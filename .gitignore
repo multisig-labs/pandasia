@@ -1,0 +1,28 @@
+# General
+_private
+.DS_Store
+.env
+.envrc
+.mnemonic
+coverage
+coverage.json
+dist
+node_modules
+
+.vscode/extensions.json
+.vscode/launch.json
+.vscode/settings.json
+.vscode/*.log
+
+# Forge
+artifacts-forge
+out
+lcov.info
+broadcast
+
+# IntelliJ
+.idea
+
+# Openzeppelin Proxy files
+.openzeppelin
+
