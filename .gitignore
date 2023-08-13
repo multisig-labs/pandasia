@@ -4,9 +4,12 @@ _private
 .env
 .envrc
 .mnemonic
+bin
 cache
 coverage
 coverage.json
+data
+
 
 .vscode/extensions.json
 .vscode/launch.json

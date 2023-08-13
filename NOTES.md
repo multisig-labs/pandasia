@@ -1,51 +1,34 @@
-https://github.com/0xcyphered/secp256k1-solidity/blob/main/contracts/SECP256K1.sol
+```
+Mnemonic: test test test test test test test test test test test test test test test test test test test test test test test blade
+
+P-Addr: P-avax1gfpj30csekhwmf4mqkncelus5zl2ztqzvv7aww
+address bytes: 0x424328bf10cdaeeda6bb05a78cff90a0bea12c02
+priv key cb58: PrivateKey-2GCgSHhQMwycn28YMovLxDeka4dr6NeD1LFmMY7Dcbg14Sx7uX
+priv key hex: a6367274e753df164ee95497c42c9a1f879307cb538eb34bbe29dc29950ed64d
+PrivKey: 507269766174654b65792d32474367534868514d7779636e3238594d6f764c7844656b61346472364e6544314c466d4d59374463626731345378377558
+serialized compressed pub key bytes: 03f9e73672eb9865f4e8fefd3cc508121661c59482c2677cbef5426163c86ee0df
+<format byte = 0x02/0x03><32-byte X coordinate>
+
+
+C-Addr: 0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4 0x0961ca10d49b9b8e371aa0bcf77fe5730b18f2e4
+priv key: 93b3701cf8eeb6f7d3b22211c691734f24816a02efa933f67f34d37053182577
+
+sign msg: 0x0961ca10d49b9b8e371aa0bcf77fe5730b18f2e4
+hash to sign:
+signature: YezQscPPaK8pXRbLuy1abhCozJbLZnEkZnJcbv3c3x5YG2XQo1Cqb7HQ2GTPLj9uRr2NWrY2vD1XTggnmVczdETza21y2C
+36d190a0b334483474936da7fb45912df86a894a265e93bd0ea6f2e96abe24f0 38d596998a3667b3f1f44416f92c2d0234e414db37f7473da42d1ab9ddab24f4 00 94d99d15
+```
+
+If we want to use all lowercase (un-checksummed) c-chain addrs we can do this:
 
 ```
-func DigestAvaMsg(msg string) []byte {
-	msgb := []byte(msg)
-	l := uint32(len(msgb))
-	lb := make([]byte, 4)
-	binary.BigEndian.PutUint32(lb, l)
-	prefix := []byte("\x1AAvalanche Signed Message:\n")
-
-	buf := new(bytes.Buffer)
-	buf.Write(prefix)
-	buf.Write(lb)
-	buf.Write(msgb)
-	fullmsg := buf.Bytes()
-	h := sha256.Sum256(fullmsg)
-	return h[:]
+import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+// Given an address, convert to its string (lowercase) format, and hash a message like the avalanche wallet would do
+function hashMessage(address addr) public pure returns (bytes32) {
+	bytes memory header = bytes("\x1AAvalanche Signed Message:\n");
+	// len of an ascii addr is 42 bytes
+	uint32 addrLen = 42;
+	bytes memory addrStr = bytes(Strings.toHexString(uint160(addr), 20));
+	return sha256(abi.encodePacked(header, addrLen, addrStr));
 }
 ```
-
-// prefix size: 26 bytes
-0x1a
-// prefix: Avalanche Signed Message:\n
-0x41 0x76 0x61 0x6c 0x61 0x6e 0x63 0x68 0x65 0x20 0x53 0x69 0x67 0x6e 0x65 0x64 0x20 0x4d 0x65 0x73 0x73 0x61 0x67 0x65 0x3a 0x0a
-// msg size: 30 bytes
-0x00 0x00 0x00 0x1e
-// msg: Through consensus to the stars
-54 68 72 6f 75 67 68 20 63 6f 6e 73 65 6e 73 75 73 20 74 6f 20 74 68 65 20 73 74 61 72 73
-
-```
-const signature = "0x...."
-
-const r = signature.slice(0, 66);
-const s = "0x" + signature.slice(66, 130);
-const v = parseInt(signature.slice(130, 132), 16);
-
-function verify(bytes32 _data, uint8 _v, bytes32 _r, bytes32 _s) public pure returns (address) {
-    bytes memory prefix = "\x19Ethereum Signed Message:\n32";
-    bytes32 hash = keccak256(abi.encodePacked(prefix, _data));
-    address signer = ecrecover(hash, _v, _r, _s);
-    return signer;
-}
-
-```
-
-addr 1 from my ledger
-P-avax15ayepmzwddzewjljl2dwwq7j9kvh4kj3x6cjp5
-has no rewards
-signing msg 0x63682bdc5f875e9bf69e201550658492c9763f89
-hash to sign: 68C88E730ECED13EE4A68EFF65D3D250BB7B0F27C1CB4C8E20C52514D45D9390
-sig: YPKVD1F1FXpeTrBeu2gN6xgniiVXGJVtFJnqrPvKsmbtkXF313XiQcBAYWFWjB13wXuJTz2XB3X5CuC3qtopBFGEX1uTpE

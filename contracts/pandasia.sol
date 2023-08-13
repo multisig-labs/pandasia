@@ -1,37 +1,63 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity 0.8.17;
 
-import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
+import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+
+import {AddressChecksumUtils} from "./AddressChecksumUtils.sol";
 import "./SECP256K1.sol";
+import {console} from "forge-std/console.sol";
 
 contract Pandasia {
-	mapping(address => address) p2c;
+	error PAddrNotInValidatorMerkleTree();
 
-	// Given an address, convert to its string (lowercase) format, and hash a message like the avalanche wallet would do
-	function hashMessage(address addr) public pure returns (bytes32) {
+	bytes32 public merkleRoot;
+	mapping(address => address) private c2p;
+
+	function setRoot(bytes32 root) public {
+		merkleRoot = root;
+	}
+
+	// Given an address, convert to its checksummed string (mixedcase) format, and hash a message like the avalanche wallet would do
+	function hashChecksummedMessage(address addr) public view returns (bytes32) {
 		bytes memory header = bytes("\x1AAvalanche Signed Message:\n");
 		// len of an ascii addr is 42 bytes
 		uint32 addrLen = 42;
-		bytes memory addrStr = bytes(Strings.toHexString(uint160(addr), 20));
-		return sha256(abi.encodePacked(header, addrLen, addrStr));
+		string memory addrStr = AddressChecksumUtils.getChecksum(addr);
+		console.logBytes(abi.encodePacked(header, addrLen, "0x", addrStr));
+		return sha256(abi.encodePacked(header, addrLen, "0x", addrStr));
 	}
 
-	function registerPChainAddr(bytes32 pChainSig) external {
-		address hash = msg.sender;
-		//pubKey = recoverPubKey(hash, pChainSig)
+	// Sign C-chain address in mixedcase hex format with P-chain addr on wallet.avax.network
+	function registerPChainAddr(uint8 v, bytes32 r, bytes32 s, bytes32[] memory proof) public {
+		bytes32 msgHash = hashChecksummedMessage(msg.sender);
+		(uint256 x, uint256 y) = SECP256K1.recover(uint256(msgHash), v, uint256(r), uint256(s));
+		address paddy = pubKeyBytesToAvaAddressBytes(x, y);
+		if (verify(merkleRoot, paddy, proof)) {
+			// We could just store a flag as well, preserving privacy a little bit?
+			// To really preserve priv we need a way to salt the message they sign
+			c2p[msg.sender] = paddy;
+		} else {
+			revert PAddrNotInValidatorMerkleTree();
+		}
 	}
 
-	function recoverPersonalSignAddress(bytes32 message, uint8 v, bytes32 r, bytes32 s) public pure returns (address) {
-		bytes memory publicKey = recoverPersonalSignPublicKey(message, v, r, s);
-		return address(uint160(uint256(keccak256(publicKey))));
+	function isRegisteredValidator(address addr) public view returns (bool) {
+		return c2p[addr] != address(0);
 	}
 
-	// TODO make this work
-	function recoverPersonalSignPublicKey(bytes32 message, uint8 v, bytes32 r, bytes32 s) public pure returns (bytes memory) {
-		// string memory header = "\x1AAvalanche Signed Message:\n";
-		bytes memory header = bytes("\x1AAvalanche Signed Message:\n");
-		bytes32 _message = keccak256(abi.encodePacked(header, message));
-		(uint256 x, uint256 y) = SECP256K1.recover(uint256(_message), v - 27, uint256(r), uint256(s));
-		return abi.encodePacked(x, y);
+	function pubKeyBytesToAvaAddressBytes(uint256 x, uint256 y) public pure returns (address) {
+		// Calc format prefix for compressed pub key
+		bytes1 format = (y % 2 == 0) ? bytes1(0x02) : bytes1(0x03);
+		bytes memory pubKey = abi.encodePacked(format, x);
+		bytes32 pubKeySha = sha256(pubKey);
+		return address(ripemd160(abi.encodePacked(pubKeySha)));
+	}
+
+	function verify(bytes32 root, address account, bytes32[] memory proof) public pure returns (bool) {
+		return MerkleProof.verify(proof, root, _leaf(account));
+	}
+
+	function _leaf(address account) internal pure returns (bytes32) {
+		return keccak256(bytes.concat(keccak256(abi.encode(account))));
 	}
 }
