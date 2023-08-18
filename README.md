@@ -26,7 +26,7 @@ When you sign a "message" in the wallet, you do not sign a hash of the message y
 
 `\x1AAvalanche Signed Message:\n\x0000002A0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4`
 
-where `\x1A` is 26, the length of `AAvalanche Signed Message:\n` and `\x0000002A` is 42, the length of the text string `0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4`
+where `\x1A` is 26, the length of `Avalanche Signed Message:\n` and `\x0000002A` is 42, the length of the text string `0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4`
 
 The wallet then takes the `sha256` hash of those bytes, and that is the message that gets signed.
 
