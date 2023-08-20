@@ -32,7 +32,18 @@ func StartHttpServer(dbfile string, host string, port int) {
 		return c.HTML(http.StatusOK, "ok")
 	})
 
-	e.GET("/tree/:root/:addr", func(c echo.Context) error {
+	e.GET("/trees", func(c echo.Context) error {
+		ctx := context.Background()
+		_, queries := db.OpenDB(dbfile)
+		roots, err := queries.ListMerkleRoots(ctx)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+		}
+
+		return c.JSON(http.StatusOK, roots)
+	})
+
+	e.GET("/trees/:root/:addr", func(c echo.Context) error {
 		root := c.Param("root")
 		addr := c.Param("addr")
 

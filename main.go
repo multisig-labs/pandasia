@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
 	"runtime/debug"
 
@@ -15,6 +16,7 @@ import (
 	"github.com/multisig-labs/pandasia/pkg/pchain"
 	"github.com/multisig-labs/pandasia/pkg/syncer"
 	"github.com/multisig-labs/pandasia/pkg/version"
+	"github.com/schollz/progressbar/v3"
 	"golang.org/x/exp/slog"
 	_ "modernc.org/sqlite"
 )
@@ -57,7 +59,27 @@ func syncPchainCmd() {
 
 	ctx := context.Background()
 	_, queries := db.OpenDB(args.DbFile)
-	err := syncer.SyncPChain(ctx, queries, args.NodeURL)
+
+	var bar *progressbar.ProgressBar
+	f := func(tot int, n int) {
+		if bar == nil {
+			bar = progressbar.NewOptions(tot,
+				progressbar.OptionSetWriter(os.Stderr),
+				progressbar.OptionSetRenderBlankState(true),
+				progressbar.OptionEnableColorCodes(true),
+				progressbar.OptionShowCount(),
+				progressbar.OptionShowIts(),
+				progressbar.OptionThrottle(1000*time.Millisecond),
+				progressbar.OptionSetDescription("[cyan]Syncing P-chain...[reset]"),
+				progressbar.OptionOnCompletion(func() {
+					fmt.Fprint(os.Stderr, "\n")
+				}),
+			)
+		}
+		bar.Add(n)
+	}
+
+	err := syncer.SyncPChain(ctx, queries, args.NodeURL, f)
 	handleError(err)
 }
 

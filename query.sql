@@ -34,3 +34,8 @@ LIMIT 1;
 SELECT id, height, tree_type, root, tree
 FROM merkle_trees
 WHERE root = ?;
+
+-- name: ListMerkleRoots :many
+SELECT id, height, tree_type, root
+FROM merkle_trees
+ORDER BY height DESC;

@@ -4,18 +4,18 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
-	"time"
 
 	"github.com/multisig-labs/pandasia/pkg/db"
 	"github.com/multisig-labs/pandasia/pkg/pchain"
-	"github.com/schollz/progressbar/v3"
 	"golang.org/x/exp/slices"
 	"golang.org/x/exp/slog"
 )
 
-// Will run as a cron and keep DB up to date with chain
-func SyncPChain(ctx context.Context, queries *db.Queries, uri string) error {
+// Sync the DB with the current state of the P-chain
+func SyncPChain(ctx context.Context, queries *db.Queries, uri string, progressFn func(tot int, n int)) error {
+	if progressFn == nil {
+		progressFn = func(tot int, n int) {}
+	}
 	batchSize := int64(1000)
 	keepTypeIds := []int64{pchain.RewardValidatorTxId, pchain.AddValidatorTxId, pchain.AddDelegatorTxId}
 
@@ -32,18 +32,8 @@ func SyncPChain(ctx context.Context, queries *db.Queries, uri string) error {
 		batches++
 	}
 
-	bar := progressbar.NewOptions64(numBlksToFetch,
-		progressbar.OptionSetWriter(os.Stderr),
-		progressbar.OptionSetRenderBlankState(true),
-		progressbar.OptionEnableColorCodes(true),
-		progressbar.OptionShowCount(),
-		progressbar.OptionShowIts(),
-		progressbar.OptionThrottle(1000*time.Millisecond),
-		progressbar.OptionSetDescription("[cyan]Syncing P-chain...[reset]"),
-		progressbar.OptionOnCompletion(func() {
-			fmt.Fprint(os.Stderr, "\n")
-		}),
-	)
+	progressFn(int(numBlksToFetch), 0)
+
 	for batch := int64(0); batch < batches; batch++ {
 		height := startHeight + (batch * batchSize)
 		// slog.Info("superfetch", "batch", batch, "height", height, "remaining", maxHeight-height)
@@ -54,7 +44,7 @@ func SyncPChain(ctx context.Context, queries *db.Queries, uri string) error {
 		}
 
 		for _, b := range blks {
-			bar.Add(1)
+			progressFn(int(numBlksToFetch), 1)
 			for _, t := range b.Txs {
 				// To save space we only keep the json for txs we are interested in
 				unsignedTx := "{}"

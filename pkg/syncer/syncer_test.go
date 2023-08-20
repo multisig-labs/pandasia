@@ -20,7 +20,7 @@ import (
 func Test1(t *testing.T) {
 	_, queries := db.OpenDB("../../pandasia.db")
 
-	err := SyncPChain(context.Background(), queries, "http://100.83.243.106:9650")
+	err := SyncPChain(context.Background(), queries, "http://100.83.243.106:9650", nil)
 	require.NoError(t, err)
 
 	t.Fatal()

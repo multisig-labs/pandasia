@@ -153,6 +153,47 @@ func (q *Queries) FindMerkleTreeByType(ctx context.Context, treeType string) (Fi
 	return i, err
 }
 
+const listMerkleRoots = `-- name: ListMerkleRoots :many
+SELECT id, height, tree_type, root
+FROM merkle_trees
+ORDER BY height DESC
+`
+
+type ListMerkleRootsRow struct {
+	ID       int64
+	Height   int64
+	TreeType string
+	Root     string
+}
+
+func (q *Queries) ListMerkleRoots(ctx context.Context) ([]ListMerkleRootsRow, error) {
+	rows, err := q.db.QueryContext(ctx, listMerkleRoots)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListMerkleRootsRow
+	for rows.Next() {
+		var i ListMerkleRootsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Height,
+			&i.TreeType,
+			&i.Root,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const maxHeight = `-- name: MaxHeight :one
 SELECT cast(COALESCE(max(height),0) as integer) as maxheight from txs
 `
