@@ -6,11 +6,22 @@ import (
 	"testing"
 
 	smt "github.com/FantasyJony/openzeppelin-merkle-tree-go/standard_merkle_tree"
+	"github.com/ava-labs/avalanchego/utils/formatting/address"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/multisig-labs/pandasia/pkg/db"
 	"github.com/multisig-labs/pandasia/pkg/pchain"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/crypto/sha3"
 )
+
+func TestAddr(t *testing.T) {
+	addr := "P-avax1u6xzj47hp5g0atfx4haadhzp6jah52sngfgdvg"
+	_, _, addrBytes, err := address.Parse(addr)
+	require.NoError(t, err)
+	addrHex := common.BytesToAddress(addrBytes).Hex()
+	t.Logf("Addr: %s", addrHex)
+	t.Fatal()
+}
 
 func TestGenerate(t *testing.T) {
 	ctx := context.Background()
@@ -21,7 +32,7 @@ func TestGenerate(t *testing.T) {
 	require.NoError(t, err)
 	j, err := GenerateTree(vaddrs)
 	require.NoError(t, err)
-	err = os.WriteFile("tree.json", []byte(j), 0666)
+	err = os.WriteFile("tree.json", j, 0666)
 	require.NoError(t, err)
 	t.Fatal()
 }

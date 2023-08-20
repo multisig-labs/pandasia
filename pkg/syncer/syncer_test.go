@@ -71,6 +71,13 @@ func Test3(t *testing.T) {
 	t.Fatal()
 }
 
+func TestUpdateRewards(t *testing.T) {
+	ctx := context.Background()
+	dbFile, _ := db.OpenDB("../../data/pandasia-dev.db")
+	UpdateRewards(ctx, dbFile)
+	t.Fatal()
+}
+
 func superFetch(uri string, startIdx int, numToFetch int, ch chan *colly.Response) error {
 	threads := runtime.NumCPU()
 	c := colly.NewCollector(colly.AllowURLRevisit())

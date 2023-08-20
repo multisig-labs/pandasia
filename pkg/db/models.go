@@ -8,19 +8,12 @@ import (
 	"database/sql"
 )
 
-type MerkleProof struct {
-	ID           int64
-	MerkleRootID int64
-	Paddy        string
-	Data         string
-	Proof        string
-}
-
-type MerkleRoot struct {
-	ID     int64
-	Height int64
-	Type   string
-	Root   string
+type MerkleTree struct {
+	ID       int64
+	Height   int64
+	TreeType string
+	Tree     string
+	Root     string
 }
 
 type Tx struct {
@@ -36,6 +29,7 @@ type Tx struct {
 	ValidatorEndTs   sql.NullInt64
 	ValidatorWeight  sql.NullInt64
 	RewardsAddr      sql.NullString
+	RewardsForID     sql.NullString
 	HasEarnedReward  sql.NullInt64
 }
 

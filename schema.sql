@@ -11,6 +11,7 @@ CREATE TABLE txs (
   validator_end_ts integer GENERATED ALWAYS AS (json_extract(unsigned_tx, '$.validator.end')) STORED,
   validator_weight integer GENERATED ALWAYS AS (json_extract(unsigned_tx, '$.validator.weight')) STORED,
   rewards_addr text GENERATED ALWAYS AS (json_extract(unsigned_tx, '$.rewardsOwner.addresses[0]')) STORED,
+	rewards_for_id text GENERATED ALWAYS AS (CASE WHEN type_id = 20 THEN json_extract(unsigned_tx, '$.txID') ELSE null END) STORED, -- This tx signifies that another txid should earn rewards
 	has_earned_reward integer,
   FOREIGN KEY(type_id) REFERENCES types(id)
 ) STRICT;
@@ -21,24 +22,19 @@ CREATE INDEX txs_type_id ON txs(type_id);
 CREATE INDEX txs_node_id ON txs(node_id);
 CREATE INDEX txs_rewards_addr ON txs(rewards_addr);
 CREATE INDEX txs_signer_addr_p ON txs(signer_addr_p);
+CREATE INDEX txs_rewards_for_id ON txs(rewards_for_id);
 CREATE INDEX txs_has_earned_reward ON txs(has_earned_reward);
 
-CREATE TABLE merkle_roots (
+CREATE TABLE merkle_trees (
 	id integer PRIMARY KEY,
-	height integer NOT NULL,
-	type text NOT NULL, -- validator or delegator
-	root text NOT NULL
+	height integer NOT NULL, -- pchain height tree was generated at
+	tree_type text NOT NULL, -- validator or delegator
+	tree text NOT NULL, -- json of tree in OpenZeppelin format
+	root text NOT NULL GENERATED ALWAYS AS (json_extract(tree, '$.tree[0]')) STORED
 );
 
-CREATE TABLE merkle_proofs (
-	id integer PRIMARY KEY,
-	merkle_root_id integer NOT NULL,
-	paddy text NOT NULL, -- P-avax1blahblah
-	data text NOT NULL, -- the 20 bytes of the address in hex
-	proof text NOT NULL, -- hex proof data
-	FOREIGN KEY(merkle_root_id) REFERENCES merkle_roots(id)
-);
-
+CREATE UNIQUE INDEX merkle_trees_height_tree_type ON merkle_trees(height,tree_type);
+CREATE UNIQUE INDEX merkle_trees_root ON merkle_trees(root);
 
 CREATE TABLE types (
   id integer PRIMARY KEY,

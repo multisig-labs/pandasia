@@ -2,10 +2,14 @@ package syncer
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
+	"os"
+	"time"
 
 	"github.com/multisig-labs/pandasia/pkg/db"
 	"github.com/multisig-labs/pandasia/pkg/pchain"
+	"github.com/schollz/progressbar/v3"
 	"golang.org/x/exp/slices"
 	"golang.org/x/exp/slog"
 )
@@ -28,9 +32,21 @@ func SyncPChain(ctx context.Context, queries *db.Queries, uri string) error {
 		batches++
 	}
 
+	bar := progressbar.NewOptions64(numBlksToFetch,
+		progressbar.OptionSetWriter(os.Stderr),
+		progressbar.OptionSetRenderBlankState(true),
+		progressbar.OptionEnableColorCodes(true),
+		progressbar.OptionShowCount(),
+		progressbar.OptionShowIts(),
+		progressbar.OptionThrottle(1000*time.Millisecond),
+		progressbar.OptionSetDescription("[cyan]Syncing P-chain...[reset]"),
+		progressbar.OptionOnCompletion(func() {
+			fmt.Fprint(os.Stderr, "\n")
+		}),
+	)
 	for batch := int64(0); batch < batches; batch++ {
 		height := startHeight + (batch * batchSize)
-		slog.Info("superfetch", "batch", batch, "height", height)
+		// slog.Info("superfetch", "batch", batch, "height", height, "remaining", maxHeight-height)
 
 		blks, err := pchain.SuperFetchBlocks(uri, int(height), int(batchSize))
 		if err != nil {
@@ -38,6 +54,7 @@ func SyncPChain(ctx context.Context, queries *db.Queries, uri string) error {
 		}
 
 		for _, b := range blks {
+			bar.Add(1)
 			for _, t := range b.Txs {
 				// To save space we only keep the json for txs we are interested in
 				unsignedTx := "{}"
@@ -57,17 +74,31 @@ func SyncPChain(ctx context.Context, queries *db.Queries, uri string) error {
 				if err != nil {
 					slog.Error("queries.CreateTx", "height", b.Height, "err", err)
 				}
-
-				if t.TypeId == pchain.RewardValidatorTxId {
-					err := queries.MarkAsRewarded(ctx, t.EarnedRewardForTxId)
-					if err != nil {
-						slog.Error("queries.MarkAsRewarded", "height", b.Height, "tid", t.Id, "err", err)
-					}
-				}
-
 			}
 		}
 	}
 
+	return nil
+}
+
+// Scan all txs and mark the validator txs that have earned rewards
+func UpdateRewards(ctx context.Context, dbFile *sql.DB) error {
+	// sqlc doesnt like this query so just run it manually
+	sql := `
+		UPDATE txs
+		SET has_earned_reward = 1
+		FROM txs AS t2
+		WHERE txs.type_id = 12
+		AND txs.id = t2.rewards_for_id;
+		`
+	_, err := dbFile.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	// num, err := r.RowsAffected()
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }

@@ -10,47 +10,22 @@ import (
 	"database/sql"
 )
 
-const createMerkleProof = `-- name: CreateMerkleProof :exec
-INSERT INTO merkle_proofs (
-	merkle_root_id, paddy, data, proof
-) VALUES (
- ?, ?, ?, ?
-)
-`
-
-type CreateMerkleProofParams struct {
-	MerkleRootID int64
-	Paddy        string
-	Data         string
-	Proof        string
-}
-
-func (q *Queries) CreateMerkleProof(ctx context.Context, arg CreateMerkleProofParams) error {
-	_, err := q.db.ExecContext(ctx, createMerkleProof,
-		arg.MerkleRootID,
-		arg.Paddy,
-		arg.Data,
-		arg.Proof,
-	)
-	return err
-}
-
-const createMerkleRootAndReturnId = `-- name: CreateMerkleRootAndReturnId :one
-INSERT INTO merkle_roots (
-	height, type, root
+const createMerkleTreeAndReturnId = `-- name: CreateMerkleTreeAndReturnId :one
+INSERT INTO merkle_trees (
+	height, tree_type, tree
 ) VALUES (
  ?, ?, ?
 ) RETURNING id
 `
 
-type CreateMerkleRootAndReturnIdParams struct {
-	Height int64
-	Type   string
-	Root   string
+type CreateMerkleTreeAndReturnIdParams struct {
+	Height   int64
+	TreeType string
+	Tree     string
 }
 
-func (q *Queries) CreateMerkleRootAndReturnId(ctx context.Context, arg CreateMerkleRootAndReturnIdParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, createMerkleRootAndReturnId, arg.Height, arg.Type, arg.Root)
+func (q *Queries) CreateMerkleTreeAndReturnId(ctx context.Context, arg CreateMerkleTreeAndReturnIdParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, createMerkleTreeAndReturnId, arg.Height, arg.TreeType, arg.Tree)
 	var id int64
 	err := row.Scan(&id)
 	return id, err
@@ -122,15 +97,60 @@ func (q *Queries) FindAddrsForMerkleTree(ctx context.Context, arg FindAddrsForMe
 	return items, nil
 }
 
-const markAsRewarded = `-- name: MarkAsRewarded :exec
-UPDATE txs
-SET has_earned_reward = 1
-WHERE id = ?
+const findMerkleTreeByRoot = `-- name: FindMerkleTreeByRoot :one
+SELECT id, height, tree_type, root, tree
+FROM merkle_trees
+WHERE root = ?
 `
 
-func (q *Queries) MarkAsRewarded(ctx context.Context, id string) error {
-	_, err := q.db.ExecContext(ctx, markAsRewarded, id)
-	return err
+type FindMerkleTreeByRootRow struct {
+	ID       int64
+	Height   int64
+	TreeType string
+	Root     string
+	Tree     string
+}
+
+func (q *Queries) FindMerkleTreeByRoot(ctx context.Context, root string) (FindMerkleTreeByRootRow, error) {
+	row := q.db.QueryRowContext(ctx, findMerkleTreeByRoot, root)
+	var i FindMerkleTreeByRootRow
+	err := row.Scan(
+		&i.ID,
+		&i.Height,
+		&i.TreeType,
+		&i.Root,
+		&i.Tree,
+	)
+	return i, err
+}
+
+const findMerkleTreeByType = `-- name: FindMerkleTreeByType :one
+SELECT id, height, tree_type, root, tree
+FROM merkle_trees
+WHERE tree_type = ?
+ORDER BY height
+LIMIT 1
+`
+
+type FindMerkleTreeByTypeRow struct {
+	ID       int64
+	Height   int64
+	TreeType string
+	Root     string
+	Tree     string
+}
+
+func (q *Queries) FindMerkleTreeByType(ctx context.Context, treeType string) (FindMerkleTreeByTypeRow, error) {
+	row := q.db.QueryRowContext(ctx, findMerkleTreeByType, treeType)
+	var i FindMerkleTreeByTypeRow
+	err := row.Scan(
+		&i.ID,
+		&i.Height,
+		&i.TreeType,
+		&i.Root,
+		&i.Tree,
+	)
+	return i, err
 }
 
 const maxHeight = `-- name: MaxHeight :one

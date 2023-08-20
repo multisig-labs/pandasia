@@ -8,11 +8,6 @@ INSERT OR IGNORE INTO txs (
   ?, ?, ?, ?, ?, ?
 );
 
--- name: MarkAsRewarded :exec
-UPDATE txs
-SET has_earned_reward = 1
-WHERE id = ?;
-
 -- name: FindAddrsForMerkleTree :many
 SELECT DISTINCT rewards_addr
 FROM txs
@@ -21,16 +16,21 @@ AND type_id = ?
 AND height <= ?
 ORDER BY rewards_addr;
 
--- name: CreateMerkleRootAndReturnId :one
-INSERT INTO merkle_roots (
-	height, type, root
+-- name: CreateMerkleTreeAndReturnId :one
+INSERT INTO merkle_trees (
+	height, tree_type, tree
 ) VALUES (
  ?, ?, ?
 ) RETURNING id;
 
--- name: CreateMerkleProof :exec
-INSERT INTO merkle_proofs (
-	merkle_root_id, paddy, data, proof
-) VALUES (
- ?, ?, ?, ?
-);
+-- name: FindMerkleTreeByType :one
+SELECT id, height, tree_type, root, tree
+FROM merkle_trees
+WHERE tree_type = ?
+ORDER BY height
+LIMIT 1;
+
+-- name: FindMerkleTreeByRoot :one
+SELECT id, height, tree_type, root, tree
+FROM merkle_trees
+WHERE root = ?;
