@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,6 +13,7 @@ import (
 	"golang.org/x/exp/slog"
 
 	"github.com/AbsaOSS/env-binder/env"
+	"github.com/ava-labs/avalanchego/utils/cb58"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -25,7 +27,9 @@ import (
 type Config struct {
 	// Seconds between job runs
 	JobPeriod string `env:"JOB_PERIOD,default=24h"`
-	jobPeriod time.Duration
+	// Serve content from public not embedded
+	ServeEmbedded bool `env:"SERVE_EMBEDDED,default=true"`
+	jobPeriod     time.Duration
 }
 
 var EnvConfig *Config
@@ -47,9 +51,12 @@ type proofResponse struct {
 	Height   int
 	Root     string
 	Proof    []string
+	SigV     string
+	SigR     string
+	SigS     string
 }
 
-func StartHttpServer(dbFileName string, host string, port int, nodeURL string) {
+func StartHttpServer(dbFileName string, host string, port int, nodeURL string, webContent fs.FS) {
 	slog.Info("init", "EnvConfig", EnvConfig)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -80,7 +87,7 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string) {
 		},
 	}))
 
-	e.GET("/", func(c echo.Context) error {
+	e.GET("/health", func(c echo.Context) error {
 		return c.HTML(http.StatusOK, "ok")
 	})
 
@@ -93,9 +100,11 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string) {
 		return c.JSON(http.StatusOK, roots)
 	})
 
-	e.GET("/trees/:root/:addr", func(c echo.Context) error {
+	// /proof/:root?addr=P-avax1gfpj30csekhwmf4mqkncelus5zl2ztqzvv7aww&sig=24eWufzWvm38teEhNQmtE9N5BD12CWUawv1YtbYkuxeS5gGCN6CoZBgU4V4WDrLa5anYyTLGZT8nqiEsqX7hm1k3jofswfx
+	e.GET("/proof/:root", func(c echo.Context) error {
 		root := c.Param("root")
-		addr := c.Param("addr")
+		addr := c.QueryParam("addr")
+		sig := c.QueryParam("sig")
 
 		t, err := queries.FindMerkleTreeByRoot(ctx, root)
 		if err != nil {
@@ -118,8 +127,30 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string) {
 			Proof:    proofAry,
 		}
 
+		if sig != "" {
+			sigBytes, err := cb58.Decode(sig)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+			}
+			r.SigR = fmt.Sprintf("0x%x", sigBytes[0:32])
+			r.SigS = fmt.Sprintf("0x%x", sigBytes[32:64])
+			r.SigV = fmt.Sprintf("0x%x", sigBytes[64:])
+		}
+
 		return c.JSON(http.StatusOK, r)
 	})
+
+	// Serve static files in public/
+	// Basically "cd" into the /public folder of the embedded content
+	contentSub, err := fs.Sub(webContent, "public")
+	if err != nil {
+		panic(err)
+	}
+	if !EnvConfig.ServeEmbedded {
+		slog.Warn("Ignoring embedded content, serving from /public")
+		contentSub = os.DirFS("./public")
+	}
+	e.GET("/*", echo.WrapHandler(http.FileServer(http.FS(contentSub))))
 
 	go func() {
 		cSigTerm := make(chan os.Signal, 1)

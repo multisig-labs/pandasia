@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"embed"
 	"flag"
 	"fmt"
 	"os"
@@ -20,6 +21,9 @@ import (
 	"golang.org/x/exp/slog"
 	_ "modernc.org/sqlite"
 )
+
+//go:embed public/*
+var webContent embed.FS
 
 func main() {
 	defer handlePanic()
@@ -92,7 +96,7 @@ func serveApiCmd() {
 	}{}
 	mcli.Parse(&args, mcli.WithErrorHandling(flag.ExitOnError))
 
-	api.StartHttpServer(args.DbFile, args.Host, args.Port, args.NodeURL)
+	api.StartHttpServer(args.DbFile, args.Host, args.Port, args.NodeURL, webContent)
 }
 
 func generateCmd() {

@@ -5,6 +5,23 @@
 - generate tree
 - submit root
 
+# Command Scratchpad
+
+export PADDR=P-avax1gfpj30csekhwmf4mqkncelus5zl2ztqzvv7aww
+export CADDR=0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4
+export SIG=24eWufzWvm38teEhNQmtE9N5BD12CWUawv1YtbYkuxeS5gGCN6CoZBgU4V4WDrLa5anYyTLGZT8nqiEsqX7hm1k3jofswfx
+
+just anvil
+JOB_PERIOD=10h SERVE_EMBEDDED=false bin/pandasia serve --db data/pandasia-dev.db --node-url http://100.83.243.106:9650
+
+just deploy
+
+export CURRENT_ROOT=$(curl --silent localhost:8000/trees | jq -r '.[0].Root')
+curl --silent "localhost:8000/proof/${CURRENT_ROOT}?addr=${PADDR}&sig=${SIG}"
+just cast-submit-root ${CURRENT_ROOT}
+scripts/register.ts ${PADDR} ${SIG}
+just cast-is-validator ${CADDR}
+
 ```
 Mnemonic: test test test test test test test test test test test test test test test test test test test test test test test blade
 
@@ -17,13 +34,18 @@ serialized compressed pub key bytes: 03f9e73672eb9865f4e8fefd3cc508121661c59482c
 <format byte = 0x02/0x03><32-byte X coordinate>
 
 
-C-Addr: 0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4 0x0961ca10d49b9b8e371aa0bcf77fe5730b18f2e4
+C-Addr: 0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4
 priv key: 93b3701cf8eeb6f7d3b22211c691734f24816a02efa933f67f34d37053182577
 
 sign msg: 0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4
 hash to sign:
 signature: 24eWufzWvm38teEhNQmtE9N5BD12CWUawv1YtbYkuxeS5gGCN6CoZBgU4V4WDrLa5anYyTLGZT8nqiEsqX7hm1k3jofswfx
 
+{
+  v: "0x00",
+  r: "0x6ac1cc3277dffe75d9cc8264acacc9f464762bab7ef73921a67dee1a398bd337",
+  s: "0x39cf19e2ff4c36ba64ed3684af9a72b59b7ccd16833666c81e84fb001bbb315a"
+}
 ```
 
 If we want to use all lowercase (un-checksummed) c-chain addrs we can do this:

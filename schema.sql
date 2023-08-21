@@ -36,6 +36,16 @@ CREATE TABLE merkle_trees (
 CREATE UNIQUE INDEX merkle_trees_height_tree_type ON merkle_trees(height,tree_type);
 CREATE UNIQUE INDEX merkle_trees_root ON merkle_trees(root);
 
+-- Only keep the last N trees to save space
+CREATE TRIGGER merkle_trees_insert AFTER INSERT ON merkle_trees
+WHEN (SELECT count(*) FROM merkle_trees WHERE tree_type = NEW.tree_type) > 5
+BEGIN
+	DELETE FROM merkle_trees
+	WHERE tree_type = NEW.tree_type
+		AND height = (SELECT min(height) FROM merkle_trees WHERE tree_type = NEW.tree_type);
+END;
+
+
 CREATE TABLE types (
   id integer PRIMARY KEY,
   name text NOT NULL
