@@ -85,13 +85,14 @@ func syncPchainCmd() {
 
 func serveApiCmd() {
 	args := struct {
-		DbFile string `cli:"--db, SQLite database file name" default:"pandasia.db"`
-		Host   string `cli:"--host, host" default:"0.0.0.0"`
-		Port   int    `cli:"--port, port" default:"8000"`
+		DbFile  string `cli:"--db, SQLite database file name" default:"pandasia.db"`
+		NodeURL string `cli:"--node-url, Avalanche node URL" default:"http://localhost:9650"`
+		Host    string `cli:"--host, host" default:"0.0.0.0"`
+		Port    int    `cli:"--port, port" default:"8000"`
 	}{}
 	mcli.Parse(&args, mcli.WithErrorHandling(flag.ExitOnError))
 
-	api.StartHttpServer(args.DbFile, args.Host, args.Port)
+	api.StartHttpServer(args.DbFile, args.Host, args.Port, args.NodeURL)
 }
 
 func generateCmd() {
@@ -118,9 +119,9 @@ func generateCmd() {
 	tree, err := merkle.GenerateTree(vaddrs)
 	handleError(err)
 
-	id, err := merkle.SaveTreeToDB(ctx, queries, merkle.TREE_TYPE_VALIDATOR, int(height), tree)
+	err = merkle.SaveTreeToDB(ctx, queries, merkle.TREE_TYPE_VALIDATOR, int(height), tree)
 	handleError(err)
-	slog.Info("saved tree to db", "id", id)
+	slog.Info("saved tree to db", "height", height)
 }
 
 func verifyTreeCmd() {

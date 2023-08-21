@@ -1,3 +1,10 @@
+# Operations
+
+- serve API
+- sync
+- generate tree
+- submit root
+
 ```
 Mnemonic: test test test test test test test test test test test test test test test test test test test test test test test blade
 
@@ -13,10 +20,10 @@ serialized compressed pub key bytes: 03f9e73672eb9865f4e8fefd3cc508121661c59482c
 C-Addr: 0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4 0x0961ca10d49b9b8e371aa0bcf77fe5730b18f2e4
 priv key: 93b3701cf8eeb6f7d3b22211c691734f24816a02efa933f67f34d37053182577
 
-sign msg: 0x0961ca10d49b9b8e371aa0bcf77fe5730b18f2e4
+sign msg: 0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4
 hash to sign:
-signature: YezQscPPaK8pXRbLuy1abhCozJbLZnEkZnJcbv3c3x5YG2XQo1Cqb7HQ2GTPLj9uRr2NWrY2vD1XTggnmVczdETza21y2C
-36d190a0b334483474936da7fb45912df86a894a265e93bd0ea6f2e96abe24f0 38d596998a3667b3f1f44416f92c2d0234e414db37f7473da42d1ab9ddab24f4 00 94d99d15
+signature: 24eWufzWvm38teEhNQmtE9N5BD12CWUawv1YtbYkuxeS5gGCN6CoZBgU4V4WDrLa5anYyTLGZT8nqiEsqX7hm1k3jofswfx
+
 ```
 
 If we want to use all lowercase (un-checksummed) c-chain addrs we can do this:

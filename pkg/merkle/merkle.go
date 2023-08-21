@@ -61,6 +61,10 @@ func GenerateTree(vaddrs []ValidatorAddress) ([]byte, error) {
 		values = append(values, []interface{}{smt.SolAddress(vaddr.AddrHex)})
 	}
 
+	// Add in a known test addr
+	// "test ... blade" P-avax1gfpj30csekhwmf4mqkncelus5zl2ztqzvv7aww 0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02
+	values = append(values, []interface{}{smt.SolAddress("0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02")})
+
 	tree, err := smt.Of(values, leafEncodings)
 	if err != nil {
 		return nil, err
@@ -75,13 +79,13 @@ func GenerateTree(vaddrs []ValidatorAddress) ([]byte, error) {
 	return jsonValue, nil
 }
 
-func SaveTreeToDB(ctx context.Context, queries *db.Queries, treeType string, height int, tree []byte) (int64, error) {
-	args := db.CreateMerkleTreeAndReturnIdParams{
+func SaveTreeToDB(ctx context.Context, queries *db.Queries, treeType string, height int, tree []byte) error {
+	args := db.CreateMerkleTreeParams{
 		Height:   int64(height),
 		TreeType: treeType,
 		Tree:     string(tree),
 	}
-	return queries.CreateMerkleTreeAndReturnId(ctx, args)
+	return queries.CreateMerkleTree(ctx, args)
 }
 
 func FindTreeByType(ctx context.Context, queries *db.Queries, treeType string) ([]byte, error) {

@@ -7,6 +7,8 @@ require (
 	github.com/ava-labs/coreth v0.12.5-rc.1
 	github.com/davecgh/go-spew v1.1.1
 	github.com/jxskiss/mcli v0.8.3
+	github.com/neilotoole/errgroup v0.1.6
+	github.com/schollz/progressbar/v3 v3.13.1
 	github.com/stretchr/testify v1.8.4
 	github.com/tidwall/gjson v1.16.0
 	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
@@ -30,7 +32,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/saintfish/chardet v0.0.0-20120816061221-3af4cd4741ca // indirect
-	github.com/schollz/progressbar/v3 v3.13.1 // indirect
 	github.com/temoto/robotstxt v1.1.1 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
@@ -40,6 +41,7 @@ require (
 )
 
 require (
+	github.com/AbsaOSS/env-binder v1.0.1
 	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/FantasyJony/openzeppelin-merkle-tree-go v1.1.2
 	github.com/MakeNowJust/heredoc/v2 v2.0.1 // indirect

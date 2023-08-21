@@ -39,7 +39,24 @@ build:
 test:
 	forge test
 
-# Delete and recreate a sqlite db
+deploy: (_ping ETH_RPC_URL)
+	#!/bin/bash
+	forge script --broadcast --slow --ffi --fork-url=${ETH_RPC_URL} --private-key=${PRIVATE_KEY} scripts/deploy.s.sol
+	addr=$(cat broadcast/deploy.s.sol/31337/run-latest.json | jq -r ".transactions[2].contractAddress")
+	echo "Pandasia deployed to $addr"
+	sed -i '' "s/^PANDASIA_ADDR=.*/PANDASIA_ADDR=${addr}/" .env
+
+cast-submit-root root: (_ping ETH_RPC_URL)
+	cast send --private-key=${PRIVATE_KEY} ${PANDASIA_ADDR} "setRoot(bytes32)" {{root}}
+
+anvil:
+	anvil --port 9650 --mnemonic "${MNEMONIC}"
+
+# Delete and recreate a dev sqlite db
 create-db:
 	rm -f data/pandasia-dev.db*
 	cat schema.sql | sqlite3 data/pandasia-dev.db
+
+# Check if there is an http(s) server listening on [url]
+_ping url:
+	@if ! curl -k --silent --connect-timeout 2 {{url}} >/dev/null 2>&1; then echo 'No server at {{url}}!' && exit 1; fi

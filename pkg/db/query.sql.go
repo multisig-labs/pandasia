@@ -10,25 +10,23 @@ import (
 	"database/sql"
 )
 
-const createMerkleTreeAndReturnId = `-- name: CreateMerkleTreeAndReturnId :one
-INSERT INTO merkle_trees (
+const createMerkleTree = `-- name: CreateMerkleTree :exec
+INSERT OR IGNORE INTO merkle_trees (
 	height, tree_type, tree
 ) VALUES (
  ?, ?, ?
 ) RETURNING id
 `
 
-type CreateMerkleTreeAndReturnIdParams struct {
+type CreateMerkleTreeParams struct {
 	Height   int64
 	TreeType string
 	Tree     string
 }
 
-func (q *Queries) CreateMerkleTreeAndReturnId(ctx context.Context, arg CreateMerkleTreeAndReturnIdParams) (int64, error) {
-	row := q.db.QueryRowContext(ctx, createMerkleTreeAndReturnId, arg.Height, arg.TreeType, arg.Tree)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
+func (q *Queries) CreateMerkleTree(ctx context.Context, arg CreateMerkleTreeParams) error {
+	_, err := q.db.ExecContext(ctx, createMerkleTree, arg.Height, arg.TreeType, arg.Tree)
+	return err
 }
 
 const createTx = `-- name: CreateTx :exec

@@ -16,8 +16,8 @@ AND type_id = ?
 AND height <= ?
 ORDER BY rewards_addr;
 
--- name: CreateMerkleTreeAndReturnId :one
-INSERT INTO merkle_trees (
+-- name: CreateMerkleTree :exec
+INSERT OR IGNORE INTO merkle_trees (
 	height, tree_type, tree
 ) VALUES (
  ?, ?, ?

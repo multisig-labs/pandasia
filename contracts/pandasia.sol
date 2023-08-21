@@ -2,28 +2,26 @@
 pragma solidity 0.8.17;
 
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {AddressChecksumUtils} from "./AddressChecksumUtils.sol";
 import "./SECP256K1.sol";
-import {console} from "forge-std/console.sol";
 
-contract Pandasia {
+contract Pandasia is Ownable {
 	error PAddrNotInValidatorMerkleTree();
 
 	bytes32 public merkleRoot;
 	mapping(address => address) private c2p;
 
-	function setRoot(bytes32 root) public {
+	function setRoot(bytes32 root) public onlyOwner {
 		merkleRoot = root;
 	}
 
 	// Given an address, convert to its checksummed string (mixedcase) format, and hash a message like the avalanche wallet would do
-	function hashChecksummedMessage(address addr) public view returns (bytes32) {
+	function hashChecksummedMessage(address addr) public pure returns (bytes32) {
 		bytes memory header = bytes("\x1AAvalanche Signed Message:\n");
 		// len of an ascii addr is 42 bytes
 		uint32 addrLen = 42;
 		string memory addrStr = AddressChecksumUtils.getChecksum(addr);
-		console.logBytes(abi.encodePacked(header, addrLen, "0x", addrStr));
 		return sha256(abi.encodePacked(header, addrLen, "0x", addrStr));
 	}
 

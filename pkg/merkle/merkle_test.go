@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	smt "github.com/FantasyJony/openzeppelin-merkle-tree-go/standard_merkle_tree"
+	"github.com/ava-labs/avalanchego/utils/cb58"
 	"github.com/ava-labs/avalanchego/utils/formatting/address"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/multisig-labs/pandasia/pkg/db"
@@ -15,12 +16,23 @@ import (
 )
 
 func TestAddr(t *testing.T) {
-	addr := "P-avax1u6xzj47hp5g0atfx4haadhzp6jah52sngfgdvg"
+	addr := "P-avax1gfpj30csekhwmf4mqkncelus5zl2ztqzvv7aww"
 	_, _, addrBytes, err := address.Parse(addr)
 	require.NoError(t, err)
 	addrHex := common.BytesToAddress(addrBytes).Hex()
 	t.Logf("Addr: %s", addrHex)
 	t.Fatal()
+}
+
+func TestDecodeSig(t *testing.T) {
+	sig := "24eWufzWvm38teEhNQmtE9N5BD12CWUawv1YtbYkuxeS5gGCN6CoZBgU4V4WDrLa5anYyTLGZT8nqiEsqX7hm1k3jofswfx"
+	b, err := cb58.Decode(sig)
+	require.NoError(t, err)
+	// 6ac1cc3277dffe75d9cc8264acacc9f464762bab7ef73921a67dee1a398bd337 39cf19e2ff4c36ba64ed3684af9a72b59b7ccd16833666c81e84fb001bbb315a 00
+	t.Logf("Addr: %x", b)
+	t.Logf("R: %x  S: %x  V: %x", b[0:31], b[32:64], b[65:])
+	t.Fatal()
+
 }
 
 func TestGenerate(t *testing.T) {
