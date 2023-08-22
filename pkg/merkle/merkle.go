@@ -2,6 +2,7 @@ package merkle
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	smt "github.com/FantasyJony/openzeppelin-merkle-tree-go/standard_merkle_tree"
@@ -52,6 +53,24 @@ func GenerateProof(jsonTree string, addr string) ([][]byte, error) {
 	}
 
 	return proof, nil
+}
+
+// Given a json tree, return ["P-avax1234","P-avax1456",...]
+func LoadAddrsFromTree(jsonTree string) ([]string, error) {
+	smtTree, err := smt.Load([]byte(jsonTree))
+	if err != nil {
+		return nil, err
+	}
+	out := make([]string, 0, len(smtTree.Entries()))
+	for _, value := range smtTree.Entries() {
+		a := value.Value[0].(common.Address)
+		s, err := address.Format("P", "avax", a.Bytes())
+		if err != nil {
+			return nil, fmt.Errorf("err formatting %s", a)
+		}
+		out = append(out, s)
+	}
+	return out, nil
 }
 
 func GenerateTree(vaddrs []ValidatorAddress) ([]byte, error) {

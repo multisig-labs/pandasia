@@ -9,11 +9,12 @@ import (
 )
 
 type MerkleTree struct {
-	ID       int64
-	Height   int64
-	TreeType string
-	Tree     string
-	Root     string
+	ID         int64
+	Height     int64
+	TreeType   string
+	Tree       string
+	Root       string
+	AddrsCount int64
 }
 
 type Tx struct {

@@ -41,10 +41,10 @@ test:
 
 deploy: (_ping ETH_RPC_URL)
 	#!/bin/bash
-	# forge script --broadcast --slow --ffi --fork-url=${ETH_RPC_URL} --private-key=${PRIVATE_KEY} scripts/deploy.s.sol
-	# addr=$(cat broadcast/deploy.s.sol/31337/run-latest.json | jq -r ".transactions[2].contractAddress")
-	# echo "Pandasia deployed to $addr"
-	# sed -i '' "s/^PANDASIA_ADDR=.*/PANDASIA_ADDR=${addr}/" .env
+	forge script --broadcast --slow --ffi --fork-url=${ETH_RPC_URL} --private-key=${PRIVATE_KEY} scripts/deploy.s.sol
+	addr=$(cat broadcast/deploy.s.sol/31337/run-latest.json | jq -r ".transactions[2].contractAddress")
+	echo "Pandasia deployed to $addr"
+	sed -i '' "s/^PANDASIA_ADDR=.*/PANDASIA_ADDR=${addr}/" .env
 	rm -f public/js/abi.json
 	cat artifacts-forge/pandasia.sol/pandasia.json | jq "{abi: .abi}" > public/js/abi.json
 

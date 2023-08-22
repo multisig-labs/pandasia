@@ -46,6 +46,13 @@ func init() {
 	}
 }
 
+type treeResponse struct {
+	TreeType string
+	Height   int
+	Root     string
+	Addrs    []string
+}
+
 type proofResponse struct {
 	TreeType string
 	Height   int
@@ -66,6 +73,7 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 	e.HideBanner = true
 	e.Debug = true // Show more detailed errors in json response
 	e.Use(middleware.CORS())
+	e.Use(middleware.Gzip())
 	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
 		LogLevel: 4, // ERROR level
 	}))
@@ -98,6 +106,27 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		}
 
 		return c.JSON(http.StatusOK, roots)
+	})
+
+	e.GET("/trees/:root", func(c echo.Context) error {
+		root := c.Param("root")
+		t, err := queries.FindMerkleTreeByRoot(ctx, root)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+		}
+
+		addrs, err := merkle.LoadAddrsFromTree(t.Tree)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+		}
+		r := treeResponse{
+			TreeType: t.TreeType,
+			Height:   int(t.Height),
+			Root:     t.Root,
+			Addrs:    addrs,
+		}
+
+		return c.JSON(http.StatusOK, r)
 	})
 
 	// /proof/:root?addr=P-avax1gfpj30csekhwmf4mqkncelus5zl2ztqzvv7aww&sig=24eWufzWvm38teEhNQmtE9N5BD12CWUawv1YtbYkuxeS5gGCN6CoZBgU4V4WDrLa5anYyTLGZT8nqiEsqX7hm1k3jofswfx

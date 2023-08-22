@@ -1,28 +1,32 @@
-# Operations
+# TODO
 
-- serve API
-- sync
-- generate tree
-- submit root
+Use this to check our work on if rewards have been recvd
+https://ava-labs-inc.metabaseapp.com/public/question/78f9de45-1f09-4b08-847b-086372bdcc4c
 
 # Command Scratchpad
 
-export PADDR=P-avax1gfpj30csekhwmf4mqkncelus5zl2ztqzvv7aww
-export CADDR=0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4
-export SIG=24eWufzWvm38teEhNQmtE9N5BD12CWUawv1YtbYkuxeS5gGCN6CoZBgU4V4WDrLa5anYyTLGZT8nqiEsqX7hm1k3jofswfx
+```bash
+export PADDR="P-avax1gfpj30csekhwmf4mqkncelus5zl2ztqzvv7aww"
+export CADDR="0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4"
+export SIG="24eWufzWvm38teEhNQmtE9N5BD12CWUawv1YtbYkuxeS5gGCN6CoZBgU4V4WDrLa5anYyTLGZT8nqiEsqX7hm1k3jofswfx"
 
 just anvil
 JOB_PERIOD=10h SERVE_EMBEDDED=false bin/pandasia serve --db data/pandasia-dev.db --node-url http://100.83.243.106:9650
 
 just deploy
 
-export CURRENT_ROOT=$(curl --silent localhost:8000/trees | jq -r '.[0].Root')
-curl --silent "localhost:8000/proof/${CURRENT_ROOT}?addr=${PADDR}&sig=${SIG}"
+export CURRENT_ROOT=$(curl --silent localhost:8000/trees | jq -r '.[0].Root'); echo ${CURRENT_ROOT}
 just cast-submit-root ${CURRENT_ROOT}
+
+curl --silent "localhost:8000/proof/${CURRENT_ROOT}?addr=${PADDR}&sig=${SIG}"
 scripts/register.ts ${PADDR} ${SIG}
 just cast-is-validator ${CADDR}
 
+sqlite3 data/pandasia-dev.db '.once out.json' 'select tree from merkle_trees'
+
 ```
+
+```bash
 Mnemonic: test test test test test test test test test test test test test test test test test test test test test test test blade
 
 P-Addr: P-avax1gfpj30csekhwmf4mqkncelus5zl2ztqzvv7aww

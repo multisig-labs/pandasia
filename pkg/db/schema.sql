@@ -30,7 +30,8 @@ CREATE TABLE merkle_trees (
 	height integer NOT NULL, -- pchain height tree was generated at
 	tree_type text NOT NULL, -- validator or delegator
 	tree text NOT NULL, -- json of tree in OpenZeppelin format
-	root text NOT NULL GENERATED ALWAYS AS (json_extract(tree, '$.tree[0]')) STORED
+	root text NOT NULL GENERATED ALWAYS AS (json_extract(tree, '$.tree[0]')) STORED,
+	addrs_count integer NOT NULL GENERATED ALWAYS AS (json_array_length(tree, '$.values')) STORED
 );
 
 CREATE UNIQUE INDEX merkle_trees_height_tree_type ON merkle_trees(height,tree_type);
