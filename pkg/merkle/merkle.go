@@ -12,6 +12,18 @@ import (
 	"golang.org/x/exp/slog"
 )
 
+// Merkle Tree
+// IDEA: Currently we use this as our leaf value
+//   value := []interface{}{
+// 	  smt.SolAddress(addrHex),
+//   }
+// But we could add some kind of "type" in as well,
+//   value := []interface{}{
+//    smt.SolString(type)
+// 	  smt.SolAddress(addrHex),
+//   }
+// But for now, we can just use different trees and roots for different types of things
+
 type ValidatorAddress struct {
 	// P-avax1blah
 	Addr string

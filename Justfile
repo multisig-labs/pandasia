@@ -36,8 +36,9 @@ build:
 	go build -ldflags "{{LDFLAGS}}" -o bin/pandasia main.go
 	forge build
 
-test:
-	forge test
+# Run forge unit tests
+test contract="." test="." *flags="":
+	forge test --match-contract {{contract}} --match-test {{test}} {{flags}}
 
 deploy: (_ping ETH_RPC_URL)
 	#!/bin/bash
