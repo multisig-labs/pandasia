@@ -89,14 +89,15 @@ func syncPchainCmd() {
 
 func serveApiCmd() {
 	args := struct {
-		DbFile  string `cli:"--db, SQLite database file name" default:"pandasia.db"`
-		NodeURL string `cli:"--node-url, Avalanche node URL" default:"http://localhost:9650"`
-		Host    string `cli:"--host, host" default:"0.0.0.0"`
-		Port    int    `cli:"--port, port" default:"8000"`
+		DbFile       string `cli:"--db, SQLite database file name" default:"pandasia.db"`
+		NodeURL      string `cli:"--node-url, Avalanche node URL" default:"http://localhost:9650"`
+		Host         string `cli:"--host, host" default:"0.0.0.0"`
+		Port         int    `cli:"--port, port" default:"8000"`
+		PandasiaAddr string `cli:"--pandasia-addr, contract addr"`
 	}{}
 	mcli.Parse(&args, mcli.WithErrorHandling(flag.ExitOnError))
 
-	api.StartHttpServer(args.DbFile, args.Host, args.Port, args.NodeURL, webContent)
+	api.StartHttpServer(args.DbFile, args.Host, args.Port, args.NodeURL, webContent, args.PandasiaAddr)
 }
 
 func generateCmd() {

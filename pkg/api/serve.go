@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"math/big"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,6 +18,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/multisig-labs/pandasia/pkg/contracts"
 	"github.com/multisig-labs/pandasia/pkg/db"
 	"github.com/multisig-labs/pandasia/pkg/merkle"
 	"github.com/multisig-labs/pandasia/pkg/pchain"
@@ -46,6 +48,11 @@ func init() {
 	}
 }
 
+type Pagination struct {
+	Limit  int
+	Offset int
+}
+
 type treeResponse struct {
 	TreeType string
 	Height   int
@@ -63,7 +70,7 @@ type proofResponse struct {
 	SigS     string
 }
 
-func StartHttpServer(dbFileName string, host string, port int, nodeURL string, webContent fs.FS) {
+func StartHttpServer(dbFileName string, host string, port int, nodeURL string, webContent fs.FS, pandasiaAddr string) {
 	slog.Info("init", "EnvConfig", EnvConfig)
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -169,6 +176,32 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		return c.JSON(http.StatusOK, r)
 	})
 
+	// If we have a deployed addr, set up some routes to view contract data
+	if pandasiaAddr != "" {
+		slog.Info("Creating routes for /airdrops", "addr", pandasiaAddr)
+		ctrcs, err := contracts.NewContracts(nodeURL, pandasiaAddr)
+		if err != nil {
+			panic(err)
+		}
+
+		e.GET("/airdrops", func(c echo.Context) error {
+			p := new(Pagination)
+			if err := c.Bind(p); err != nil {
+				return err
+			}
+
+			offset := new(big.Int).SetUint64(uint64(p.Offset))
+			limit := new(big.Int).SetUint64(uint64(p.Limit))
+
+			airdrops, err := ctrcs.Pandasia.GetAirdrops(nil, offset, limit)
+			if err != nil {
+				return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+			}
+
+			return c.JSON(http.StatusOK, airdrops)
+		})
+	}
+
 	// Serve static files in public/
 	// Basically "cd" into the /public folder of the embedded content
 	contentSub, err := fs.Sub(webContent, "public")
@@ -180,6 +213,8 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		contentSub = os.DirFS("./public")
 	}
 	e.GET("/*", echo.WrapHandler(http.FileServer(http.FS(contentSub))))
+
+	// Setup Go Routines
 
 	go func() {
 		cSigTerm := make(chan os.Signal, 1)

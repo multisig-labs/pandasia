@@ -11,7 +11,7 @@ export CADDR="0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4"
 export SIG="24eWufzWvm38teEhNQmtE9N5BD12CWUawv1YtbYkuxeS5gGCN6CoZBgU4V4WDrLa5anYyTLGZT8nqiEsqX7hm1k3jofswfx"
 
 just anvil
-JOB_PERIOD=10h SERVE_EMBEDDED=false bin/pandasia serve --db data/pandasia-dev.db --node-url http://100.83.243.106:9650
+JOB_PERIOD=10h SERVE_EMBEDDED=false bin/pandasia serve --db data/pandasia-dev.db --node-url http://100.83.243.106:9650 --pandasia-addr $PANDASIA_ADDR
 
 just deploy
 
@@ -23,6 +23,8 @@ scripts/register.ts ${PADDR} ${SIG}
 just cast-is-validator ${CADDR}
 
 sqlite3 data/pandasia-dev.db '.once out.json' 'select tree from merkle_trees'
+curl --silent localhost:8000/airdrops
+just forge-script createAirdrop
 
 ```
 

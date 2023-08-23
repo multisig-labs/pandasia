@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -13,6 +13,7 @@ contract Pandasia is Ownable {
 	using SafeERC20 for IERC20;
 
 	error PAddrNotInValidatorMerkleTree();
+	error PAddrAlreadyRegistered();
 	error InvalidAddress();
 	error InvalidAmount();
 	error AirdropOutOfFunds();
@@ -30,11 +31,12 @@ contract Pandasia is Ownable {
 
 	mapping(uint256 => Airdrop) public airdrops;
 	mapping(uint256 => mapping(address => bool)) public claimed;
-	mapping(address => uint256[]) public airdropIds;
+	mapping(address => uint256[]) public airdropIds; // owners => airdropIds
 	uint256 public airdropCount;
 
 	bytes32 public merkleRoot;
 	mapping(address => address) public c2p;
+	mapping(address => address) public p2c;
 
 	function setRoot(bytes32 root) external onlyOwner {
 		merkleRoot = root;
@@ -115,6 +117,35 @@ contract Pandasia is Ownable {
 		IERC20(airdrop.erc20).safeTransfer(msg.sender, withdrawAmt);
 	}
 
+	function emergencyWithdraw(uint256 airdropId, uint256 withdrawAmt) external onlyOwner {
+		Airdrop storage airdrop = airdrops[airdropId];
+		if (airdrop.balance < withdrawAmt) {
+			revert InvalidWithdrawRequest();
+		}
+		airdrop.balance = airdrop.balance - withdrawAmt;
+		IERC20(airdrop.erc20).safeTransfer(msg.sender, withdrawAmt);
+	}
+
+	function getAirdrops(uint256 offset, uint256 limit) external view returns (Airdrop[] memory pageOfAirdrops) {
+		uint256 max = offset + limit;
+		if (max > airdropCount || limit == 0) {
+			max = airdropCount;
+		}
+		pageOfAirdrops = new Airdrop[](max - offset);
+		uint256 total = 0;
+		for (uint256 i = offset; i < max; i++) {
+			pageOfAirdrops[total] = airdrops[i];
+			total++;
+		}
+		// Dirty hack to cut unused elements off end of return value (from RP)
+		// solhint-disable-next-line no-inline-assembly
+		assembly {
+			mstore(pageOfAirdrops, total)
+		}
+	}
+
+	/* Merkle Tree Functions */
+
 	// Given an address, convert to its checksummed string (mixedcase) format, and hash a message like the avalanche wallet would do
 	function hashChecksummedMessage(address addr) public pure returns (bytes32) {
 		bytes memory header = bytes("\x1AAvalanche Signed Message:\n");
@@ -129,10 +160,12 @@ contract Pandasia is Ownable {
 		bytes32 msgHash = hashChecksummedMessage(msg.sender);
 		(uint256 x, uint256 y) = SECP256K1.recover(uint256(msgHash), v, uint256(r), uint256(s));
 		address paddy = pubKeyBytesToAvaAddressBytes(x, y);
+		if (p2c[paddy] != address(0)) {
+			revert PAddrAlreadyRegistered();
+		}
 		if (verify(merkleRoot, paddy, proof)) {
-			// We could just store a flag as well, preserving privacy a little bit?
-			// To really preserve priv we need a way to salt the message they sign
 			c2p[msg.sender] = paddy;
+			p2c[paddy] = msg.sender;
 		} else {
 			revert PAddrNotInValidatorMerkleTree();
 		}

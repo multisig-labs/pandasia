@@ -1,4 +1,4 @@
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -12,9 +12,13 @@ import {SECP256K1} from "../../contracts/SECP256K1.sol";
 // Ava: P-avax1gfpj30csekhwmf4mqkncelus5zl2ztqzvv7aww
 // P-Addr Bytes: 0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02
 
+// P-avax1gfpj... signing 0x0000000000000000000000000000000000000001
+// sig: MczkY1ar24JgNxmxcRA9KkQJSVo4rWorg2XwDtnAzakMw4PLnLwFqrEyTYL7goJjLX3Gnim4UoXhjcCdEPAHrxpXh9PpNR
+// {"r":"0x23b5b54651e48c075395b537775219548920f453332fdc586d4d0c8fadfb6072","s":"0x155ffa9f0c72d2dc3e60890a641ba28346271e9fb51ec0710e69095038cee1d6","v":"0x01"}
+
 // P-avax1gfpj... signing "0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4" gives
 // sig: 24eWufzWvm38teEhNQmtE9N5BD12CWUawv1YtbYkuxeS5gGCN6CoZBgU4V4WDrLa5anYyTLGZT8nqiEsqX7hm1k3jofswfx
-// cb58decode gives (r, s, v): 6ac1cc3277dffe75d9cc8264acacc9f464762bab7ef73921a67dee1a398bd337 39cf19e2ff4c36ba64ed3684af9a72b59b7ccd16833666c81e84fb001bbb315a 00
+// {"r":"0x6ac1cc3277dffe75d9cc8264acacc9f464762bab7ef73921a67dee1a398bd337","s":"0x39cf19e2ff4c36ba64ed3684af9a72b59b7ccd16833666c81e84fb001bbb315a","v":"0x00"}
 
 // Merkle Tree
 // {"format":"standard-v1","tree":["0xfcd7a701a861392c67cef2baaaf08063a1214f4ba4c3948c45b8e2008d28a35e","0xbfc74daa8eab55692b857896491b60b6d44cf47bd8629cd66ae2aca38f6fbb37","0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f"],"values":[{"value":["0x1111111111111111111111111111111111111111"],"treeIndex":2},{"value":["0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4"],"treeIndex":1}],"leafEncoding":["address"]}
@@ -48,8 +52,16 @@ contract PandasiaTest is Test {
 		vm.prank(caddy);
 		pandasia.registerPChainAddr(v, r, s, proof);
 		stopMeasuringGas();
-
 		assertTrue(pandasia.isRegisteredValidator(caddy));
+
+		// Try to reg a diff caddy with the same paddy
+		address hacker = address(1);
+		v = 1;
+		r = bytes32(0x23b5b54651e48c075395b537775219548920f453332fdc586d4d0c8fadfb6072);
+		s = bytes32(0x155ffa9f0c72d2dc3e60890a641ba28346271e9fb51ec0710e69095038cee1d6);
+		vm.prank(hacker);
+		vm.expectRevert(Pandasia.PAddrAlreadyRegistered.selector);
+		pandasia.registerPChainAddr(v, r, s, proof);
 	}
 
 	// Test against known-good message using wallet.avax.network

@@ -1,4 +1,4 @@
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 // https://ethereum.stackexchange.com/questions/63908/address-checksum-solidity-implementation
 

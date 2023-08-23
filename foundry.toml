@@ -5,5 +5,5 @@ out = "artifacts-forge"
 optimizer = true
 optimizer_runs = 5_000
 gas-reports = ["*"]
-solc-version = "0.8.17"
+solc-version = "0.8.19"
 verbosity = 2

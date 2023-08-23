@@ -1,4 +1,4 @@
-pragma solidity 0.8.17;
+pragma solidity 0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -10,6 +10,7 @@ contract AirdropTest is Test {
 	ERC20Mock public erc20;
 	Pandasia public pandasia;
 	address public validator;
+	address public deployer;
 
 	function setUp() public {
 		bytes32 root = bytes32(0x1733170f5a465a52692730efa67c11a3c9b1208a5acbe833057fac165ce6947b);
@@ -18,8 +19,10 @@ contract AirdropTest is Test {
 		bytes32[] memory proof = new bytes32[](1);
 		proof[0] = bytes32(0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f);
 
+		deployer = address(999);
 		pandasia = new Pandasia();
 		pandasia.setRoot(root);
+		pandasia.transferOwnership(deployer);
 
 		// Signature generated on wallet.avax.network
 		uint8 v = 0;
@@ -80,9 +83,16 @@ contract AirdropTest is Test {
 		pandasia.withdrawFunding(id, 1 ether);
 
 		vm.warp(block.timestamp + 1001);
-		pandasia.withdrawFunding(id, perClaimAmt);
-		assertEq(erc20.balanceOf(owner), perClaimAmt);
+		pandasia.withdrawFunding(id, 1 ether);
+		assertEq(erc20.balanceOf(owner), 1 ether);
 		vm.stopPrank();
+
+		vm.expectRevert("Ownable: caller is not the owner");
+		pandasia.emergencyWithdraw(id, 1 ether);
+
+		vm.prank(deployer);
+		pandasia.emergencyWithdraw(id, 1 ether);
+		assertEq(erc20.balanceOf(deployer), 1 ether);
 	}
 
 	//

@@ -47,7 +47,13 @@ deploy: (_ping ETH_RPC_URL)
 	echo "Pandasia deployed to $addr"
 	sed -i '' "s/^PANDASIA_ADDR=.*/PANDASIA_ADDR=${addr}/" .env
 	rm -f public/js/abi.json
-	cat artifacts-forge/pandasia.sol/pandasia.json | jq "{abi: .abi}" > public/js/abi.json
+	cat artifacts-forge/contracts/Pandasia.sol/Pandasia.json | jq "{abi: .abi}" > public/js/abi.json
+
+# Execute a Forge script
+forge-script cmd:
+	#!/usr/bin/env bash
+	fn={{cmd}}
+	forge script --broadcast --slow --ffi --fork-url=${ETH_RPC_URL} --private-key=${PRIVATE_KEY} scripts/${fn%.*.*}.s.sol
 
 cast-submit-root root: (_ping ETH_RPC_URL)
 	cast send --private-key=${PRIVATE_KEY} ${PANDASIA_ADDR} "setRoot(bytes32)" {{root}}
@@ -62,6 +68,16 @@ anvil:
 create-db:
 	rm -f data/pandasia-dev.db*
 	cat schema.sql | sqlite3 data/pandasia-dev.db
+
+# Generate Go code interface for /contracts
+codegen:
+	#!/bin/bash
+	CORETH=0.11.9
+	forge build
+	THISDIR=$PWD
+	echo "Generating GO code with Coreth v${CORETH}"
+	cd $GOPATH/pkg/mod/github.com/ava-labs/coreth@v${CORETH}
+	cat $THISDIR/artifacts-forge/contracts/Pandasia.sol/Pandasia.json | jq '.abi' | go run cmd/abigen/main.go --abi - --pkg pandasia --out $THISDIR/pkg/contracts/pandasia/pandasia.go
 
 # Check if there is an http(s) server listening on [url]
 _ping url:
