@@ -66,9 +66,9 @@
     {
       "id": "pointer:pointer",
       "typeName": "pointer",
-      "x": 1356.963483920138,
-      "y": 1277.0095240484914,
-      "lastActivityTimestamp": 1692979177396,
+      "x": 1753.8314809896808,
+      "y": 1336.871112282337,
+      "lastActivityTimestamp": 1692980579902,
       "meta": {}
     },
     {
@@ -79,8 +79,8 @@
       "typeName": "page"
     },
     {
-      "x": -328.3792148106029,
-      "y": -357.1438264027073,
+      "x": 150.62892397978334,
+      "y": -99.1320122281603,
       "z": 0.81216,
       "meta": {},
       "id": "camera:page:Z_HfsDz6TPeEl21vXdX7E",
@@ -89,7 +89,9 @@
     {
       "editingId": null,
       "croppingId": null,
-      "selectedIds": [],
+      "selectedIds": [
+        "shape:zYq98eqnp6Crw1sKvjt1i"
+      ],
       "hoveredId": null,
       "erasingIds": [],
       "hintingIds": [],

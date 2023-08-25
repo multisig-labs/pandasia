@@ -91,8 +91,8 @@ contract Pandasia is Ownable {
 		token.safeTransferFrom(msg.sender, address(this), fundAmt);
 	}
 
-	function claimAirdrop(uint64 airdropId, bytes32[] memory proof) external {
-		if (claimed[airdropId][msg.sender]) {
+	function canClaimAirdrop(address addr, uint64 airdropId, bytes32[] memory proof) public view returns (bool) {
+		if (claimed[airdropId][addr]) {
 			revert AddressAlreadyClaimed();
 		}
 
@@ -106,8 +106,8 @@ contract Pandasia is Ownable {
 			revert AirdropOutOfFunds();
 		}
 
-		bool isInAirdropRoot = airdrop.root != bytes32(0) && verify(airdrop.root, msg.sender, proof);
-		bool isValidator = isRegisteredValidator(msg.sender) || isMinipoolOperator(msg.sender);
+		bool isInAirdropRoot = verify(airdrop.root, addr, proof);
+		bool isValidator = isRegisteredValidator(addr) || isMinipoolOperator(addr);
 		bool isEligible;
 
 		if (airdrop.union) {
@@ -124,9 +124,17 @@ contract Pandasia is Ownable {
 			revert AddressNotEligible();
 		}
 
-		claimed[airdropId][msg.sender] = true;
-		airdrop.balance = airdrop.balance - airdrop.amount;
-		IERC20(airdrop.erc20).safeTransfer(msg.sender, airdrop.amount);
+		return true;
+	}
+
+	// TODO measure gas costs of this, do we need to optimize?
+	function claimAirdrop(uint64 airdropId, bytes32[] memory proof) external {
+		Airdrop memory airdrop = airdrops[airdropId];
+		if (canClaimAirdrop(msg.sender, airdropId, proof)) {
+			claimed[airdropId][msg.sender] = true;
+			airdrop.balance = airdrop.balance - airdrop.amount;
+			IERC20(airdrop.erc20).safeTransfer(msg.sender, airdrop.amount);
+		}
 	}
 
 	function hasClaimed(uint64 airdropId, address addr) public view returns (bool) {
@@ -139,7 +147,7 @@ contract Pandasia is Ownable {
 
 	function isMinipoolOperator(address addr) public view returns (bool) {
 		// Can use Staking.sol getLastRewardsCycleCompleted > 0 I think?
-		return true;
+		return false;
 	}
 
 	function getAirdropIds(address owner) public view returns (uint64[] memory) {
@@ -224,7 +232,7 @@ contract Pandasia is Ownable {
 	}
 
 	function verify(bytes32 root, address account, bytes32[] memory proof) public pure returns (bool) {
-		return MerkleProof.verify(proof, root, _leaf(account));
+		return proof.length > 0 && account != address(0) && root != bytes32(0) && MerkleProof.verify(proof, root, _leaf(account));
 	}
 
 	function _leaf(address account) internal pure returns (bytes32) {

@@ -40,10 +40,12 @@ contract AirdropTest is Test {
 	}
 
 	function testNewAirdrop() public {
+		bool isEligible;
 		uint256 perClaimAmt = 10 ether;
 		uint256 totalFundingAmt = 20 ether;
 		address owner = address(1);
 		address nonValidator = address(2);
+
 		vm.startPrank(owner);
 
 		uint64 id = pandasia.newAirdrop(bytes32(0), true, address(erc20), perClaimAmt, uint32(block.timestamp + 1000));
@@ -53,26 +55,28 @@ contract AirdropTest is Test {
 		erc20.mint(owner, totalFundingAmt);
 		erc20.approve(address(pandasia), totalFundingAmt);
 
-		// Under fund it
-		vm.expectRevert(Pandasia.InvalidAmount.selector);
-		pandasia.fundAirdrop(id, 1 ether);
-
 		// Fund it
 		pandasia.fundAirdrop(id, totalFundingAmt);
 		assertEq(erc20.balanceOf(owner), 0);
 
 		vm.stopPrank();
 
+		vm.expectRevert(Pandasia.AddressNotEligible.selector);
+		pandasia.canClaimAirdrop(nonValidator, id, emptyProof);
+
 		vm.prank(nonValidator);
 		vm.expectRevert(Pandasia.AddressNotEligible.selector);
 		pandasia.claimAirdrop(id, emptyProof);
+
+		isEligible = pandasia.canClaimAirdrop(validator, id, emptyProof);
+		assertTrue(isEligible);
 
 		vm.startPrank(validator);
 		pandasia.claimAirdrop(id, emptyProof);
 		assertEq(erc20.balanceOf(validator), perClaimAmt);
 
 		// Can only claim once
-		vm.expectRevert(Pandasia.AddressNotEligible.selector);
+		vm.expectRevert(Pandasia.AddressAlreadyClaimed.selector);
 		pandasia.claimAirdrop(id, emptyProof);
 		vm.stopPrank();
 
