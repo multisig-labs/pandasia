@@ -16,100 +16,138 @@ contract Pandasia is Ownable {
 	error PAddrAlreadyRegistered();
 	error InvalidAddress();
 	error InvalidAmount();
+	error AirdropExpired();
 	error AirdropOutOfFunds();
 	error AddressNotEligible();
+	error AddressAlreadyClaimed();
 	error InvalidWithdrawRequest();
 
+	// Storage is sorted for slot optimization
+	// _owner address comes from Ownable Slot 0
+	uint64 public airdropCount; // counter for AirdropIds (max 18,446,744,073,709,551,615 LFGG)
+	uint32 public feePct; // 10_000 = 100% fee charged on funding an airdrop
+	mapping(uint64 => Airdrop) public airdrops;
+	mapping(uint64 => mapping(address => bool)) public claimed;
+	mapping(address => uint64[]) public airdropIds; // index of owners => airdropIds
+
+	bytes32 public validatorRoot; // Merkle root defining all verified validator P-chain addresses
+	mapping(address => address) public c2p; // maps c-chain addr => verified p-chain addr
+	mapping(address => address) public p2c; // maps verified p-chain addr => c-chain addr
+
 	struct Airdrop {
+		bytes32 root; // optional merkle root that applies for this airdrop
+		uint256 balance; // current balance of asset
+		uint256 amount; // amount claimable by each address
 		address owner; // account that contributed the funds
 		address erc20; // claimable asset
-		uint256 balance; // current balance of asset
-		uint256 amount; // amount claimable by each validator
-		uint256 expires; // time that airdop expires and owner can re-claim any left over funds
-		bytes32 memo; // notes about the airdrop
+		uint32 expires; // time that airdop expires and no further claims can be made
+		bool union; // if union=t, then an addr in root OR validatorRoot is eligble, else addr must be in root AND validatorRoot
 	}
 
-	mapping(uint256 => Airdrop) public airdrops;
-	mapping(uint256 => mapping(address => bool)) public claimed;
-	mapping(address => uint256[]) public airdropIds; // owners => airdropIds
-	uint256 public airdropCount;
-
-	bytes32 public merkleRoot;
-	mapping(address => address) public c2p;
-	mapping(address => address) public p2c;
-
-	function setRoot(bytes32 root) external onlyOwner {
-		merkleRoot = root;
+	// Pandasia DAO will update this root (daily?) with a new tree of all validators
+	function setValidatorRoot(bytes32 root) external onlyOwner {
+		validatorRoot = root;
 	}
 
-	function newAirdrop(address erc20, uint256 amount, uint256 expires, bytes32 memo) external returns (uint256) {
+	function setFee(uint32 fee) external onlyOwner {
+		feePct = fee;
+	}
+
+	function newAirdrop(bytes32 root, bool union, address erc20, uint256 amount, uint32 expires) external returns (uint64) {
 		if (erc20 == address(0)) {
 			revert InvalidAddress();
 		}
 		if (amount == 0) {
 			revert InvalidAmount();
 		}
+		if (expires < block.timestamp) {
+			revert AirdropExpired();
+		}
 		airdropCount++;
 		Airdrop storage airdrop = airdrops[airdropCount];
+		airdrop.root = root;
+		airdrop.union = union;
 		// Do we care? Can they set any owner on creation?
 		airdrop.owner = msg.sender;
 		airdrop.erc20 = erc20;
 		airdrop.amount = amount;
 		airdrop.expires = expires;
-		airdrop.memo = memo;
 
 		airdropIds[msg.sender].push(airdropCount);
 		return airdropCount;
 	}
 
-	function fundAirdrop(uint256 airdropId, uint256 amount) external {
+	function fundAirdrop(uint64 airdropId, uint256 amount) external {
 		Airdrop storage airdrop = airdrops[airdropId];
 		IERC20 token = IERC20(airdrop.erc20);
 		uint256 balance = token.balanceOf(msg.sender);
-		if (amount == 0 || balance < amount || amount < airdrop.amount) {
+		if (amount == 0 || balance < amount) {
 			revert InvalidAmount();
 		}
 
-		token.safeTransferFrom(msg.sender, address(this), amount);
-		airdrop.balance = airdrop.balance + amount;
+		uint256 feeAmt = (amount * feePct) / 10_000;
+		uint256 fundAmt = amount - feeAmt;
+		airdrop.balance = airdrop.balance + fundAmt;
+		token.safeTransferFrom(msg.sender, address(this), fundAmt);
 	}
 
-	function fundAirdropWithPermit(uint256 airdropId, uint256 amount, address funder, uint256 deadline, uint8 v, bytes32 r, bytes32 s) external {
-		Airdrop storage airdrop = airdrops[airdropId];
-		IERC20 token = IERC20(airdrop.erc20);
-		uint256 balance = token.balanceOf(msg.sender);
-		if (balance < amount || amount == 0) {
-			revert InvalidAmount();
+	function claimAirdrop(uint64 airdropId, bytes32[] memory proof) external {
+		if (claimed[airdropId][msg.sender]) {
+			revert AddressAlreadyClaimed();
 		}
 
-		IERC20Permit(airdrop.erc20).permit(funder, address(this), amount, deadline, v, r, s);
-		token.safeTransferFrom(msg.sender, address(this), amount);
-		airdrop.balance = airdrop.balance + amount;
-	}
+		Airdrop memory airdrop = airdrops[airdropId];
 
-	function claimAirdrop(uint256 airdropId) external {
-		if (c2p[msg.sender] == address(0) || claimed[airdropId][msg.sender]) {
-			revert AddressNotEligible();
+		if (block.timestamp > airdrop.expires) {
+			revert AirdropExpired();
 		}
 
-		Airdrop storage airdrop = airdrops[airdropId];
 		if (airdrop.balance < airdrop.amount) {
 			revert AirdropOutOfFunds();
 		}
+
+		bool isInAirdropRoot = airdrop.root != bytes32(0) && verify(airdrop.root, msg.sender, proof);
+		bool isValidator = isRegisteredValidator(msg.sender) || isMinipoolOperator(msg.sender);
+		bool isEligible;
+
+		if (airdrop.union) {
+			if (isValidator || isInAirdropRoot) {
+				isEligible = true;
+			}
+		} else {
+			if (isValidator && isInAirdropRoot) {
+				isEligible = true;
+			}
+		}
+
+		if (!isEligible) {
+			revert AddressNotEligible();
+		}
+
 		claimed[airdropId][msg.sender] = true;
 		airdrop.balance = airdrop.balance - airdrop.amount;
 		IERC20(airdrop.erc20).safeTransfer(msg.sender, airdrop.amount);
 	}
 
-	// TODO Safes? Wat do?
-	function claimAirdropWithPermit(uint256 airdropId) external {}
+	function hasClaimed(uint64 airdropId, address addr) public view returns (bool) {
+		return claimed[airdropId][addr] == true;
+	}
 
-	function getAirdropIds(address owner) public view returns (uint256[] memory) {
+	function isRegisteredValidator(address addr) public view returns (bool) {
+		return c2p[addr] != address(0);
+	}
+
+	function isMinipoolOperator(address addr) public view returns (bool) {
+		// Can use Staking.sol getLastRewardsCycleCompleted > 0 I think?
+		return true;
+	}
+
+	function getAirdropIds(address owner) public view returns (uint64[] memory) {
 		return airdropIds[owner];
 	}
 
-	function withdrawFunding(uint256 airdropId, uint256 withdrawAmt) external {
-		Airdrop storage airdrop = airdrops[airdropId];
+	function withdrawFunding(uint64 airdropId, uint256 withdrawAmt) external {
+		Airdrop memory airdrop = airdrops[airdropId];
 		if (airdrop.owner != msg.sender || airdrop.balance < withdrawAmt || block.timestamp < airdrop.expires) {
 			revert InvalidWithdrawRequest();
 		}
@@ -117,8 +155,8 @@ contract Pandasia is Ownable {
 		IERC20(airdrop.erc20).safeTransfer(msg.sender, withdrawAmt);
 	}
 
-	function emergencyWithdraw(uint256 airdropId, uint256 withdrawAmt) external onlyOwner {
-		Airdrop storage airdrop = airdrops[airdropId];
+	function emergencyWithdraw(uint64 airdropId, uint256 withdrawAmt) external onlyOwner {
+		Airdrop memory airdrop = airdrops[airdropId];
 		if (airdrop.balance < withdrawAmt) {
 			revert InvalidWithdrawRequest();
 		}
@@ -126,14 +164,20 @@ contract Pandasia is Ownable {
 		IERC20(airdrop.erc20).safeTransfer(msg.sender, withdrawAmt);
 	}
 
-	function getAirdrops(uint256 offset, uint256 limit) external view returns (Airdrop[] memory pageOfAirdrops) {
-		uint256 max = offset + limit;
+	function withdrawFees(uint64 airdropId) external onlyOwner {
+		Airdrop memory airdrop = airdrops[airdropId];
+		uint256 fees = IERC20(airdrop.erc20).balanceOf(address(this)) - airdrop.balance;
+		IERC20(airdrop.erc20).safeTransfer(msg.sender, fees);
+	}
+
+	function getAirdrops(uint64 offset, uint64 limit) external view returns (Airdrop[] memory pageOfAirdrops) {
+		uint64 max = offset + limit;
 		if (max > airdropCount || limit == 0) {
 			max = airdropCount;
 		}
 		pageOfAirdrops = new Airdrop[](max - offset);
-		uint256 total = 0;
-		for (uint256 i = offset; i < max; i++) {
+		uint64 total = 0;
+		for (uint64 i = offset; i < max; i++) {
 			pageOfAirdrops[total] = airdrops[i];
 			total++;
 		}
@@ -146,24 +190,15 @@ contract Pandasia is Ownable {
 
 	/* Merkle Tree Functions */
 
-	// Given an address, convert to its checksummed string (mixedcase) format, and hash a message like the avalanche wallet would do
-	function hashChecksummedMessage(address addr) public pure returns (bytes32) {
-		bytes memory header = bytes("\x1AAvalanche Signed Message:\n");
-		// len of an ascii addr is 42 bytes
-		uint32 addrLen = 42;
-		string memory addrStr = AddressChecksumUtils.getChecksum(addr);
-		return sha256(abi.encodePacked(header, addrLen, "0x", addrStr));
-	}
-
 	// Sign C-chain address in mixedcase hex format with P-chain addr on wallet.avax.network
-	function registerPChainAddr(uint8 v, bytes32 r, bytes32 s, bytes32[] memory proof) public {
+	function registerPChainAddr(uint8 v, bytes32 r, bytes32 s, bytes32[] memory proof) external {
 		bytes32 msgHash = hashChecksummedMessage(msg.sender);
 		(uint256 x, uint256 y) = SECP256K1.recover(uint256(msgHash), v, uint256(r), uint256(s));
 		address paddy = pubKeyBytesToAvaAddressBytes(x, y);
 		if (p2c[paddy] != address(0)) {
 			revert PAddrAlreadyRegistered();
 		}
-		if (verify(merkleRoot, paddy, proof)) {
+		if (verify(validatorRoot, paddy, proof)) {
 			c2p[msg.sender] = paddy;
 			p2c[paddy] = msg.sender;
 		} else {
@@ -171,8 +206,13 @@ contract Pandasia is Ownable {
 		}
 	}
 
-	function isRegisteredValidator(address addr) public view returns (bool) {
-		return c2p[addr] != address(0);
+	// Given an address, convert to its checksummed string (mixedcase) format, and hash a message like the avalanche wallet would do
+	function hashChecksummedMessage(address addr) public pure returns (bytes32) {
+		bytes memory header = bytes("\x1AAvalanche Signed Message:\n");
+		// len of an ascii addr is 42 bytes
+		uint32 addrLen = 42;
+		string memory addrStr = AddressChecksumUtils.getChecksum(addr);
+		return sha256(abi.encodePacked(header, addrLen, "0x", addrStr));
 	}
 
 	function pubKeyBytesToAvaAddressBytes(uint256 x, uint256 y) public pure returns (address) {

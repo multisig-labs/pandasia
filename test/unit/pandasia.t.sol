@@ -36,7 +36,7 @@ contract PandasiaTest is Test {
 		proof[0] = bytes32(0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f);
 
 		Pandasia pandasia = new Pandasia();
-		pandasia.setRoot(root);
+		pandasia.setValidatorRoot(root);
 		assertFalse(pandasia.isRegisteredValidator(caddy));
 
 		// Signature generated on wallet.avax.network

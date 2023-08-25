@@ -12,7 +12,11 @@ contract AirdropTest is Test {
 	address public validator;
 	address public deployer;
 
+	bytes32[] public emptyProof;
+
 	function setUp() public {
+		emptyProof = new bytes32[](0);
+
 		bytes32 root = bytes32(0x1733170f5a465a52692730efa67c11a3c9b1208a5acbe833057fac165ce6947b);
 		validator = address(0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4);
 		// address paddy = address(0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02);
@@ -21,7 +25,7 @@ contract AirdropTest is Test {
 
 		deployer = address(999);
 		pandasia = new Pandasia();
-		pandasia.setRoot(root);
+		pandasia.setValidatorRoot(root);
 		pandasia.transferOwnership(deployer);
 
 		// Signature generated on wallet.avax.network
@@ -42,8 +46,8 @@ contract AirdropTest is Test {
 		address nonValidator = address(2);
 		vm.startPrank(owner);
 
-		uint256 id = pandasia.newAirdrop(address(erc20), perClaimAmt, block.timestamp + 1000, bytes32("pennies from heaven"));
-		uint256[] memory ids = pandasia.getAirdropIds(owner);
+		uint64 id = pandasia.newAirdrop(bytes32(0), true, address(erc20), perClaimAmt, uint32(block.timestamp + 1000));
+		uint64[] memory ids = pandasia.getAirdropIds(owner);
 		assertEq(ids[0], id, "getAirdrops");
 
 		erc20.mint(owner, totalFundingAmt);
@@ -61,15 +65,15 @@ contract AirdropTest is Test {
 
 		vm.prank(nonValidator);
 		vm.expectRevert(Pandasia.AddressNotEligible.selector);
-		pandasia.claimAirdrop(id);
+		pandasia.claimAirdrop(id, emptyProof);
 
 		vm.startPrank(validator);
-		pandasia.claimAirdrop(id);
+		pandasia.claimAirdrop(id, emptyProof);
 		assertEq(erc20.balanceOf(validator), perClaimAmt);
 
 		// Can only claim once
 		vm.expectRevert(Pandasia.AddressNotEligible.selector);
-		pandasia.claimAirdrop(id);
+		pandasia.claimAirdrop(id, emptyProof);
 		vm.stopPrank();
 
 		vm.expectRevert(Pandasia.InvalidWithdrawRequest.selector);
