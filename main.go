@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"embed"
 	"flag"
@@ -29,6 +30,7 @@ func main() {
 	defer handlePanic()
 	mcli.Add("sync-pchain", syncPchainCmd, "Sync the P-Chain to the db")
 	mcli.Add("generate", generateCmd, "Generate the Merkle Tree at current height and save to DB")
+	mcli.Add("generate-stdin", generateFromStdinCmd, "Generate the Merkle Tree from list of addr on stdin")
 	mcli.Add("serve", serveApiCmd, "Start API server")
 	mcli.Add("verify", verifyTreeCmd, "Verify an entire merkle tree")
 	mcli.Add("addrs", addrsForHeight, "Output list of addrs that would be included at a specific height")
@@ -124,9 +126,38 @@ func generateCmd() {
 	tree, err := merkle.GenerateTree(vaddrs)
 	handleError(err)
 
-	err = merkle.SaveTreeToDB(ctx, queries, merkle.TREE_TYPE_VALIDATOR, int(height), tree)
+	err = merkle.SaveTreeToDB(ctx, queries, merkle.TREE_TYPE_VALIDATOR, int(height), tree, "")
 	handleError(err)
 	slog.Info("saved tree to db", "height", height)
+}
+
+// TODO this is just for testing, need a route to do this for real via API
+func generateFromStdinCmd() {
+	args := struct {
+		DbFile      string `cli:"--db, SQLite database file name" default:"pandasia.db"`
+		Description string `cli:"--desc, description of the merkle tree"`
+	}{}
+	mcli.Parse(&args, mcli.WithErrorHandling(flag.ExitOnError))
+
+	ctx := context.Background()
+	_, queries := db.OpenDB(args.DbFile)
+
+	scanner := bufio.NewScanner(os.Stdin)
+	vaddrs := []merkle.ValidatorAddress{}
+
+	for scanner.Scan() {
+		vaddrs = append(vaddrs, merkle.ValidatorAddress{AddrHex: scanner.Text()})
+	}
+	handleError(scanner.Err())
+
+	slog.Info("calculating tree", "len(addrs)", len(vaddrs))
+	tree, err := merkle.GenerateTree(vaddrs)
+	handleError(err)
+
+	err = merkle.SaveTreeToDB(ctx, queries, merkle.TREE_TYPE_CUSTOM, 0, tree, args.Description)
+	handleError(err)
+	slog.Info("saved tree to db", "desc", args.Description)
+
 }
 
 func verifyTreeCmd() {

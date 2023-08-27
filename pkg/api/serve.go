@@ -271,7 +271,7 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 					return err
 				}
 
-				err = merkle.SaveTreeToDB(gCtx, queries, merkle.TREE_TYPE_VALIDATOR, int(height), tree)
+				err = merkle.SaveTreeToDB(gCtx, queries, merkle.TREE_TYPE_VALIDATOR, int(height), tree, "")
 				if err != nil {
 					return err
 				}

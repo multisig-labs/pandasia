@@ -15,6 +15,8 @@ JOB_PERIOD=10h SERVE_EMBEDDED=false bin/pandasia serve --db data/pandasia-dev.db
 
 just deploy
 
+bin/pandasia generate --db data/pandasia-dev.db
+
 export CURRENT_ROOT=$(curl --silent localhost:8000/trees | jq -r '.[0].Root'); echo ${CURRENT_ROOT}
 just cast-submit-root ${CURRENT_ROOT}
 
@@ -22,9 +24,12 @@ curl --silent "localhost:8000/proof/${CURRENT_ROOT}?addr=${PADDR}&sig=${SIG}"
 scripts/register.ts ${PADDR} ${SIG}
 just cast-is-validator ${CADDR}
 
-sqlite3 data/pandasia-dev.db '.once out.json' 'select tree from merkle_trees'
+# Export the merkle tree json
+sqlite3 data/pandasia-dev.db 'select tree from merkle_trees where id = 1' | jq
 curl --silent localhost:8000/airdrops
 just forge-script createAirdrop
+
+echo "0x0000000000000000000000000000000000000001\n0x0000000000000000000000000000000000000002" | bin/pandasia generate-stdin --db data/pandasia-dev.db --desc "test tree"
 
 ```
 

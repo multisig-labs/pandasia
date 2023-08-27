@@ -9,6 +9,10 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 import {AddressChecksumUtils} from "./AddressChecksumUtils.sol";
 import "./SECP256K1.sol";
 
+interface Staking {
+	function getLastRewardsCycleCompleted(address stakerAddr) external view returns (uint256);
+}
+
 contract Pandasia is Ownable {
 	using SafeERC20 for IERC20;
 
@@ -34,6 +38,8 @@ contract Pandasia is Ownable {
 	mapping(address => address) public c2p; // maps c-chain addr => verified p-chain addr
 	mapping(address => address) public p2c; // maps verified p-chain addr => c-chain addr
 
+	address public stakingContract;
+
 	struct Airdrop {
 		bytes32 root; // optional merkle root that applies for this airdrop
 		uint256 balance; // current balance of asset
@@ -51,6 +57,10 @@ contract Pandasia is Ownable {
 
 	function setFee(uint32 fee) external onlyOwner {
 		feePct = fee;
+	}
+
+	function setStakingContract(address addr) external onlyOwner {
+		stakingContract = addr;
 	}
 
 	function newAirdrop(bytes32 root, bool union, address erc20, uint256 amount, uint32 expires) external returns (uint64) {
@@ -127,7 +137,6 @@ contract Pandasia is Ownable {
 		return true;
 	}
 
-	// TODO measure gas costs of this, do we need to optimize?
 	function claimAirdrop(uint64 airdropId, bytes32[] memory proof) external {
 		Airdrop memory airdrop = airdrops[airdropId];
 		if (canClaimAirdrop(msg.sender, airdropId, proof)) {
@@ -146,8 +155,8 @@ contract Pandasia is Ownable {
 	}
 
 	function isMinipoolOperator(address addr) public view returns (bool) {
-		// Can use Staking.sol getLastRewardsCycleCompleted > 0 I think?
-		return false;
+		// TODO verify this is going to work
+		return Staking(stakingContract).getLastRewardsCycleCompleted(addr) > 0;
 	}
 
 	function getAirdropIds(address owner) public view returns (uint64[] memory) {
@@ -231,6 +240,7 @@ contract Pandasia is Ownable {
 		return address(ripemd160(abi.encodePacked(pubKeySha)));
 	}
 
+	// Uses about 35K gas for a large proof
 	function verify(bytes32 root, address account, bytes32[] memory proof) public pure returns (bool) {
 		return proof.length > 0 && account != address(0) && root != bytes32(0) && MerkleProof.verify(proof, root, _leaf(account));
 	}

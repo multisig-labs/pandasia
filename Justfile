@@ -65,9 +65,10 @@ anvil:
 	anvil --port 9650 --mnemonic "${MNEMONIC}"
 
 # Delete and recreate a dev sqlite db
-create-db:
+create-dev-db:
 	rm -f data/pandasia-dev.db*
-	cat schema.sql | sqlite3 data/pandasia-dev.db
+	cat pkg/db/schema.sql | sqlite3 data/pandasia-dev.db
+	unzip -p pkg/db/txs-sample.sql.zip | sqlite3 data/pandasia-dev.db
 
 # Generate Go code interface for /contracts
 codegen:

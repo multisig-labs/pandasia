@@ -12,20 +12,26 @@ import (
 
 const createMerkleTree = `-- name: CreateMerkleTree :exec
 INSERT OR IGNORE INTO merkle_trees (
-	height, tree_type, tree
+	height, tree_type, tree, description
 ) VALUES (
- ?, ?, ?
+ ?, ?, ?, ?
 ) RETURNING id
 `
 
 type CreateMerkleTreeParams struct {
-	Height   int64
-	TreeType string
-	Tree     string
+	Height      int64
+	TreeType    string
+	Tree        string
+	Description string
 }
 
 func (q *Queries) CreateMerkleTree(ctx context.Context, arg CreateMerkleTreeParams) error {
-	_, err := q.db.ExecContext(ctx, createMerkleTree, arg.Height, arg.TreeType, arg.Tree)
+	_, err := q.db.ExecContext(ctx, createMerkleTree,
+		arg.Height,
+		arg.TreeType,
+		arg.Tree,
+		arg.Description,
+	)
 	return err
 }
 
@@ -96,17 +102,18 @@ func (q *Queries) FindAddrsForMerkleTree(ctx context.Context, arg FindAddrsForMe
 }
 
 const findMerkleTreeByRoot = `-- name: FindMerkleTreeByRoot :one
-SELECT id, height, tree_type, root, tree
+SELECT id, height, tree_type, root, tree, description
 FROM merkle_trees
 WHERE root = ?
 `
 
 type FindMerkleTreeByRootRow struct {
-	ID       int64
-	Height   int64
-	TreeType string
-	Root     string
-	Tree     string
+	ID          int64
+	Height      int64
+	TreeType    string
+	Root        string
+	Tree        string
+	Description string
 }
 
 func (q *Queries) FindMerkleTreeByRoot(ctx context.Context, root string) (FindMerkleTreeByRootRow, error) {
@@ -118,12 +125,13 @@ func (q *Queries) FindMerkleTreeByRoot(ctx context.Context, root string) (FindMe
 		&i.TreeType,
 		&i.Root,
 		&i.Tree,
+		&i.Description,
 	)
 	return i, err
 }
 
 const findMerkleTreeByType = `-- name: FindMerkleTreeByType :one
-SELECT id, height, tree_type, root, tree
+SELECT id, height, tree_type, root, tree, description
 FROM merkle_trees
 WHERE tree_type = ?
 ORDER BY height
@@ -131,11 +139,12 @@ LIMIT 1
 `
 
 type FindMerkleTreeByTypeRow struct {
-	ID       int64
-	Height   int64
-	TreeType string
-	Root     string
-	Tree     string
+	ID          int64
+	Height      int64
+	TreeType    string
+	Root        string
+	Tree        string
+	Description string
 }
 
 func (q *Queries) FindMerkleTreeByType(ctx context.Context, treeType string) (FindMerkleTreeByTypeRow, error) {
@@ -147,21 +156,23 @@ func (q *Queries) FindMerkleTreeByType(ctx context.Context, treeType string) (Fi
 		&i.TreeType,
 		&i.Root,
 		&i.Tree,
+		&i.Description,
 	)
 	return i, err
 }
 
 const listMerkleRoots = `-- name: ListMerkleRoots :many
-SELECT id, height, tree_type, root
+SELECT id, height, tree_type, root, description
 FROM merkle_trees
 ORDER BY height DESC
 `
 
 type ListMerkleRootsRow struct {
-	ID       int64
-	Height   int64
-	TreeType string
-	Root     string
+	ID          int64
+	Height      int64
+	TreeType    string
+	Root        string
+	Description string
 }
 
 func (q *Queries) ListMerkleRoots(ctx context.Context) ([]ListMerkleRootsRow, error) {
@@ -178,6 +189,7 @@ func (q *Queries) ListMerkleRoots(ctx context.Context) ([]ListMerkleRootsRow, er
 			&i.Height,
 			&i.TreeType,
 			&i.Root,
+			&i.Description,
 		); err != nil {
 			return nil, err
 		}

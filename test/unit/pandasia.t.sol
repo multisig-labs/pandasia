@@ -146,7 +146,9 @@ contract PandasiaTest is Test {
 		proof[16] = bytes32(0x8650d014c99057e6c2e56e99fc2abe8875141a600a0a34c9d30ddd4d7468a5b5);
 		proof[17] = bytes32(0x8789ac606f7545a65049120d57b3b06b839ba6cf0a341a8d6edc0d7922d281e6);
 		address account = address(0x7bDF8B86561d98d77e5BFc4B0eD20b7beB8fCdb6);
+		startMeasuringGas("verify large proof");
 		bool ok = pandasia.verify(root, account, proof);
+		stopMeasuringGas();
 		assertTrue(ok);
 	}
 

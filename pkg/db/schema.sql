@@ -15,6 +15,8 @@ CREATE TABLE txs (
 	has_earned_reward integer,
   FOREIGN KEY(type_id) REFERENCES types(id)
 ) STRICT;
+-- Some Sql browsers dont show generated columns, so make a view as well
+CREATE VIEW txs_v AS SELECT * FROM txs;
 
 CREATE INDEX txs_height ON txs(height);
 CREATE INDEX txs_block_id ON txs(block_id);
@@ -25,25 +27,29 @@ CREATE INDEX txs_signer_addr_p ON txs(signer_addr_p);
 CREATE INDEX txs_rewards_for_id ON txs(rewards_for_id);
 CREATE INDEX txs_has_earned_reward ON txs(has_earned_reward);
 
+
 CREATE TABLE merkle_trees (
 	id integer PRIMARY KEY,
 	height integer NOT NULL, -- pchain height tree was generated at
-	tree_type text NOT NULL, -- validator or delegator
+	tree_type text NOT NULL, -- validator or custom
+	description text NOT NULL DEFAULT '',
 	tree text NOT NULL, -- json of tree in OpenZeppelin format
 	root text NOT NULL GENERATED ALWAYS AS (json_extract(tree, '$.tree[0]')) STORED,
 	addrs_count integer NOT NULL GENERATED ALWAYS AS (json_array_length(tree, '$.values')) STORED
 );
+-- Some Sql browsers dont show generated columns, so make a view as well
+CREATE VIEW merkle_trees_v AS SELECT * FROM merkle_trees;
 
 CREATE UNIQUE INDEX merkle_trees_height_tree_type ON merkle_trees(height,tree_type);
 CREATE UNIQUE INDEX merkle_trees_root ON merkle_trees(root);
 
--- Only keep the last N trees to save space
+-- Only keep the last N large validator trees to save space
 CREATE TRIGGER merkle_trees_insert AFTER INSERT ON merkle_trees
-WHEN (SELECT count(*) FROM merkle_trees WHERE tree_type = NEW.tree_type) > 5
+WHEN (SELECT count(*) FROM merkle_trees WHERE NEW.tree_type = "validator") > 5
 BEGIN
 	DELETE FROM merkle_trees
-	WHERE tree_type = NEW.tree_type
-		AND height = (SELECT min(height) FROM merkle_trees WHERE tree_type = NEW.tree_type);
+	WHERE tree_type = "validator"
+		AND height = (SELECT min(height) FROM merkle_trees WHERE tree_type = "validator");
 END;
 
 

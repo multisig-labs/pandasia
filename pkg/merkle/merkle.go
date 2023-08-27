@@ -33,8 +33,9 @@ type ValidatorAddress struct {
 
 // const TREE_TYPE_DELEGATOR = "delegator"
 const TREE_TYPE_VALIDATOR = "validator"
+const TREE_TYPE_CUSTOM = "custom"
 
-// addr is P-avax1blah
+// addr is P-avax1blah or 0x1234...
 func GenerateProof(jsonTree string, addr string) ([][]byte, error) {
 	var addrHex string
 
@@ -110,11 +111,12 @@ func GenerateTree(vaddrs []ValidatorAddress) ([]byte, error) {
 	return jsonValue, nil
 }
 
-func SaveTreeToDB(ctx context.Context, queries *db.Queries, treeType string, height int, tree []byte) error {
+func SaveTreeToDB(ctx context.Context, queries *db.Queries, treeType string, height int, tree []byte, description string) error {
 	args := db.CreateMerkleTreeParams{
-		Height:   int64(height),
-		TreeType: treeType,
-		Tree:     string(tree),
+		Height:      int64(height),
+		TreeType:    treeType,
+		Tree:        string(tree),
+		Description: description,
 	}
 	return queries.CreateMerkleTree(ctx, args)
 }

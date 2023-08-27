@@ -18,24 +18,24 @@ ORDER BY rewards_addr;
 
 -- name: CreateMerkleTree :exec
 INSERT OR IGNORE INTO merkle_trees (
-	height, tree_type, tree
+	height, tree_type, tree, description
 ) VALUES (
- ?, ?, ?
+ ?, ?, ?, ?
 ) RETURNING id;
 
 -- name: FindMerkleTreeByType :one
-SELECT id, height, tree_type, root, tree
+SELECT id, height, tree_type, root, tree, description
 FROM merkle_trees
 WHERE tree_type = ?
 ORDER BY height
 LIMIT 1;
 
 -- name: FindMerkleTreeByRoot :one
-SELECT id, height, tree_type, root, tree
+SELECT id, height, tree_type, root, tree, description
 FROM merkle_trees
 WHERE root = ?;
 
 -- name: ListMerkleRoots :many
-SELECT id, height, tree_type, root
+SELECT id, height, tree_type, root, description
 FROM merkle_trees
 ORDER BY height DESC;
