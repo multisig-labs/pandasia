@@ -24,8 +24,10 @@ default:
 
 # Install dependencies
 install:
-	brew install sqlc
+	brew install sqlc sqlite3
 	forge install
+	# echo 'export PATH="/opt/homebrew/opt/sqlite/bin:$PATH"' >> ~/.zshrc
+	echo "Make sure sqlite3 from homebrew is in your path"
 
 # Delete artifacts
 clean:
@@ -67,6 +69,7 @@ anvil:
 
 # Delete and recreate a dev sqlite db
 create-dev-db:
+	mkdir -p data
 	rm -f data/pandasia-dev.db*
 	cat pkg/db/schema.sql | sqlite3 data/pandasia-dev.db
 	unzip -p pkg/db/txs-sample.sql.zip | sqlite3 data/pandasia-dev.db

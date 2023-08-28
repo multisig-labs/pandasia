@@ -6,8 +6,12 @@ https://ava-labs-inc.metabaseapp.com/public/question/78f9de45-1f09-4b08-847b-086
 # Command Scratchpad
 
 ```bash
+just install
+
 # Build everything
 just build
+
+just create-dev-db
 
 # Start Anvil in one terminal
 just anvil
