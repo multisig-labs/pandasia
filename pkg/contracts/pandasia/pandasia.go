@@ -30,17 +30,18 @@ var (
 
 // PandasiaAirdrop is an auto generated low-level Go binding around an user-defined struct.
 type PandasiaAirdrop struct {
-	Owner   common.Address
-	Erc20   common.Address
+	Root    [32]byte
 	Balance *big.Int
 	Amount  *big.Int
-	Expires *big.Int
-	Memo    [32]byte
+	Owner   common.Address
+	Erc20   common.Address
+	Expires uint32
+	Union   bool
 }
 
 // PandasiaMetaData contains all meta data concerning the Pandasia contract.
 var PandasiaMetaData = &bind.MetaData{
-	ABI: "[{\"inputs\":[],\"name\":\"AddressNotEligible\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"AirdropOutOfFunds\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidAddress\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidAmount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidWithdrawRequest\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"PAddrNotInValidatorMerkleTree\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"airdropCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"airdropIds\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"airdrops\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"erc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expires\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"memo\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"c2p\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"airdropId\",\"type\":\"uint256\"}],\"name\":\"claimAirdrop\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"airdropId\",\"type\":\"uint256\"}],\"name\":\"claimAirdropWithPermit\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"claimed\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"airdropId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"withdrawAmt\",\"type\":\"uint256\"}],\"name\":\"emergencyWithdraw\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"airdropId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"fundAirdrop\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"airdropId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"funder\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"deadline\",\"type\":\"uint256\"},{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"}],\"name\":\"fundAirdropWithPermit\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"getAirdropIds\",\"outputs\":[{\"internalType\":\"uint256[]\",\"name\":\"\",\"type\":\"uint256[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"offset\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"limit\",\"type\":\"uint256\"}],\"name\":\"getAirdrops\",\"outputs\":[{\"components\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"erc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expires\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"memo\",\"type\":\"bytes32\"}],\"internalType\":\"structPandasia.Airdrop[]\",\"name\":\"pageOfAirdrops\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"hashChecksummedMessage\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"isRegisteredValidator\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"merkleRoot\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"erc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"expires\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"memo\",\"type\":\"bytes32\"}],\"name\":\"newAirdrop\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"y\",\"type\":\"uint256\"}],\"name\":\"pubKeyBytesToAvaAddressBytes\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32[]\",\"name\":\"proof\",\"type\":\"bytes32[]\"}],\"name\":\"registerPChainAddr\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"root\",\"type\":\"bytes32\"}],\"name\":\"setRoot\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"root\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"bytes32[]\",\"name\":\"proof\",\"type\":\"bytes32[]\"}],\"name\":\"verify\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"airdropId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"withdrawAmt\",\"type\":\"uint256\"}],\"name\":\"withdrawFunding\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
+	ABI: "[{\"inputs\":[],\"name\":\"AddressAlreadyClaimed\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"AddressNotEligible\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"AirdropExpired\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"AirdropOutOfFunds\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidAddress\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidAmount\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidWithdrawRequest\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"PAddrAlreadyRegistered\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"PAddrNotInValidatorMerkleTree\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"airdropCount\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"airdropIds\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"name\":\"airdrops\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"root\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"erc20\",\"type\":\"address\"},{\"internalType\":\"uint32\",\"name\":\"expires\",\"type\":\"uint32\"},{\"internalType\":\"bool\",\"name\":\"union\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"c2p\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"},{\"internalType\":\"uint64\",\"name\":\"airdropId\",\"type\":\"uint64\"},{\"internalType\":\"bytes32[]\",\"name\":\"proof\",\"type\":\"bytes32[]\"}],\"name\":\"canClaimAirdrop\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"airdropId\",\"type\":\"uint64\"},{\"internalType\":\"bytes32[]\",\"name\":\"proof\",\"type\":\"bytes32[]\"}],\"name\":\"claimAirdrop\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"},{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"claimed\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"airdropId\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"withdrawAmt\",\"type\":\"uint256\"}],\"name\":\"emergencyWithdraw\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"feePct\",\"outputs\":[{\"internalType\":\"uint32\",\"name\":\"\",\"type\":\"uint32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"airdropId\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"fundAirdrop\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"}],\"name\":\"getAirdropIds\",\"outputs\":[{\"internalType\":\"uint64[]\",\"name\":\"\",\"type\":\"uint64[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"offset\",\"type\":\"uint64\"},{\"internalType\":\"uint64\",\"name\":\"limit\",\"type\":\"uint64\"}],\"name\":\"getAirdrops\",\"outputs\":[{\"components\":[{\"internalType\":\"bytes32\",\"name\":\"root\",\"type\":\"bytes32\"},{\"internalType\":\"uint256\",\"name\":\"balance\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"erc20\",\"type\":\"address\"},{\"internalType\":\"uint32\",\"name\":\"expires\",\"type\":\"uint32\"},{\"internalType\":\"bool\",\"name\":\"union\",\"type\":\"bool\"}],\"internalType\":\"structPandasia.Airdrop[]\",\"name\":\"pageOfAirdrops\",\"type\":\"tuple[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"airdropId\",\"type\":\"uint64\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"hasClaimed\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"hashChecksummedMessage\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"isMinipoolOperator\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"isRegisteredValidator\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"root\",\"type\":\"bytes32\"},{\"internalType\":\"bool\",\"name\":\"union\",\"type\":\"bool\"},{\"internalType\":\"address\",\"name\":\"erc20\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"uint32\",\"name\":\"expires\",\"type\":\"uint32\"}],\"name\":\"newAirdrop\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"p2c\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"x\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"y\",\"type\":\"uint256\"}],\"name\":\"pubKeyBytesToAvaAddressBytes\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint8\",\"name\":\"v\",\"type\":\"uint8\"},{\"internalType\":\"bytes32\",\"name\":\"r\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"s\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32[]\",\"name\":\"proof\",\"type\":\"bytes32[]\"}],\"name\":\"registerPChainAddr\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint32\",\"name\":\"fee\",\"type\":\"uint32\"}],\"name\":\"setFee\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"setStakingContract\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"root\",\"type\":\"bytes32\"}],\"name\":\"setValidatorRoot\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"stakingContract\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"validatorRoot\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"root\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"},{\"internalType\":\"bytes32[]\",\"name\":\"proof\",\"type\":\"bytes32[]\"}],\"name\":\"verify\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"airdropId\",\"type\":\"uint64\"}],\"name\":\"withdrawFees\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"airdropId\",\"type\":\"uint64\"},{\"internalType\":\"uint256\",\"name\":\"withdrawAmt\",\"type\":\"uint256\"}],\"name\":\"withdrawFunding\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]",
 }
 
 // PandasiaABI is the input ABI used to generate the binding from.
@@ -191,16 +192,16 @@ func (_Pandasia *PandasiaTransactorRaw) Transact(opts *bind.TransactOpts, method
 
 // AirdropCount is a free data retrieval call binding the contract method 0xe952f74f.
 //
-// Solidity: function airdropCount() view returns(uint256)
-func (_Pandasia *PandasiaCaller) AirdropCount(opts *bind.CallOpts) (*big.Int, error) {
+// Solidity: function airdropCount() view returns(uint64)
+func (_Pandasia *PandasiaCaller) AirdropCount(opts *bind.CallOpts) (uint64, error) {
 	var out []interface{}
 	err := _Pandasia.contract.Call(opts, &out, "airdropCount")
 
 	if err != nil {
-		return *new(*big.Int), err
+		return *new(uint64), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+	out0 := *abi.ConvertType(out[0], new(uint64)).(*uint64)
 
 	return out0, err
 
@@ -208,30 +209,30 @@ func (_Pandasia *PandasiaCaller) AirdropCount(opts *bind.CallOpts) (*big.Int, er
 
 // AirdropCount is a free data retrieval call binding the contract method 0xe952f74f.
 //
-// Solidity: function airdropCount() view returns(uint256)
-func (_Pandasia *PandasiaSession) AirdropCount() (*big.Int, error) {
+// Solidity: function airdropCount() view returns(uint64)
+func (_Pandasia *PandasiaSession) AirdropCount() (uint64, error) {
 	return _Pandasia.Contract.AirdropCount(&_Pandasia.CallOpts)
 }
 
 // AirdropCount is a free data retrieval call binding the contract method 0xe952f74f.
 //
-// Solidity: function airdropCount() view returns(uint256)
-func (_Pandasia *PandasiaCallerSession) AirdropCount() (*big.Int, error) {
+// Solidity: function airdropCount() view returns(uint64)
+func (_Pandasia *PandasiaCallerSession) AirdropCount() (uint64, error) {
 	return _Pandasia.Contract.AirdropCount(&_Pandasia.CallOpts)
 }
 
 // AirdropIds is a free data retrieval call binding the contract method 0x566851e9.
 //
-// Solidity: function airdropIds(address , uint256 ) view returns(uint256)
-func (_Pandasia *PandasiaCaller) AirdropIds(opts *bind.CallOpts, arg0 common.Address, arg1 *big.Int) (*big.Int, error) {
+// Solidity: function airdropIds(address , uint256 ) view returns(uint64)
+func (_Pandasia *PandasiaCaller) AirdropIds(opts *bind.CallOpts, arg0 common.Address, arg1 *big.Int) (uint64, error) {
 	var out []interface{}
 	err := _Pandasia.contract.Call(opts, &out, "airdropIds", arg0, arg1)
 
 	if err != nil {
-		return *new(*big.Int), err
+		return *new(uint64), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new(*big.Int)).(**big.Int)
+	out0 := *abi.ConvertType(out[0], new(uint64)).(*uint64)
 
 	return out0, err
 
@@ -239,79 +240,84 @@ func (_Pandasia *PandasiaCaller) AirdropIds(opts *bind.CallOpts, arg0 common.Add
 
 // AirdropIds is a free data retrieval call binding the contract method 0x566851e9.
 //
-// Solidity: function airdropIds(address , uint256 ) view returns(uint256)
-func (_Pandasia *PandasiaSession) AirdropIds(arg0 common.Address, arg1 *big.Int) (*big.Int, error) {
+// Solidity: function airdropIds(address , uint256 ) view returns(uint64)
+func (_Pandasia *PandasiaSession) AirdropIds(arg0 common.Address, arg1 *big.Int) (uint64, error) {
 	return _Pandasia.Contract.AirdropIds(&_Pandasia.CallOpts, arg0, arg1)
 }
 
 // AirdropIds is a free data retrieval call binding the contract method 0x566851e9.
 //
-// Solidity: function airdropIds(address , uint256 ) view returns(uint256)
-func (_Pandasia *PandasiaCallerSession) AirdropIds(arg0 common.Address, arg1 *big.Int) (*big.Int, error) {
+// Solidity: function airdropIds(address , uint256 ) view returns(uint64)
+func (_Pandasia *PandasiaCallerSession) AirdropIds(arg0 common.Address, arg1 *big.Int) (uint64, error) {
 	return _Pandasia.Contract.AirdropIds(&_Pandasia.CallOpts, arg0, arg1)
 }
 
-// Airdrops is a free data retrieval call binding the contract method 0x60db5082.
+// Airdrops is a free data retrieval call binding the contract method 0x0821774f.
 //
-// Solidity: function airdrops(uint256 ) view returns(address owner, address erc20, uint256 balance, uint256 amount, uint256 expires, bytes32 memo)
-func (_Pandasia *PandasiaCaller) Airdrops(opts *bind.CallOpts, arg0 *big.Int) (struct {
-	Owner   common.Address
-	Erc20   common.Address
+// Solidity: function airdrops(uint64 ) view returns(bytes32 root, uint256 balance, uint256 amount, address owner, address erc20, uint32 expires, bool union)
+func (_Pandasia *PandasiaCaller) Airdrops(opts *bind.CallOpts, arg0 uint64) (struct {
+	Root    [32]byte
 	Balance *big.Int
 	Amount  *big.Int
-	Expires *big.Int
-	Memo    [32]byte
+	Owner   common.Address
+	Erc20   common.Address
+	Expires uint32
+	Union   bool
 }, error) {
 	var out []interface{}
 	err := _Pandasia.contract.Call(opts, &out, "airdrops", arg0)
 
 	outstruct := new(struct {
-		Owner   common.Address
-		Erc20   common.Address
+		Root    [32]byte
 		Balance *big.Int
 		Amount  *big.Int
-		Expires *big.Int
-		Memo    [32]byte
+		Owner   common.Address
+		Erc20   common.Address
+		Expires uint32
+		Union   bool
 	})
 	if err != nil {
 		return *outstruct, err
 	}
 
-	outstruct.Owner = *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
-	outstruct.Erc20 = *abi.ConvertType(out[1], new(common.Address)).(*common.Address)
-	outstruct.Balance = *abi.ConvertType(out[2], new(*big.Int)).(**big.Int)
-	outstruct.Amount = *abi.ConvertType(out[3], new(*big.Int)).(**big.Int)
-	outstruct.Expires = *abi.ConvertType(out[4], new(*big.Int)).(**big.Int)
-	outstruct.Memo = *abi.ConvertType(out[5], new([32]byte)).(*[32]byte)
+	outstruct.Root = *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+	outstruct.Balance = *abi.ConvertType(out[1], new(*big.Int)).(**big.Int)
+	outstruct.Amount = *abi.ConvertType(out[2], new(*big.Int)).(**big.Int)
+	outstruct.Owner = *abi.ConvertType(out[3], new(common.Address)).(*common.Address)
+	outstruct.Erc20 = *abi.ConvertType(out[4], new(common.Address)).(*common.Address)
+	outstruct.Expires = *abi.ConvertType(out[5], new(uint32)).(*uint32)
+	outstruct.Union = *abi.ConvertType(out[6], new(bool)).(*bool)
 
 	return *outstruct, err
 
 }
 
-// Airdrops is a free data retrieval call binding the contract method 0x60db5082.
+// Airdrops is a free data retrieval call binding the contract method 0x0821774f.
 //
-// Solidity: function airdrops(uint256 ) view returns(address owner, address erc20, uint256 balance, uint256 amount, uint256 expires, bytes32 memo)
-func (_Pandasia *PandasiaSession) Airdrops(arg0 *big.Int) (struct {
-	Owner   common.Address
-	Erc20   common.Address
+// Solidity: function airdrops(uint64 ) view returns(bytes32 root, uint256 balance, uint256 amount, address owner, address erc20, uint32 expires, bool union)
+func (_Pandasia *PandasiaSession) Airdrops(arg0 uint64) (struct {
+	Root    [32]byte
 	Balance *big.Int
 	Amount  *big.Int
-	Expires *big.Int
-	Memo    [32]byte
+	Owner   common.Address
+	Erc20   common.Address
+	Expires uint32
+	Union   bool
 }, error) {
 	return _Pandasia.Contract.Airdrops(&_Pandasia.CallOpts, arg0)
 }
 
-// Airdrops is a free data retrieval call binding the contract method 0x60db5082.
+// Airdrops is a free data retrieval call binding the contract method 0x0821774f.
 //
-// Solidity: function airdrops(uint256 ) view returns(address owner, address erc20, uint256 balance, uint256 amount, uint256 expires, bytes32 memo)
-func (_Pandasia *PandasiaCallerSession) Airdrops(arg0 *big.Int) (struct {
-	Owner   common.Address
-	Erc20   common.Address
+// Solidity: function airdrops(uint64 ) view returns(bytes32 root, uint256 balance, uint256 amount, address owner, address erc20, uint32 expires, bool union)
+func (_Pandasia *PandasiaCallerSession) Airdrops(arg0 uint64) (struct {
+	Root    [32]byte
 	Balance *big.Int
 	Amount  *big.Int
-	Expires *big.Int
-	Memo    [32]byte
+	Owner   common.Address
+	Erc20   common.Address
+	Expires uint32
+	Union   bool
 }, error) {
 	return _Pandasia.Contract.Airdrops(&_Pandasia.CallOpts, arg0)
 }
@@ -347,10 +353,41 @@ func (_Pandasia *PandasiaCallerSession) C2p(arg0 common.Address) (common.Address
 	return _Pandasia.Contract.C2p(&_Pandasia.CallOpts, arg0)
 }
 
-// Claimed is a free data retrieval call binding the contract method 0x120aa877.
+// CanClaimAirdrop is a free data retrieval call binding the contract method 0xeb38c3a3.
 //
-// Solidity: function claimed(uint256 , address ) view returns(bool)
-func (_Pandasia *PandasiaCaller) Claimed(opts *bind.CallOpts, arg0 *big.Int, arg1 common.Address) (bool, error) {
+// Solidity: function canClaimAirdrop(address addr, uint64 airdropId, bytes32[] proof) view returns(bool)
+func (_Pandasia *PandasiaCaller) CanClaimAirdrop(opts *bind.CallOpts, addr common.Address, airdropId uint64, proof [][32]byte) (bool, error) {
+	var out []interface{}
+	err := _Pandasia.contract.Call(opts, &out, "canClaimAirdrop", addr, airdropId, proof)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// CanClaimAirdrop is a free data retrieval call binding the contract method 0xeb38c3a3.
+//
+// Solidity: function canClaimAirdrop(address addr, uint64 airdropId, bytes32[] proof) view returns(bool)
+func (_Pandasia *PandasiaSession) CanClaimAirdrop(addr common.Address, airdropId uint64, proof [][32]byte) (bool, error) {
+	return _Pandasia.Contract.CanClaimAirdrop(&_Pandasia.CallOpts, addr, airdropId, proof)
+}
+
+// CanClaimAirdrop is a free data retrieval call binding the contract method 0xeb38c3a3.
+//
+// Solidity: function canClaimAirdrop(address addr, uint64 airdropId, bytes32[] proof) view returns(bool)
+func (_Pandasia *PandasiaCallerSession) CanClaimAirdrop(addr common.Address, airdropId uint64, proof [][32]byte) (bool, error) {
+	return _Pandasia.Contract.CanClaimAirdrop(&_Pandasia.CallOpts, addr, airdropId, proof)
+}
+
+// Claimed is a free data retrieval call binding the contract method 0xa60628e2.
+//
+// Solidity: function claimed(uint64 , address ) view returns(bool)
+func (_Pandasia *PandasiaCaller) Claimed(opts *bind.CallOpts, arg0 uint64, arg1 common.Address) (bool, error) {
 	var out []interface{}
 	err := _Pandasia.contract.Call(opts, &out, "claimed", arg0, arg1)
 
@@ -364,32 +401,63 @@ func (_Pandasia *PandasiaCaller) Claimed(opts *bind.CallOpts, arg0 *big.Int, arg
 
 }
 
-// Claimed is a free data retrieval call binding the contract method 0x120aa877.
+// Claimed is a free data retrieval call binding the contract method 0xa60628e2.
 //
-// Solidity: function claimed(uint256 , address ) view returns(bool)
-func (_Pandasia *PandasiaSession) Claimed(arg0 *big.Int, arg1 common.Address) (bool, error) {
+// Solidity: function claimed(uint64 , address ) view returns(bool)
+func (_Pandasia *PandasiaSession) Claimed(arg0 uint64, arg1 common.Address) (bool, error) {
 	return _Pandasia.Contract.Claimed(&_Pandasia.CallOpts, arg0, arg1)
 }
 
-// Claimed is a free data retrieval call binding the contract method 0x120aa877.
+// Claimed is a free data retrieval call binding the contract method 0xa60628e2.
 //
-// Solidity: function claimed(uint256 , address ) view returns(bool)
-func (_Pandasia *PandasiaCallerSession) Claimed(arg0 *big.Int, arg1 common.Address) (bool, error) {
+// Solidity: function claimed(uint64 , address ) view returns(bool)
+func (_Pandasia *PandasiaCallerSession) Claimed(arg0 uint64, arg1 common.Address) (bool, error) {
 	return _Pandasia.Contract.Claimed(&_Pandasia.CallOpts, arg0, arg1)
+}
+
+// FeePct is a free data retrieval call binding the contract method 0xa02cf937.
+//
+// Solidity: function feePct() view returns(uint32)
+func (_Pandasia *PandasiaCaller) FeePct(opts *bind.CallOpts) (uint32, error) {
+	var out []interface{}
+	err := _Pandasia.contract.Call(opts, &out, "feePct")
+
+	if err != nil {
+		return *new(uint32), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(uint32)).(*uint32)
+
+	return out0, err
+
+}
+
+// FeePct is a free data retrieval call binding the contract method 0xa02cf937.
+//
+// Solidity: function feePct() view returns(uint32)
+func (_Pandasia *PandasiaSession) FeePct() (uint32, error) {
+	return _Pandasia.Contract.FeePct(&_Pandasia.CallOpts)
+}
+
+// FeePct is a free data retrieval call binding the contract method 0xa02cf937.
+//
+// Solidity: function feePct() view returns(uint32)
+func (_Pandasia *PandasiaCallerSession) FeePct() (uint32, error) {
+	return _Pandasia.Contract.FeePct(&_Pandasia.CallOpts)
 }
 
 // GetAirdropIds is a free data retrieval call binding the contract method 0x58dd78c5.
 //
-// Solidity: function getAirdropIds(address owner) view returns(uint256[])
-func (_Pandasia *PandasiaCaller) GetAirdropIds(opts *bind.CallOpts, owner common.Address) ([]*big.Int, error) {
+// Solidity: function getAirdropIds(address owner) view returns(uint64[])
+func (_Pandasia *PandasiaCaller) GetAirdropIds(opts *bind.CallOpts, owner common.Address) ([]uint64, error) {
 	var out []interface{}
 	err := _Pandasia.contract.Call(opts, &out, "getAirdropIds", owner)
 
 	if err != nil {
-		return *new([]*big.Int), err
+		return *new([]uint64), err
 	}
 
-	out0 := *abi.ConvertType(out[0], new([]*big.Int)).(*[]*big.Int)
+	out0 := *abi.ConvertType(out[0], new([]uint64)).(*[]uint64)
 
 	return out0, err
 
@@ -397,22 +465,22 @@ func (_Pandasia *PandasiaCaller) GetAirdropIds(opts *bind.CallOpts, owner common
 
 // GetAirdropIds is a free data retrieval call binding the contract method 0x58dd78c5.
 //
-// Solidity: function getAirdropIds(address owner) view returns(uint256[])
-func (_Pandasia *PandasiaSession) GetAirdropIds(owner common.Address) ([]*big.Int, error) {
+// Solidity: function getAirdropIds(address owner) view returns(uint64[])
+func (_Pandasia *PandasiaSession) GetAirdropIds(owner common.Address) ([]uint64, error) {
 	return _Pandasia.Contract.GetAirdropIds(&_Pandasia.CallOpts, owner)
 }
 
 // GetAirdropIds is a free data retrieval call binding the contract method 0x58dd78c5.
 //
-// Solidity: function getAirdropIds(address owner) view returns(uint256[])
-func (_Pandasia *PandasiaCallerSession) GetAirdropIds(owner common.Address) ([]*big.Int, error) {
+// Solidity: function getAirdropIds(address owner) view returns(uint64[])
+func (_Pandasia *PandasiaCallerSession) GetAirdropIds(owner common.Address) ([]uint64, error) {
 	return _Pandasia.Contract.GetAirdropIds(&_Pandasia.CallOpts, owner)
 }
 
-// GetAirdrops is a free data retrieval call binding the contract method 0x6ae1a80e.
+// GetAirdrops is a free data retrieval call binding the contract method 0x74ee3db2.
 //
-// Solidity: function getAirdrops(uint256 offset, uint256 limit) view returns((address,address,uint256,uint256,uint256,bytes32)[] pageOfAirdrops)
-func (_Pandasia *PandasiaCaller) GetAirdrops(opts *bind.CallOpts, offset *big.Int, limit *big.Int) ([]PandasiaAirdrop, error) {
+// Solidity: function getAirdrops(uint64 offset, uint64 limit) view returns((bytes32,uint256,uint256,address,address,uint32,bool)[] pageOfAirdrops)
+func (_Pandasia *PandasiaCaller) GetAirdrops(opts *bind.CallOpts, offset uint64, limit uint64) ([]PandasiaAirdrop, error) {
 	var out []interface{}
 	err := _Pandasia.contract.Call(opts, &out, "getAirdrops", offset, limit)
 
@@ -426,18 +494,49 @@ func (_Pandasia *PandasiaCaller) GetAirdrops(opts *bind.CallOpts, offset *big.In
 
 }
 
-// GetAirdrops is a free data retrieval call binding the contract method 0x6ae1a80e.
+// GetAirdrops is a free data retrieval call binding the contract method 0x74ee3db2.
 //
-// Solidity: function getAirdrops(uint256 offset, uint256 limit) view returns((address,address,uint256,uint256,uint256,bytes32)[] pageOfAirdrops)
-func (_Pandasia *PandasiaSession) GetAirdrops(offset *big.Int, limit *big.Int) ([]PandasiaAirdrop, error) {
+// Solidity: function getAirdrops(uint64 offset, uint64 limit) view returns((bytes32,uint256,uint256,address,address,uint32,bool)[] pageOfAirdrops)
+func (_Pandasia *PandasiaSession) GetAirdrops(offset uint64, limit uint64) ([]PandasiaAirdrop, error) {
 	return _Pandasia.Contract.GetAirdrops(&_Pandasia.CallOpts, offset, limit)
 }
 
-// GetAirdrops is a free data retrieval call binding the contract method 0x6ae1a80e.
+// GetAirdrops is a free data retrieval call binding the contract method 0x74ee3db2.
 //
-// Solidity: function getAirdrops(uint256 offset, uint256 limit) view returns((address,address,uint256,uint256,uint256,bytes32)[] pageOfAirdrops)
-func (_Pandasia *PandasiaCallerSession) GetAirdrops(offset *big.Int, limit *big.Int) ([]PandasiaAirdrop, error) {
+// Solidity: function getAirdrops(uint64 offset, uint64 limit) view returns((bytes32,uint256,uint256,address,address,uint32,bool)[] pageOfAirdrops)
+func (_Pandasia *PandasiaCallerSession) GetAirdrops(offset uint64, limit uint64) ([]PandasiaAirdrop, error) {
 	return _Pandasia.Contract.GetAirdrops(&_Pandasia.CallOpts, offset, limit)
+}
+
+// HasClaimed is a free data retrieval call binding the contract method 0xd7a8a2b7.
+//
+// Solidity: function hasClaimed(uint64 airdropId, address addr) view returns(bool)
+func (_Pandasia *PandasiaCaller) HasClaimed(opts *bind.CallOpts, airdropId uint64, addr common.Address) (bool, error) {
+	var out []interface{}
+	err := _Pandasia.contract.Call(opts, &out, "hasClaimed", airdropId, addr)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// HasClaimed is a free data retrieval call binding the contract method 0xd7a8a2b7.
+//
+// Solidity: function hasClaimed(uint64 airdropId, address addr) view returns(bool)
+func (_Pandasia *PandasiaSession) HasClaimed(airdropId uint64, addr common.Address) (bool, error) {
+	return _Pandasia.Contract.HasClaimed(&_Pandasia.CallOpts, airdropId, addr)
+}
+
+// HasClaimed is a free data retrieval call binding the contract method 0xd7a8a2b7.
+//
+// Solidity: function hasClaimed(uint64 airdropId, address addr) view returns(bool)
+func (_Pandasia *PandasiaCallerSession) HasClaimed(airdropId uint64, addr common.Address) (bool, error) {
+	return _Pandasia.Contract.HasClaimed(&_Pandasia.CallOpts, airdropId, addr)
 }
 
 // HashChecksummedMessage is a free data retrieval call binding the contract method 0xf7bdccb6.
@@ -471,6 +570,37 @@ func (_Pandasia *PandasiaCallerSession) HashChecksummedMessage(addr common.Addre
 	return _Pandasia.Contract.HashChecksummedMessage(&_Pandasia.CallOpts, addr)
 }
 
+// IsMinipoolOperator is a free data retrieval call binding the contract method 0xbf4379f6.
+//
+// Solidity: function isMinipoolOperator(address addr) view returns(bool)
+func (_Pandasia *PandasiaCaller) IsMinipoolOperator(opts *bind.CallOpts, addr common.Address) (bool, error) {
+	var out []interface{}
+	err := _Pandasia.contract.Call(opts, &out, "isMinipoolOperator", addr)
+
+	if err != nil {
+		return *new(bool), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(bool)).(*bool)
+
+	return out0, err
+
+}
+
+// IsMinipoolOperator is a free data retrieval call binding the contract method 0xbf4379f6.
+//
+// Solidity: function isMinipoolOperator(address addr) view returns(bool)
+func (_Pandasia *PandasiaSession) IsMinipoolOperator(addr common.Address) (bool, error) {
+	return _Pandasia.Contract.IsMinipoolOperator(&_Pandasia.CallOpts, addr)
+}
+
+// IsMinipoolOperator is a free data retrieval call binding the contract method 0xbf4379f6.
+//
+// Solidity: function isMinipoolOperator(address addr) view returns(bool)
+func (_Pandasia *PandasiaCallerSession) IsMinipoolOperator(addr common.Address) (bool, error) {
+	return _Pandasia.Contract.IsMinipoolOperator(&_Pandasia.CallOpts, addr)
+}
+
 // IsRegisteredValidator is a free data retrieval call binding the contract method 0x6ed14c27.
 //
 // Solidity: function isRegisteredValidator(address addr) view returns(bool)
@@ -500,37 +630,6 @@ func (_Pandasia *PandasiaSession) IsRegisteredValidator(addr common.Address) (bo
 // Solidity: function isRegisteredValidator(address addr) view returns(bool)
 func (_Pandasia *PandasiaCallerSession) IsRegisteredValidator(addr common.Address) (bool, error) {
 	return _Pandasia.Contract.IsRegisteredValidator(&_Pandasia.CallOpts, addr)
-}
-
-// MerkleRoot is a free data retrieval call binding the contract method 0x2eb4a7ab.
-//
-// Solidity: function merkleRoot() view returns(bytes32)
-func (_Pandasia *PandasiaCaller) MerkleRoot(opts *bind.CallOpts) ([32]byte, error) {
-	var out []interface{}
-	err := _Pandasia.contract.Call(opts, &out, "merkleRoot")
-
-	if err != nil {
-		return *new([32]byte), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
-
-	return out0, err
-
-}
-
-// MerkleRoot is a free data retrieval call binding the contract method 0x2eb4a7ab.
-//
-// Solidity: function merkleRoot() view returns(bytes32)
-func (_Pandasia *PandasiaSession) MerkleRoot() ([32]byte, error) {
-	return _Pandasia.Contract.MerkleRoot(&_Pandasia.CallOpts)
-}
-
-// MerkleRoot is a free data retrieval call binding the contract method 0x2eb4a7ab.
-//
-// Solidity: function merkleRoot() view returns(bytes32)
-func (_Pandasia *PandasiaCallerSession) MerkleRoot() ([32]byte, error) {
-	return _Pandasia.Contract.MerkleRoot(&_Pandasia.CallOpts)
 }
 
 // Owner is a free data retrieval call binding the contract method 0x8da5cb5b.
@@ -564,6 +663,37 @@ func (_Pandasia *PandasiaCallerSession) Owner() (common.Address, error) {
 	return _Pandasia.Contract.Owner(&_Pandasia.CallOpts)
 }
 
+// P2c is a free data retrieval call binding the contract method 0x5dd1cf00.
+//
+// Solidity: function p2c(address ) view returns(address)
+func (_Pandasia *PandasiaCaller) P2c(opts *bind.CallOpts, arg0 common.Address) (common.Address, error) {
+	var out []interface{}
+	err := _Pandasia.contract.Call(opts, &out, "p2c", arg0)
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// P2c is a free data retrieval call binding the contract method 0x5dd1cf00.
+//
+// Solidity: function p2c(address ) view returns(address)
+func (_Pandasia *PandasiaSession) P2c(arg0 common.Address) (common.Address, error) {
+	return _Pandasia.Contract.P2c(&_Pandasia.CallOpts, arg0)
+}
+
+// P2c is a free data retrieval call binding the contract method 0x5dd1cf00.
+//
+// Solidity: function p2c(address ) view returns(address)
+func (_Pandasia *PandasiaCallerSession) P2c(arg0 common.Address) (common.Address, error) {
+	return _Pandasia.Contract.P2c(&_Pandasia.CallOpts, arg0)
+}
+
 // PubKeyBytesToAvaAddressBytes is a free data retrieval call binding the contract method 0x42da5791.
 //
 // Solidity: function pubKeyBytesToAvaAddressBytes(uint256 x, uint256 y) pure returns(address)
@@ -593,6 +723,68 @@ func (_Pandasia *PandasiaSession) PubKeyBytesToAvaAddressBytes(x *big.Int, y *bi
 // Solidity: function pubKeyBytesToAvaAddressBytes(uint256 x, uint256 y) pure returns(address)
 func (_Pandasia *PandasiaCallerSession) PubKeyBytesToAvaAddressBytes(x *big.Int, y *big.Int) (common.Address, error) {
 	return _Pandasia.Contract.PubKeyBytesToAvaAddressBytes(&_Pandasia.CallOpts, x, y)
+}
+
+// StakingContract is a free data retrieval call binding the contract method 0xee99205c.
+//
+// Solidity: function stakingContract() view returns(address)
+func (_Pandasia *PandasiaCaller) StakingContract(opts *bind.CallOpts) (common.Address, error) {
+	var out []interface{}
+	err := _Pandasia.contract.Call(opts, &out, "stakingContract")
+
+	if err != nil {
+		return *new(common.Address), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new(common.Address)).(*common.Address)
+
+	return out0, err
+
+}
+
+// StakingContract is a free data retrieval call binding the contract method 0xee99205c.
+//
+// Solidity: function stakingContract() view returns(address)
+func (_Pandasia *PandasiaSession) StakingContract() (common.Address, error) {
+	return _Pandasia.Contract.StakingContract(&_Pandasia.CallOpts)
+}
+
+// StakingContract is a free data retrieval call binding the contract method 0xee99205c.
+//
+// Solidity: function stakingContract() view returns(address)
+func (_Pandasia *PandasiaCallerSession) StakingContract() (common.Address, error) {
+	return _Pandasia.Contract.StakingContract(&_Pandasia.CallOpts)
+}
+
+// ValidatorRoot is a free data retrieval call binding the contract method 0x9fcd6801.
+//
+// Solidity: function validatorRoot() view returns(bytes32)
+func (_Pandasia *PandasiaCaller) ValidatorRoot(opts *bind.CallOpts) ([32]byte, error) {
+	var out []interface{}
+	err := _Pandasia.contract.Call(opts, &out, "validatorRoot")
+
+	if err != nil {
+		return *new([32]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([32]byte)).(*[32]byte)
+
+	return out0, err
+
+}
+
+// ValidatorRoot is a free data retrieval call binding the contract method 0x9fcd6801.
+//
+// Solidity: function validatorRoot() view returns(bytes32)
+func (_Pandasia *PandasiaSession) ValidatorRoot() ([32]byte, error) {
+	return _Pandasia.Contract.ValidatorRoot(&_Pandasia.CallOpts)
+}
+
+// ValidatorRoot is a free data retrieval call binding the contract method 0x9fcd6801.
+//
+// Solidity: function validatorRoot() view returns(bytes32)
+func (_Pandasia *PandasiaCallerSession) ValidatorRoot() ([32]byte, error) {
+	return _Pandasia.Contract.ValidatorRoot(&_Pandasia.CallOpts)
 }
 
 // Verify is a free data retrieval call binding the contract method 0x9a99fcf3.
@@ -626,130 +818,88 @@ func (_Pandasia *PandasiaCallerSession) Verify(root [32]byte, account common.Add
 	return _Pandasia.Contract.Verify(&_Pandasia.CallOpts, root, account, proof)
 }
 
-// ClaimAirdrop is a paid mutator transaction binding the contract method 0xe30d4440.
+// ClaimAirdrop is a paid mutator transaction binding the contract method 0x744e00a0.
 //
-// Solidity: function claimAirdrop(uint256 airdropId) returns()
-func (_Pandasia *PandasiaTransactor) ClaimAirdrop(opts *bind.TransactOpts, airdropId *big.Int) (*types.Transaction, error) {
-	return _Pandasia.contract.Transact(opts, "claimAirdrop", airdropId)
+// Solidity: function claimAirdrop(uint64 airdropId, bytes32[] proof) returns()
+func (_Pandasia *PandasiaTransactor) ClaimAirdrop(opts *bind.TransactOpts, airdropId uint64, proof [][32]byte) (*types.Transaction, error) {
+	return _Pandasia.contract.Transact(opts, "claimAirdrop", airdropId, proof)
 }
 
-// ClaimAirdrop is a paid mutator transaction binding the contract method 0xe30d4440.
+// ClaimAirdrop is a paid mutator transaction binding the contract method 0x744e00a0.
 //
-// Solidity: function claimAirdrop(uint256 airdropId) returns()
-func (_Pandasia *PandasiaSession) ClaimAirdrop(airdropId *big.Int) (*types.Transaction, error) {
-	return _Pandasia.Contract.ClaimAirdrop(&_Pandasia.TransactOpts, airdropId)
+// Solidity: function claimAirdrop(uint64 airdropId, bytes32[] proof) returns()
+func (_Pandasia *PandasiaSession) ClaimAirdrop(airdropId uint64, proof [][32]byte) (*types.Transaction, error) {
+	return _Pandasia.Contract.ClaimAirdrop(&_Pandasia.TransactOpts, airdropId, proof)
 }
 
-// ClaimAirdrop is a paid mutator transaction binding the contract method 0xe30d4440.
+// ClaimAirdrop is a paid mutator transaction binding the contract method 0x744e00a0.
 //
-// Solidity: function claimAirdrop(uint256 airdropId) returns()
-func (_Pandasia *PandasiaTransactorSession) ClaimAirdrop(airdropId *big.Int) (*types.Transaction, error) {
-	return _Pandasia.Contract.ClaimAirdrop(&_Pandasia.TransactOpts, airdropId)
+// Solidity: function claimAirdrop(uint64 airdropId, bytes32[] proof) returns()
+func (_Pandasia *PandasiaTransactorSession) ClaimAirdrop(airdropId uint64, proof [][32]byte) (*types.Transaction, error) {
+	return _Pandasia.Contract.ClaimAirdrop(&_Pandasia.TransactOpts, airdropId, proof)
 }
 
-// ClaimAirdropWithPermit is a paid mutator transaction binding the contract method 0xfdc6b24c.
+// EmergencyWithdraw is a paid mutator transaction binding the contract method 0x30e178cb.
 //
-// Solidity: function claimAirdropWithPermit(uint256 airdropId) returns()
-func (_Pandasia *PandasiaTransactor) ClaimAirdropWithPermit(opts *bind.TransactOpts, airdropId *big.Int) (*types.Transaction, error) {
-	return _Pandasia.contract.Transact(opts, "claimAirdropWithPermit", airdropId)
-}
-
-// ClaimAirdropWithPermit is a paid mutator transaction binding the contract method 0xfdc6b24c.
-//
-// Solidity: function claimAirdropWithPermit(uint256 airdropId) returns()
-func (_Pandasia *PandasiaSession) ClaimAirdropWithPermit(airdropId *big.Int) (*types.Transaction, error) {
-	return _Pandasia.Contract.ClaimAirdropWithPermit(&_Pandasia.TransactOpts, airdropId)
-}
-
-// ClaimAirdropWithPermit is a paid mutator transaction binding the contract method 0xfdc6b24c.
-//
-// Solidity: function claimAirdropWithPermit(uint256 airdropId) returns()
-func (_Pandasia *PandasiaTransactorSession) ClaimAirdropWithPermit(airdropId *big.Int) (*types.Transaction, error) {
-	return _Pandasia.Contract.ClaimAirdropWithPermit(&_Pandasia.TransactOpts, airdropId)
-}
-
-// EmergencyWithdraw is a paid mutator transaction binding the contract method 0x1f276b6e.
-//
-// Solidity: function emergencyWithdraw(uint256 airdropId, uint256 withdrawAmt) returns()
-func (_Pandasia *PandasiaTransactor) EmergencyWithdraw(opts *bind.TransactOpts, airdropId *big.Int, withdrawAmt *big.Int) (*types.Transaction, error) {
+// Solidity: function emergencyWithdraw(uint64 airdropId, uint256 withdrawAmt) returns()
+func (_Pandasia *PandasiaTransactor) EmergencyWithdraw(opts *bind.TransactOpts, airdropId uint64, withdrawAmt *big.Int) (*types.Transaction, error) {
 	return _Pandasia.contract.Transact(opts, "emergencyWithdraw", airdropId, withdrawAmt)
 }
 
-// EmergencyWithdraw is a paid mutator transaction binding the contract method 0x1f276b6e.
+// EmergencyWithdraw is a paid mutator transaction binding the contract method 0x30e178cb.
 //
-// Solidity: function emergencyWithdraw(uint256 airdropId, uint256 withdrawAmt) returns()
-func (_Pandasia *PandasiaSession) EmergencyWithdraw(airdropId *big.Int, withdrawAmt *big.Int) (*types.Transaction, error) {
+// Solidity: function emergencyWithdraw(uint64 airdropId, uint256 withdrawAmt) returns()
+func (_Pandasia *PandasiaSession) EmergencyWithdraw(airdropId uint64, withdrawAmt *big.Int) (*types.Transaction, error) {
 	return _Pandasia.Contract.EmergencyWithdraw(&_Pandasia.TransactOpts, airdropId, withdrawAmt)
 }
 
-// EmergencyWithdraw is a paid mutator transaction binding the contract method 0x1f276b6e.
+// EmergencyWithdraw is a paid mutator transaction binding the contract method 0x30e178cb.
 //
-// Solidity: function emergencyWithdraw(uint256 airdropId, uint256 withdrawAmt) returns()
-func (_Pandasia *PandasiaTransactorSession) EmergencyWithdraw(airdropId *big.Int, withdrawAmt *big.Int) (*types.Transaction, error) {
+// Solidity: function emergencyWithdraw(uint64 airdropId, uint256 withdrawAmt) returns()
+func (_Pandasia *PandasiaTransactorSession) EmergencyWithdraw(airdropId uint64, withdrawAmt *big.Int) (*types.Transaction, error) {
 	return _Pandasia.Contract.EmergencyWithdraw(&_Pandasia.TransactOpts, airdropId, withdrawAmt)
 }
 
-// FundAirdrop is a paid mutator transaction binding the contract method 0xcb0d3561.
+// FundAirdrop is a paid mutator transaction binding the contract method 0x92ac15f5.
 //
-// Solidity: function fundAirdrop(uint256 airdropId, uint256 amount) returns()
-func (_Pandasia *PandasiaTransactor) FundAirdrop(opts *bind.TransactOpts, airdropId *big.Int, amount *big.Int) (*types.Transaction, error) {
+// Solidity: function fundAirdrop(uint64 airdropId, uint256 amount) returns()
+func (_Pandasia *PandasiaTransactor) FundAirdrop(opts *bind.TransactOpts, airdropId uint64, amount *big.Int) (*types.Transaction, error) {
 	return _Pandasia.contract.Transact(opts, "fundAirdrop", airdropId, amount)
 }
 
-// FundAirdrop is a paid mutator transaction binding the contract method 0xcb0d3561.
+// FundAirdrop is a paid mutator transaction binding the contract method 0x92ac15f5.
 //
-// Solidity: function fundAirdrop(uint256 airdropId, uint256 amount) returns()
-func (_Pandasia *PandasiaSession) FundAirdrop(airdropId *big.Int, amount *big.Int) (*types.Transaction, error) {
+// Solidity: function fundAirdrop(uint64 airdropId, uint256 amount) returns()
+func (_Pandasia *PandasiaSession) FundAirdrop(airdropId uint64, amount *big.Int) (*types.Transaction, error) {
 	return _Pandasia.Contract.FundAirdrop(&_Pandasia.TransactOpts, airdropId, amount)
 }
 
-// FundAirdrop is a paid mutator transaction binding the contract method 0xcb0d3561.
+// FundAirdrop is a paid mutator transaction binding the contract method 0x92ac15f5.
 //
-// Solidity: function fundAirdrop(uint256 airdropId, uint256 amount) returns()
-func (_Pandasia *PandasiaTransactorSession) FundAirdrop(airdropId *big.Int, amount *big.Int) (*types.Transaction, error) {
+// Solidity: function fundAirdrop(uint64 airdropId, uint256 amount) returns()
+func (_Pandasia *PandasiaTransactorSession) FundAirdrop(airdropId uint64, amount *big.Int) (*types.Transaction, error) {
 	return _Pandasia.Contract.FundAirdrop(&_Pandasia.TransactOpts, airdropId, amount)
 }
 
-// FundAirdropWithPermit is a paid mutator transaction binding the contract method 0x002c21c6.
+// NewAirdrop is a paid mutator transaction binding the contract method 0x7b94656a.
 //
-// Solidity: function fundAirdropWithPermit(uint256 airdropId, uint256 amount, address funder, uint256 deadline, uint8 v, bytes32 r, bytes32 s) returns()
-func (_Pandasia *PandasiaTransactor) FundAirdropWithPermit(opts *bind.TransactOpts, airdropId *big.Int, amount *big.Int, funder common.Address, deadline *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _Pandasia.contract.Transact(opts, "fundAirdropWithPermit", airdropId, amount, funder, deadline, v, r, s)
+// Solidity: function newAirdrop(bytes32 root, bool union, address erc20, uint256 amount, uint32 expires) returns(uint64)
+func (_Pandasia *PandasiaTransactor) NewAirdrop(opts *bind.TransactOpts, root [32]byte, union bool, erc20 common.Address, amount *big.Int, expires uint32) (*types.Transaction, error) {
+	return _Pandasia.contract.Transact(opts, "newAirdrop", root, union, erc20, amount, expires)
 }
 
-// FundAirdropWithPermit is a paid mutator transaction binding the contract method 0x002c21c6.
+// NewAirdrop is a paid mutator transaction binding the contract method 0x7b94656a.
 //
-// Solidity: function fundAirdropWithPermit(uint256 airdropId, uint256 amount, address funder, uint256 deadline, uint8 v, bytes32 r, bytes32 s) returns()
-func (_Pandasia *PandasiaSession) FundAirdropWithPermit(airdropId *big.Int, amount *big.Int, funder common.Address, deadline *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _Pandasia.Contract.FundAirdropWithPermit(&_Pandasia.TransactOpts, airdropId, amount, funder, deadline, v, r, s)
+// Solidity: function newAirdrop(bytes32 root, bool union, address erc20, uint256 amount, uint32 expires) returns(uint64)
+func (_Pandasia *PandasiaSession) NewAirdrop(root [32]byte, union bool, erc20 common.Address, amount *big.Int, expires uint32) (*types.Transaction, error) {
+	return _Pandasia.Contract.NewAirdrop(&_Pandasia.TransactOpts, root, union, erc20, amount, expires)
 }
 
-// FundAirdropWithPermit is a paid mutator transaction binding the contract method 0x002c21c6.
+// NewAirdrop is a paid mutator transaction binding the contract method 0x7b94656a.
 //
-// Solidity: function fundAirdropWithPermit(uint256 airdropId, uint256 amount, address funder, uint256 deadline, uint8 v, bytes32 r, bytes32 s) returns()
-func (_Pandasia *PandasiaTransactorSession) FundAirdropWithPermit(airdropId *big.Int, amount *big.Int, funder common.Address, deadline *big.Int, v uint8, r [32]byte, s [32]byte) (*types.Transaction, error) {
-	return _Pandasia.Contract.FundAirdropWithPermit(&_Pandasia.TransactOpts, airdropId, amount, funder, deadline, v, r, s)
-}
-
-// NewAirdrop is a paid mutator transaction binding the contract method 0xe534f12f.
-//
-// Solidity: function newAirdrop(address erc20, uint256 amount, uint256 expires, bytes32 memo) returns(uint256)
-func (_Pandasia *PandasiaTransactor) NewAirdrop(opts *bind.TransactOpts, erc20 common.Address, amount *big.Int, expires *big.Int, memo [32]byte) (*types.Transaction, error) {
-	return _Pandasia.contract.Transact(opts, "newAirdrop", erc20, amount, expires, memo)
-}
-
-// NewAirdrop is a paid mutator transaction binding the contract method 0xe534f12f.
-//
-// Solidity: function newAirdrop(address erc20, uint256 amount, uint256 expires, bytes32 memo) returns(uint256)
-func (_Pandasia *PandasiaSession) NewAirdrop(erc20 common.Address, amount *big.Int, expires *big.Int, memo [32]byte) (*types.Transaction, error) {
-	return _Pandasia.Contract.NewAirdrop(&_Pandasia.TransactOpts, erc20, amount, expires, memo)
-}
-
-// NewAirdrop is a paid mutator transaction binding the contract method 0xe534f12f.
-//
-// Solidity: function newAirdrop(address erc20, uint256 amount, uint256 expires, bytes32 memo) returns(uint256)
-func (_Pandasia *PandasiaTransactorSession) NewAirdrop(erc20 common.Address, amount *big.Int, expires *big.Int, memo [32]byte) (*types.Transaction, error) {
-	return _Pandasia.Contract.NewAirdrop(&_Pandasia.TransactOpts, erc20, amount, expires, memo)
+// Solidity: function newAirdrop(bytes32 root, bool union, address erc20, uint256 amount, uint32 expires) returns(uint64)
+func (_Pandasia *PandasiaTransactorSession) NewAirdrop(root [32]byte, union bool, erc20 common.Address, amount *big.Int, expires uint32) (*types.Transaction, error) {
+	return _Pandasia.Contract.NewAirdrop(&_Pandasia.TransactOpts, root, union, erc20, amount, expires)
 }
 
 // RegisterPChainAddr is a paid mutator transaction binding the contract method 0x52f9b6f3.
@@ -794,25 +944,67 @@ func (_Pandasia *PandasiaTransactorSession) RenounceOwnership() (*types.Transact
 	return _Pandasia.Contract.RenounceOwnership(&_Pandasia.TransactOpts)
 }
 
-// SetRoot is a paid mutator transaction binding the contract method 0xdab5f340.
+// SetFee is a paid mutator transaction binding the contract method 0x1ab971ab.
 //
-// Solidity: function setRoot(bytes32 root) returns()
-func (_Pandasia *PandasiaTransactor) SetRoot(opts *bind.TransactOpts, root [32]byte) (*types.Transaction, error) {
-	return _Pandasia.contract.Transact(opts, "setRoot", root)
+// Solidity: function setFee(uint32 fee) returns()
+func (_Pandasia *PandasiaTransactor) SetFee(opts *bind.TransactOpts, fee uint32) (*types.Transaction, error) {
+	return _Pandasia.contract.Transact(opts, "setFee", fee)
 }
 
-// SetRoot is a paid mutator transaction binding the contract method 0xdab5f340.
+// SetFee is a paid mutator transaction binding the contract method 0x1ab971ab.
 //
-// Solidity: function setRoot(bytes32 root) returns()
-func (_Pandasia *PandasiaSession) SetRoot(root [32]byte) (*types.Transaction, error) {
-	return _Pandasia.Contract.SetRoot(&_Pandasia.TransactOpts, root)
+// Solidity: function setFee(uint32 fee) returns()
+func (_Pandasia *PandasiaSession) SetFee(fee uint32) (*types.Transaction, error) {
+	return _Pandasia.Contract.SetFee(&_Pandasia.TransactOpts, fee)
 }
 
-// SetRoot is a paid mutator transaction binding the contract method 0xdab5f340.
+// SetFee is a paid mutator transaction binding the contract method 0x1ab971ab.
 //
-// Solidity: function setRoot(bytes32 root) returns()
-func (_Pandasia *PandasiaTransactorSession) SetRoot(root [32]byte) (*types.Transaction, error) {
-	return _Pandasia.Contract.SetRoot(&_Pandasia.TransactOpts, root)
+// Solidity: function setFee(uint32 fee) returns()
+func (_Pandasia *PandasiaTransactorSession) SetFee(fee uint32) (*types.Transaction, error) {
+	return _Pandasia.Contract.SetFee(&_Pandasia.TransactOpts, fee)
+}
+
+// SetStakingContract is a paid mutator transaction binding the contract method 0x9dd373b9.
+//
+// Solidity: function setStakingContract(address addr) returns()
+func (_Pandasia *PandasiaTransactor) SetStakingContract(opts *bind.TransactOpts, addr common.Address) (*types.Transaction, error) {
+	return _Pandasia.contract.Transact(opts, "setStakingContract", addr)
+}
+
+// SetStakingContract is a paid mutator transaction binding the contract method 0x9dd373b9.
+//
+// Solidity: function setStakingContract(address addr) returns()
+func (_Pandasia *PandasiaSession) SetStakingContract(addr common.Address) (*types.Transaction, error) {
+	return _Pandasia.Contract.SetStakingContract(&_Pandasia.TransactOpts, addr)
+}
+
+// SetStakingContract is a paid mutator transaction binding the contract method 0x9dd373b9.
+//
+// Solidity: function setStakingContract(address addr) returns()
+func (_Pandasia *PandasiaTransactorSession) SetStakingContract(addr common.Address) (*types.Transaction, error) {
+	return _Pandasia.Contract.SetStakingContract(&_Pandasia.TransactOpts, addr)
+}
+
+// SetValidatorRoot is a paid mutator transaction binding the contract method 0x14f11439.
+//
+// Solidity: function setValidatorRoot(bytes32 root) returns()
+func (_Pandasia *PandasiaTransactor) SetValidatorRoot(opts *bind.TransactOpts, root [32]byte) (*types.Transaction, error) {
+	return _Pandasia.contract.Transact(opts, "setValidatorRoot", root)
+}
+
+// SetValidatorRoot is a paid mutator transaction binding the contract method 0x14f11439.
+//
+// Solidity: function setValidatorRoot(bytes32 root) returns()
+func (_Pandasia *PandasiaSession) SetValidatorRoot(root [32]byte) (*types.Transaction, error) {
+	return _Pandasia.Contract.SetValidatorRoot(&_Pandasia.TransactOpts, root)
+}
+
+// SetValidatorRoot is a paid mutator transaction binding the contract method 0x14f11439.
+//
+// Solidity: function setValidatorRoot(bytes32 root) returns()
+func (_Pandasia *PandasiaTransactorSession) SetValidatorRoot(root [32]byte) (*types.Transaction, error) {
+	return _Pandasia.Contract.SetValidatorRoot(&_Pandasia.TransactOpts, root)
 }
 
 // TransferOwnership is a paid mutator transaction binding the contract method 0xf2fde38b.
@@ -836,24 +1028,45 @@ func (_Pandasia *PandasiaTransactorSession) TransferOwnership(newOwner common.Ad
 	return _Pandasia.Contract.TransferOwnership(&_Pandasia.TransactOpts, newOwner)
 }
 
-// WithdrawFunding is a paid mutator transaction binding the contract method 0x030040b0.
+// WithdrawFees is a paid mutator transaction binding the contract method 0xb4950bfe.
 //
-// Solidity: function withdrawFunding(uint256 airdropId, uint256 withdrawAmt) returns()
-func (_Pandasia *PandasiaTransactor) WithdrawFunding(opts *bind.TransactOpts, airdropId *big.Int, withdrawAmt *big.Int) (*types.Transaction, error) {
+// Solidity: function withdrawFees(uint64 airdropId) returns()
+func (_Pandasia *PandasiaTransactor) WithdrawFees(opts *bind.TransactOpts, airdropId uint64) (*types.Transaction, error) {
+	return _Pandasia.contract.Transact(opts, "withdrawFees", airdropId)
+}
+
+// WithdrawFees is a paid mutator transaction binding the contract method 0xb4950bfe.
+//
+// Solidity: function withdrawFees(uint64 airdropId) returns()
+func (_Pandasia *PandasiaSession) WithdrawFees(airdropId uint64) (*types.Transaction, error) {
+	return _Pandasia.Contract.WithdrawFees(&_Pandasia.TransactOpts, airdropId)
+}
+
+// WithdrawFees is a paid mutator transaction binding the contract method 0xb4950bfe.
+//
+// Solidity: function withdrawFees(uint64 airdropId) returns()
+func (_Pandasia *PandasiaTransactorSession) WithdrawFees(airdropId uint64) (*types.Transaction, error) {
+	return _Pandasia.Contract.WithdrawFees(&_Pandasia.TransactOpts, airdropId)
+}
+
+// WithdrawFunding is a paid mutator transaction binding the contract method 0xbe6c5346.
+//
+// Solidity: function withdrawFunding(uint64 airdropId, uint256 withdrawAmt) returns()
+func (_Pandasia *PandasiaTransactor) WithdrawFunding(opts *bind.TransactOpts, airdropId uint64, withdrawAmt *big.Int) (*types.Transaction, error) {
 	return _Pandasia.contract.Transact(opts, "withdrawFunding", airdropId, withdrawAmt)
 }
 
-// WithdrawFunding is a paid mutator transaction binding the contract method 0x030040b0.
+// WithdrawFunding is a paid mutator transaction binding the contract method 0xbe6c5346.
 //
-// Solidity: function withdrawFunding(uint256 airdropId, uint256 withdrawAmt) returns()
-func (_Pandasia *PandasiaSession) WithdrawFunding(airdropId *big.Int, withdrawAmt *big.Int) (*types.Transaction, error) {
+// Solidity: function withdrawFunding(uint64 airdropId, uint256 withdrawAmt) returns()
+func (_Pandasia *PandasiaSession) WithdrawFunding(airdropId uint64, withdrawAmt *big.Int) (*types.Transaction, error) {
 	return _Pandasia.Contract.WithdrawFunding(&_Pandasia.TransactOpts, airdropId, withdrawAmt)
 }
 
-// WithdrawFunding is a paid mutator transaction binding the contract method 0x030040b0.
+// WithdrawFunding is a paid mutator transaction binding the contract method 0xbe6c5346.
 //
-// Solidity: function withdrawFunding(uint256 airdropId, uint256 withdrawAmt) returns()
-func (_Pandasia *PandasiaTransactorSession) WithdrawFunding(airdropId *big.Int, withdrawAmt *big.Int) (*types.Transaction, error) {
+// Solidity: function withdrawFunding(uint64 airdropId, uint256 withdrawAmt) returns()
+func (_Pandasia *PandasiaTransactorSession) WithdrawFunding(airdropId uint64, withdrawAmt *big.Int) (*types.Transaction, error) {
 	return _Pandasia.Contract.WithdrawFunding(&_Pandasia.TransactOpts, airdropId, withdrawAmt)
 }
 

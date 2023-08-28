@@ -13,6 +13,8 @@ interface Staking {
 	function getLastRewardsCycleCompleted(address stakerAddr) external view returns (uint256);
 }
 
+// TODO Make this contract a TransparentUpgradeableProxy so we can upgrade without losing state
+
 contract Pandasia is Ownable {
 	using SafeERC20 for IERC20;
 
@@ -38,6 +40,7 @@ contract Pandasia is Ownable {
 	mapping(address => address) public c2p; // maps c-chain addr => verified p-chain addr
 	mapping(address => address) public p2c; // maps verified p-chain addr => c-chain addr
 
+	// TODO Switch this to gogopool Storage addr, and then get staking contract addr from storage
 	address public stakingContract;
 
 	struct Airdrop {

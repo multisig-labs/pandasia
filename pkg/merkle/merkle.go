@@ -160,7 +160,6 @@ func VerifyTree(ctx context.Context, queries *db.Queries, root string) (bool, er
 		return false, err
 	}
 
-	// TODO map string tree type to tx type id
 	txType := 12
 	vaddrs, err := LoadAddrsFromDB(ctx, queries, txType, int(dbTree.Height))
 	if err != nil {

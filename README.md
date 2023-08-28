@@ -46,7 +46,5 @@ With all those pieces in place, a user can now "register" with Pandasia and thei
 
 ## Enhancement Ideas
 
-    * Ability for project to upload list of C-addrs and amounts when they create an Airdrop, and then we would create an additional Merkle tree root, and when a user claims they would get the standard validator amount plus whatever additional the project specified for that address.
     * Currently this is open to sybil attacks where if a user has many P-addrs that are in our Merkle tree they can register a new C-addr with each one. We could mitigate by trying to group P-addrs and merge into what we think is one person, but then from a UX perspective, how do we tell the user which P-addr in their wallet is the one to use when signing?
     * Another sybil mitigation would be to have node ops sign a msg with their NodeID key. Problem is many people use Allnodes etc and may not have the key, or for old nodes they didnt keep it.
-    	* Re-write the contract to use the Storage pattern, so that the contract can be upgraded without losing all the data. Might not really make sense, as we can upgrade now by just creating new contracts, and the old ones will just expire and funds dispersed. But keeping track of that from a front end UX could be annoying.

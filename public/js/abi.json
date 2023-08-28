@@ -2,7 +2,17 @@
   "abi": [
     {
       "inputs": [],
+      "name": "AddressAlreadyClaimed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "AddressNotEligible",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "AirdropExpired",
       "type": "error"
     },
     {
@@ -23,6 +33,11 @@
     {
       "inputs": [],
       "name": "InvalidWithdrawRequest",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "PAddrAlreadyRegistered",
       "type": "error"
     },
     {
@@ -54,9 +69,9 @@
       "name": "airdropCount",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "uint64",
           "name": "",
-          "type": "uint256"
+          "type": "uint64"
         }
       ],
       "stateMutability": "view",
@@ -78,9 +93,9 @@
       "name": "airdropIds",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "uint64",
           "name": "",
-          "type": "uint256"
+          "type": "uint64"
         }
       ],
       "stateMutability": "view",
@@ -89,22 +104,17 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
+          "internalType": "uint64",
           "name": "",
-          "type": "uint256"
+          "type": "uint64"
         }
       ],
       "name": "airdrops",
       "outputs": [
         {
-          "internalType": "address",
-          "name": "owner",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "erc20",
-          "type": "address"
+          "internalType": "bytes32",
+          "name": "root",
+          "type": "bytes32"
         },
         {
           "internalType": "uint256",
@@ -117,14 +127,24 @@
           "type": "uint256"
         },
         {
-          "internalType": "uint256",
-          "name": "expires",
-          "type": "uint256"
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
         },
         {
-          "internalType": "bytes32",
-          "name": "memo",
-          "type": "bytes32"
+          "internalType": "address",
+          "name": "erc20",
+          "type": "address"
+        },
+        {
+          "internalType": "uint32",
+          "name": "expires",
+          "type": "uint32"
+        },
+        {
+          "internalType": "bool",
+          "name": "union",
+          "type": "bool"
         }
       ],
       "stateMutability": "view",
@@ -152,9 +172,43 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
+          "internalType": "address",
+          "name": "addr",
+          "type": "address"
+        },
+        {
+          "internalType": "uint64",
           "name": "airdropId",
-          "type": "uint256"
+          "type": "uint64"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "proof",
+          "type": "bytes32[]"
+        }
+      ],
+      "name": "canClaimAirdrop",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "airdropId",
+          "type": "uint64"
+        },
+        {
+          "internalType": "bytes32[]",
+          "name": "proof",
+          "type": "bytes32[]"
         }
       ],
       "name": "claimAirdrop",
@@ -165,22 +219,9 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "airdropId",
-          "type": "uint256"
-        }
-      ],
-      "name": "claimAirdropWithPermit",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
+          "internalType": "uint64",
           "name": "",
-          "type": "uint256"
+          "type": "uint64"
         },
         {
           "internalType": "address",
@@ -202,9 +243,9 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
+          "internalType": "uint64",
           "name": "airdropId",
-          "type": "uint256"
+          "type": "uint64"
         },
         {
           "internalType": "uint256",
@@ -218,11 +259,24 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "feePct",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
-          "internalType": "uint256",
+          "internalType": "uint64",
           "name": "airdropId",
-          "type": "uint256"
+          "type": "uint64"
         },
         {
           "internalType": "uint256",
@@ -238,49 +292,6 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
-          "name": "airdropId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "funder",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "deadline",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint8",
-          "name": "v",
-          "type": "uint8"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "r",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "s",
-          "type": "bytes32"
-        }
-      ],
-      "name": "fundAirdropWithPermit",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
           "internalType": "address",
           "name": "owner",
           "type": "address"
@@ -289,9 +300,9 @@
       "name": "getAirdropIds",
       "outputs": [
         {
-          "internalType": "uint256[]",
+          "internalType": "uint64[]",
           "name": "",
-          "type": "uint256[]"
+          "type": "uint64[]"
         }
       ],
       "stateMutability": "view",
@@ -300,14 +311,14 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
+          "internalType": "uint64",
           "name": "offset",
-          "type": "uint256"
+          "type": "uint64"
         },
         {
-          "internalType": "uint256",
+          "internalType": "uint64",
           "name": "limit",
-          "type": "uint256"
+          "type": "uint64"
         }
       ],
       "name": "getAirdrops",
@@ -315,14 +326,9 @@
         {
           "components": [
             {
-              "internalType": "address",
-              "name": "owner",
-              "type": "address"
-            },
-            {
-              "internalType": "address",
-              "name": "erc20",
-              "type": "address"
+              "internalType": "bytes32",
+              "name": "root",
+              "type": "bytes32"
             },
             {
               "internalType": "uint256",
@@ -335,19 +341,53 @@
               "type": "uint256"
             },
             {
-              "internalType": "uint256",
-              "name": "expires",
-              "type": "uint256"
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
             },
             {
-              "internalType": "bytes32",
-              "name": "memo",
-              "type": "bytes32"
+              "internalType": "address",
+              "name": "erc20",
+              "type": "address"
+            },
+            {
+              "internalType": "uint32",
+              "name": "expires",
+              "type": "uint32"
+            },
+            {
+              "internalType": "bool",
+              "name": "union",
+              "type": "bool"
             }
           ],
           "internalType": "struct Pandasia.Airdrop[]",
           "name": "pageOfAirdrops",
           "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "airdropId",
+          "type": "uint64"
+        },
+        {
+          "internalType": "address",
+          "name": "addr",
+          "type": "address"
+        }
+      ],
+      "name": "hasClaimed",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
         }
       ],
       "stateMutability": "view",
@@ -380,6 +420,25 @@
           "type": "address"
         }
       ],
+      "name": "isMinipoolOperator",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "addr",
+          "type": "address"
+        }
+      ],
       "name": "isRegisteredValidator",
       "outputs": [
         {
@@ -392,20 +451,17 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "merkleRoot",
-      "outputs": [
+      "inputs": [
         {
           "internalType": "bytes32",
-          "name": "",
+          "name": "root",
           "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
+        },
+        {
+          "internalType": "bool",
+          "name": "union",
+          "type": "bool"
+        },
         {
           "internalType": "address",
           "name": "erc20",
@@ -417,22 +473,17 @@
           "type": "uint256"
         },
         {
-          "internalType": "uint256",
+          "internalType": "uint32",
           "name": "expires",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes32",
-          "name": "memo",
-          "type": "bytes32"
+          "type": "uint32"
         }
       ],
       "name": "newAirdrop",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "uint64",
           "name": "",
-          "type": "uint256"
+          "type": "uint64"
         }
       ],
       "stateMutability": "nonpayable",
@@ -441,6 +492,25 @@
     {
       "inputs": [],
       "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "p2c",
       "outputs": [
         {
           "internalType": "address",
@@ -513,14 +583,53 @@
     {
       "inputs": [
         {
+          "internalType": "uint32",
+          "name": "fee",
+          "type": "uint32"
+        }
+      ],
+      "name": "setFee",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "addr",
+          "type": "address"
+        }
+      ],
+      "name": "setStakingContract",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "bytes32",
           "name": "root",
           "type": "bytes32"
         }
       ],
-      "name": "setRoot",
+      "name": "setValidatorRoot",
       "outputs": [],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "stakingContract",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -534,6 +643,19 @@
       "name": "transferOwnership",
       "outputs": [],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "validatorRoot",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -568,9 +690,22 @@
     {
       "inputs": [
         {
-          "internalType": "uint256",
+          "internalType": "uint64",
           "name": "airdropId",
-          "type": "uint256"
+          "type": "uint64"
+        }
+      ],
+      "name": "withdrawFees",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint64",
+          "name": "airdropId",
+          "type": "uint64"
         },
         {
           "internalType": "uint256",

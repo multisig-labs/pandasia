@@ -1,4 +1,7 @@
 #!/usr/bin/env deno run --allow-env --allow-net
+
+// Example of how to use JS lib to get a proof from pandasia API server and submit to contract
+
 import { createWalletClient, http } from "https://esm.sh/viem@1.6.4";
 import { mnemonicToAccount } from "https://esm.sh/viem@1.6.4/accounts";
 import { chains } from "http://localhost:8000/js/chains.js";

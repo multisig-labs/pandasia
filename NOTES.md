@@ -6,30 +6,43 @@ https://ava-labs-inc.metabaseapp.com/public/question/78f9de45-1f09-4b08-847b-086
 # Command Scratchpad
 
 ```bash
+# Build everything
+just build
+
+# Start Anvil in one terminal
+just anvil
+
+# Deploy contracts in another terminal
+just deploy
+
+# Start Pandasia API server in another terminal
+JOB_PERIOD=10h SERVE_EMBEDDED=false bin/pandasia serve --db data/pandasia-dev.db --node-url http://localhost:9650 --pandasia-addr $PANDASIA_ADDR
+
+# Generate a merkle tree at current height and store in DB
+bin/pandasia generate-tree --db data/pandasia-dev.db
+
+# Submit current root to contract
+export CURRENT_ROOT=$(curl --silent localhost:8000/trees | jq -r '.[0].Root'); echo ${CURRENT_ROOT}
+just cast-submit-root ${CURRENT_ROOT}
+
+
+# Test addrs and a sig from wallet.avax.network
 export PADDR="P-avax1gfpj30csekhwmf4mqkncelus5zl2ztqzvv7aww"
 export CADDR="0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4"
 export SIG="24eWufzWvm38teEhNQmtE9N5BD12CWUawv1YtbYkuxeS5gGCN6CoZBgU4V4WDrLa5anYyTLGZT8nqiEsqX7hm1k3jofswfx"
-
-just anvil
-JOB_PERIOD=10h SERVE_EMBEDDED=false bin/pandasia serve --db data/pandasia-dev.db --node-url http://100.83.243.106:9650 --pandasia-addr $PANDASIA_ADDR
-
-just deploy
-
-bin/pandasia generate --db data/pandasia-dev.db
-
-export CURRENT_ROOT=$(curl --silent localhost:8000/trees | jq -r '.[0].Root'); echo ${CURRENT_ROOT}
-just cast-submit-root ${CURRENT_ROOT}
 
 curl --silent "localhost:8000/proof/${CURRENT_ROOT}?addr=${PADDR}&sig=${SIG}"
 scripts/register.ts ${PADDR} ${SIG}
 just cast-is-validator ${CADDR}
 
-# Export the merkle tree json
+# Export the merkle tree json to stdout
 sqlite3 data/pandasia-dev.db 'select tree from merkle_trees where id = 1' | jq
+
 curl --silent localhost:8000/airdrops
+
 just forge-script createAirdrop
 
-echo "0x0000000000000000000000000000000000000001\n0x0000000000000000000000000000000000000002" | bin/pandasia generate-stdin --db data/pandasia-dev.db --desc "test tree"
+echo "0x0000000000000000000000000000000000000001\n0x0000000000000000000000000000000000000002" | bin/pandasia generate-tree-stdin --db data/pandasia-dev.db --desc "test tree"
 
 ```
 
@@ -56,6 +69,36 @@ signature: 24eWufzWvm38teEhNQmtE9N5BD12CWUawv1YtbYkuxeS5gGCN6CoZBgU4V4WDrLa5anYy
   v: "0x00",
   r: "0x6ac1cc3277dffe75d9cc8264acacc9f464762bab7ef73921a67dee1a398bd337",
   s: "0x39cf19e2ff4c36ba64ed3684af9a72b59b7ccd16833666c81e84fb001bbb315a"
+}
+```
+
+### Sample custom Root
+
+```json
+{
+	"format": "standard-v1",
+	"tree": [
+		"0x2e1dea9890e94d280361af414f0696bc7ba251d4e52a5f786d15629d5185a89c",
+		"0x9fec67521532e3df3ca2461c12c79c2b89e8f633311a6b525fb8488fbcd1d177",
+		"0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22",
+		"0x20b2f891eaf390d96349554ee7297a8a8972c13215d1aa9dd752f9c6822c1888",
+		"0x1ab0c6948a275349ae45a06aad66a8bd65ac18074615d53676c09b67809099e0"
+	],
+	"values": [
+		{
+			"value": ["0x0000000000000000000000000000000000000001"],
+			"treeIndex": 2
+		},
+		{
+			"value": ["0x0000000000000000000000000000000000000002"],
+			"treeIndex": 4
+		},
+		{
+			"value": ["0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02"],
+			"treeIndex": 3
+		}
+	],
+	"leafEncoding": ["address"]
 }
 ```
 

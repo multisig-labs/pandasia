@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
-	"math/big"
 	"net/http"
 	"os"
 	"os/signal"
@@ -48,9 +47,9 @@ func init() {
 	}
 }
 
-type Pagination struct {
-	Limit  int
-	Offset int
+type pagination struct {
+	Limit  uint64
+	Offset uint64
 }
 
 type treeResponse struct {
@@ -185,15 +184,12 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		}
 
 		e.GET("/airdrops", func(c echo.Context) error {
-			p := new(Pagination)
+			p := new(pagination)
 			if err := c.Bind(p); err != nil {
 				return err
 			}
 
-			offset := new(big.Int).SetUint64(uint64(p.Offset))
-			limit := new(big.Int).SetUint64(uint64(p.Limit))
-
-			airdrops, err := ctrcs.Pandasia.GetAirdrops(nil, offset, limit)
+			airdrops, err := ctrcs.Pandasia.GetAirdrops(nil, p.Offset, p.Limit)
 			if err != nil {
 				return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
 			}

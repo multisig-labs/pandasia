@@ -24,6 +24,7 @@ default:
 
 # Install dependencies
 install:
+	brew install sqlc
 	forge install
 
 # Delete artifacts

@@ -29,31 +29,14 @@ var webContent embed.FS
 func main() {
 	defer handlePanic()
 	mcli.Add("sync-pchain", syncPchainCmd, "Sync the P-Chain to the db")
-	mcli.Add("generate", generateCmd, "Generate the Merkle Tree at current height and save to DB")
-	mcli.Add("generate-stdin", generateFromStdinCmd, "Generate the Merkle Tree from list of addr on stdin")
+	mcli.Add("generate-tree", generateTreeCmd, "Generate the Merkle Tree at current height and save to DB")
+	mcli.Add("generate-tree-stdin", generateTreeFromStdinCmd, "Generate the Merkle Tree from list of addr on stdin")
 	mcli.Add("serve", serveApiCmd, "Start API server")
-	mcli.Add("verify", verifyTreeCmd, "Verify an entire merkle tree")
+	mcli.Add("verify-tree", verifyTreeCmd, "Verify an entire merkle tree")
 	mcli.Add("addrs", addrsForHeight, "Output list of addrs that would be included at a specific height")
 	mcli.AddHelp()
 	mcli.AddCompletion()
 	mcli.Run()
-}
-
-func addrsForHeight() {
-	args := struct {
-		DbFile string `cli:"--db, SQLite database file name" default:"pandasia.db"`
-		Height int    `cli:"--height, Height at which to grab addrs"`
-		TxType int    `cli:"--tx-type, validator=12 delegator=14" default:"12"`
-	}{}
-	mcli.Parse(&args, mcli.WithErrorHandling(flag.ExitOnError))
-
-	ctx := context.Background()
-	_, queries := db.OpenDB(args.DbFile)
-	vaddrs, err := merkle.LoadAddrsFromDB(ctx, queries, args.TxType, args.Height)
-	handleError(err)
-	for _, v := range vaddrs {
-		fmt.Printf("%s %s\n", v.Addr, v.AddrHex)
-	}
 }
 
 func syncPchainCmd() {
@@ -102,7 +85,8 @@ func serveApiCmd() {
 	api.StartHttpServer(args.DbFile, args.Host, args.Port, args.NodeURL, webContent, args.PandasiaAddr)
 }
 
-func generateCmd() {
+// Generate a Merkle tree from txs table at current height, and store tree JSON in DB
+func generateTreeCmd() {
 	args := struct {
 		DbFile string `cli:"--db, SQLite database file name" default:"pandasia.db"`
 	}{}
@@ -131,8 +115,9 @@ func generateCmd() {
 	slog.Info("saved tree to db", "height", height)
 }
 
+// Generate a merkle tree from addresses piped in via stdin
 // TODO this is just for testing, need a route to do this for real via API
-func generateFromStdinCmd() {
+func generateTreeFromStdinCmd() {
 	args := struct {
 		DbFile      string `cli:"--db, SQLite database file name" default:"pandasia.db"`
 		Description string `cli:"--desc, description of the merkle tree"`
@@ -172,6 +157,24 @@ func verifyTreeCmd() {
 	ok, err := merkle.VerifyTree(ctx, queries, args.Root)
 	handleError(err)
 	slog.Info("Verification", "ok", ok)
+}
+
+// For debugging, grab all addresses from DB that would be included in a Merkle tree at height
+func addrsForHeight() {
+	args := struct {
+		DbFile string `cli:"--db, SQLite database file name" default:"pandasia.db"`
+		Height int    `cli:"--height, Height at which to grab addrs"`
+		TxType int    `cli:"--tx-type, validator=12 delegator=14" default:"12"`
+	}{}
+	mcli.Parse(&args, mcli.WithErrorHandling(flag.ExitOnError))
+
+	ctx := context.Background()
+	_, queries := db.OpenDB(args.DbFile)
+	vaddrs, err := merkle.LoadAddrsFromDB(ctx, queries, args.TxType, args.Height)
+	handleError(err)
+	for _, v := range vaddrs {
+		fmt.Printf("%s %s\n", v.Addr, v.AddrHex)
+	}
 }
 
 func handleError(err error) {

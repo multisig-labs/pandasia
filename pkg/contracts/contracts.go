@@ -13,23 +13,6 @@ type Contracts struct {
 	Pandasia *pandasia.PandasiaCaller
 }
 
-// type envConfig struct {
-// 	RPCHostURL              string `env:"ETH_RPC_URL,default="`
-// }
-
-// var EnvConfig *envConfig
-
-// func init() {
-// 	EnvConfig = &envConfig{}
-// 	if err := env.Bind(EnvConfig); err != nil {
-// 		log.Fatalf("error binding config to env: %v", err)
-// 	}
-// 	if _, err := time.ParseDuration(EnvConfig.ValidationTxDelay); err != nil {
-// 		log.Fatalf("invalid duration VALIDATION_TX_DELAY: %s %s", EnvConfig.ValidationTxDelay, err)
-// 	}
-// 	log.Infof("EnvConfig: %+v", EnvConfig)
-// }
-
 func NewContracts(url string, address string) (*Contracts, error) {
 	client, err := ethclient.Dial(url)
 	if err != nil {
