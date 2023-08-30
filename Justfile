@@ -100,13 +100,16 @@ keys:
 	ggt utils mnemonic-keys "${MNEMONIC}"
 
 build-docker:
-	docker build --build-arg LDFLAGS="{{LDFLAGS}}" -t {{DOCKER_IMAGE_NAME}}:{{DOCKER_IMAGE_TAG}} .
+	docker build --platform linux/amd64 --build-arg LDFLAGS="{{LDFLAGS}}" -t {{DOCKER_IMAGE_NAME}}:{{DOCKER_IMAGE_TAG}} .
 
 run-docker:
-	docker run --name "pandasia" -p 8000:8000 -v $(pwd)/data:/data -e ETH_RPC_URL={{ETH_RPC_URL}} -e PANDASIA_ADDR={{PANDASIA_ADDR}} {{DOCKER_IMAGE_NAME}}:{{DOCKER_IMAGE_TAG}}
+	docker run --platform linux/amd64 --name "pandasia" -p 8000:8000 -v $(pwd)/data:/data -e ETH_RPC_URL={{ETH_RPC_URL}} -e PANDASIA_ADDR={{PANDASIA_ADDR}} {{DOCKER_IMAGE_NAME}}:{{DOCKER_IMAGE_TAG}}
 
 run-docker-it:
-	docker run --name "pandasia" -it -p 8000:8000 -v $(pwd)/data:/data -e ETH_RPC_URL={{ETH_RPC_URL}} -e PANDASIA_ADDR={{PANDASIA_ADDR}} {{DOCKER_IMAGE_NAME}}:{{DOCKER_IMAGE_TAG}} /bin/bash
+	docker run --platform linux/amd64 --name "pandasia" -it -p 8000:8000 -v $(pwd)/data:/data -e ETH_RPC_URL={{ETH_RPC_URL}} -e PANDASIA_ADDR={{PANDASIA_ADDR}} -e PRIVATE_KEY={{PRIVATE_KEY}} {{DOCKER_IMAGE_NAME}}:{{DOCKER_IMAGE_TAG}} /bin/bash
 
 rm-docker:
 	docker rm pandasia
+
+kill-docker:
+	docker kill pandasia
