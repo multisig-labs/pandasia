@@ -33,6 +33,7 @@ ENV SERVE_EMBEDDED=false
 ENV JOB_PERIOD=10h
 ENV ETH_RPC_URL=https://api.avax-test.network/ext/bc/C/rpc
 ENV PANDASIA_ADDR=none
+ENV PRIVATE_KEY=none
 
 RUN apt-get update && apt-get install -y ca-certificates jq curl tmux git && rm -rf /var/lib/apt/lists/*
 RUN mkdir /data
