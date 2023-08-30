@@ -13,6 +13,9 @@ COPY pkg/ /src/pkg/
 COPY sqlc.yaml /src/sqlc.yaml
 COPY public/ /src/public/
 
+ARG CGO_CFLAGS="-O -D__BLST_PORTABLE__"
+ARG CGO_CFLAGS_ALLOW="-O -D__BLST_PORTABLE__"
+
 RUN sqlc generate
 RUN go build -o bin/pandasia main.go
 
