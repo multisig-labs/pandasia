@@ -12,6 +12,7 @@ LDFLAGS := "-X " + VERSION_PATH + ".BuildDate=" + BUILD_DATE + " -X " + VERSION_
 DOCKER_IMAGE_NAME := "ghcr.io/multisig-labs/pandasia"
 DOCKER_IMAGE_TAG := "latest"
 PANDASIA_ADDR := env_var("PANDASIA_ADDR")
+export P_CHAIN_URL := env_var_or_default("P_CHAIN_URL", "https://api.avax-test.network/ext/bc/P")
 export ETH_RPC_URL := env_var_or_default("ETH_RPC_URL", "http://127.0.0.1:9650")
 export MNEMONIC := env_var_or_default("MNEMONIC", "test test test test test test test test test test test junk")
 # First key from MNEMONIC
@@ -68,6 +69,11 @@ cast-submit-root root: (_ping ETH_RPC_URL)
 
 cast-is-validator caddr: (_ping ETH_RPC_URL)
 	cast call ${PANDASIA_ADDR} "isRegisteredValidator(address)" {{caddr}}
+
+# TODO create a P Chain testing table
+
+sync: (_ping ETH_RPC_URL)
+	bin/pandasia sync-pchain --node-url=${ETH_RPC_URL} --db data/pandasia-fuji.db
 
 anvil:
 	anvil --port 9650 --mnemonic "${MNEMONIC}"
