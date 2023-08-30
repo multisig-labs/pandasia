@@ -103,4 +103,10 @@ build-docker:
 	docker build --build-arg LDFLAGS="{{LDFLAGS}}" -t {{DOCKER_IMAGE_NAME}}:{{DOCKER_IMAGE_TAG}} .
 
 run-docker:
-	docker run --rm -p 8000:8000 -v $(pwd)/data:/data -e ETH_RPC_URL={{ETH_RPC_URL}} -e PANDASIA_ADDR={{PANDASIA_ADDR}} {{DOCKER_IMAGE_NAME}}:{{DOCKER_IMAGE_TAG}}
+	docker run --name "pandasia" -p 8000:8000 -v $(pwd)/data:/data -e ETH_RPC_URL={{ETH_RPC_URL}} -e PANDASIA_ADDR={{PANDASIA_ADDR}} {{DOCKER_IMAGE_NAME}}:{{DOCKER_IMAGE_TAG}}
+
+run-docker-it:
+	docker run --name "pandasia" -it -p 8000:8000 -v $(pwd)/data:/data -e ETH_RPC_URL={{ETH_RPC_URL}} -e PANDASIA_ADDR={{PANDASIA_ADDR}} {{DOCKER_IMAGE_NAME}}:{{DOCKER_IMAGE_TAG}} /bin/bash
+
+rm-docker:
+	docker rm pandasia

@@ -17,6 +17,9 @@ RUN sqlc generate
 RUN go build -o bin/pandasia main.go
 
 ENV SERVE_EMBEDDED=false
-ENV JOB_PERIOD=1h
+ENV JOB_PERIOD=10h
+ENV ETH_RPC_URL=https://api.avax-test.network/ext/bc/C/rpc
+ENV PANDASIA_ADDR=none
 
-CMD ["/src/bin/pandasia", "serve", "--db", "data/pandasia-dev.db", "--node-url", "$ETH_RPC_URL", "--pandasia-addr", "$PANDASIA_ADDR"]
+
+CMD /src/bin/pandasia serve --db /data/pandasia-dev.db --node-url ${ETH_RPC_URL} --pandasia-addr ${PANDASIA_ADDR}
