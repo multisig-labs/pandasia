@@ -15,7 +15,7 @@ sleep 60
 
 while true; do
 		echo "Syncing with P Chain..."
-		/app/bin/pandasia sync-pchain --node-url $NODE_URL --db /data/pandasia.db
+		/app/bin/pandasia sync-pchain --node-url $NODE_URL --db /data/pandasia-mainnet.db
 		echo "Done. Sleeping..."
 		sleep $INTERVAL
 done
