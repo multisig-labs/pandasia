@@ -26,9 +26,9 @@ import (
 
 type ValidatorAddress struct {
 	// P-avax1blah
-	Addr string
+	Addr string `json:"addr"`
 	// 0x1234...
-	AddrHex string
+	AddrHex string `json:"addrHex"`
 }
 
 // const TREE_TYPE_DELEGATOR = "delegator"

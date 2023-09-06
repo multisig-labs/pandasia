@@ -210,6 +210,42 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 	}
 	e.GET("/*", echo.WrapHandler(http.FileServer(http.FS(contentSub))))
 
+	// Debug routes
+
+	e.GET("/debug/generate_tree", func(c echo.Context) error {
+		addr := c.QueryParam("addr")
+		if addr == "" {
+			return echo.NewHTTPError(http.StatusBadRequest, "addr query param required")
+		}
+
+		vaddrs := []merkle.ValidatorAddress{{
+			AddrHex: addr,
+		}}
+
+		tree, err := merkle.GenerateTree(vaddrs)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+		}
+
+		// tree is bytes already formatted as JSON
+		// for now just return it
+		return c.JSON(http.StatusOK, tree)
+	})
+
+	e.GET("/debug/addresses", func(c echo.Context) error {
+		height, err := queries.MaxHeight(ctx)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+		}
+		vaddrs, err := merkle.LoadAddrsFromDB(ctx, queries, pchain.AddDelegatorTxId, int(height))
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+		}
+
+		// marshall the vaddrs to json and return
+		return c.JSON(http.StatusOK, vaddrs)
+	})
+
 	// Setup Go Routines
 
 	go func() {
@@ -220,6 +256,8 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		cancel()
 	}()
 
+	// this should be replaced with sync/errgroup
+	// see here: https://github.com/neilotoole/errgroup?tab=readme-ov-file#neilotooleerrgroup
 	g, gCtx := errgroup.WithContext(ctx)
 
 	g.Go(func() error {
