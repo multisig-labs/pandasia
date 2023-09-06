@@ -12,7 +12,6 @@ LDFLAGS := "-X " + VERSION_PATH + ".BuildDate=" + BUILD_DATE + " -X " + VERSION_
 DOCKER_IMAGE_NAME := "ghcr.io/multisig-labs/pandasia"
 DOCKER_IMAGE_TAG := "latest"
 PANDASIA_ADDR := env_var("PANDASIA_ADDR")
-export P_CHAIN_URL := env_var_or_default("P_CHAIN_URL", "https://api.avax-test.network/ext/bc/P")
 export ETH_RPC_URL := env_var_or_default("ETH_RPC_URL", "http://127.0.0.1:9650")
 export MNEMONIC := env_var_or_default("MNEMONIC", "test test test test test test test test test test test junk")
 # First key from MNEMONIC
@@ -49,9 +48,7 @@ test contract="." test="." *flags="":
 deploy: (_ping ETH_RPC_URL)
 	#!/bin/bash
 	forge script --broadcast --slow --ffi --fork-url=${ETH_RPC_URL} --private-key=${PRIVATE_KEY} scripts/deploy.s.sol
-	# Make a request to get the chain ID
-	chain_id_hex=$(curl -s --data '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' -H "Content-Type: application/json" -X POST "$ETH_RPC_URL" | jq -r '.result')
-	chain_id=$(printf "%d" "$chain_id_hex")
+	chain_id=$(cast chain-id)
 	addr=$(cat broadcast/deploy.s.sol/$chain_id/run-latest.json | jq -r ".transactions[2].contractAddress")
 	echo "Pandasia deployed to $addr"
 	sed -i '' "s/^PANDASIA_ADDR=.*/PANDASIA_ADDR=${addr}/" .env
@@ -119,3 +116,6 @@ rm-docker:
 
 kill-docker:
 	docker kill pandasia
+
+chain-id:
+	cast chain-id
