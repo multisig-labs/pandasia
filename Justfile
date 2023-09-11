@@ -9,7 +9,9 @@ GIT_COMMIT := `git rev-parse HEAD`
 BUILD_DATE := `date '+%Y-%m-%d'`
 VERSION_PATH := "github.com/multisig-labs/pandasia/pkg/version"
 LDFLAGS := "-X " + VERSION_PATH + ".BuildDate=" + BUILD_DATE + " -X " + VERSION_PATH + ".Version=" + VERSION + " -X " + VERSION_PATH + ".GitCommit=" + GIT_COMMIT
-
+DOCKER_IMAGE_NAME := "ghcr.io/multisig-labs/pandasia"
+DOCKER_IMAGE_TAG := "latest"
+PANDASIA_ADDR := env_var("PANDASIA_ADDR")
 export ETH_RPC_URL := env_var_or_default("ETH_RPC_URL", "http://127.0.0.1:9650")
 export MNEMONIC := env_var_or_default("MNEMONIC", "test test test test test test test test test test test junk")
 # First key from MNEMONIC
@@ -46,7 +48,8 @@ test contract="." test="." *flags="":
 deploy: (_ping ETH_RPC_URL)
 	#!/bin/bash
 	forge script --broadcast --slow --ffi --fork-url=${ETH_RPC_URL} --private-key=${PRIVATE_KEY} scripts/deploy.s.sol
-	addr=$(cat broadcast/deploy.s.sol/31337/run-latest.json | jq -r ".transactions[2].contractAddress")
+	chain_id=$(cast chain-id)
+	addr=$(cat broadcast/deploy.s.sol/$chain_id/run-latest.json | jq -r ".transactions[2].contractAddress")
 	echo "Pandasia deployed to $addr"
 	sed -i '' "s/^PANDASIA_ADDR=.*/PANDASIA_ADDR=${addr}/" .env
 	rm -f public/js/abi.json
@@ -63,6 +66,11 @@ cast-submit-root root: (_ping ETH_RPC_URL)
 
 cast-is-validator caddr: (_ping ETH_RPC_URL)
 	cast call ${PANDASIA_ADDR} "isRegisteredValidator(address)" {{caddr}}
+
+# TODO create a P Chain testing table
+
+sync: (_ping ETH_RPC_URL)
+	bin/pandasia sync-pchain --node-url=${ETH_RPC_URL} --db data/pandasia-fuji.db
 
 anvil:
 	anvil --port 9650 --mnemonic "${MNEMONIC}"
@@ -87,3 +95,27 @@ codegen:
 # Check if there is an http(s) server listening on [url]
 _ping url:
 	@if ! curl -k --silent --connect-timeout 2 {{url}} >/dev/null 2>&1; then echo 'No server at {{url}}!' && exit 1; fi
+
+serve:
+	JOB_PERIOD=10h SERVE_EMBEDDED=false bin/pandasia serve --db data/pandasia-dev.db --node-url $ETH_RPC_URL --pandasia-addr $PANDASIA_ADDR
+
+keys:
+	ggt utils mnemonic-keys "${MNEMONIC}"
+
+build-docker:
+	docker build --platform linux/amd64 --build-arg LDFLAGS="{{LDFLAGS}}" -t {{DOCKER_IMAGE_NAME}}:{{DOCKER_IMAGE_TAG}} .
+
+run-docker:
+	docker run --platform linux/amd64 --name "pandasia" -p 8000:8000 -v $(pwd)/data:/data -e ETH_RPC_URL={{ETH_RPC_URL}} -e PANDASIA_ADDR={{PANDASIA_ADDR}}  -e PRIVATE_KEY={{PRIVATE_KEY}} {{DOCKER_IMAGE_NAME}}:{{DOCKER_IMAGE_TAG}}
+
+run-docker-it:
+	docker run --platform linux/amd64 --name "pandasia" -it -p 8000:8000 -v $(pwd)/data:/data -e ETH_RPC_URL={{ETH_RPC_URL}} -e PANDASIA_ADDR={{PANDASIA_ADDR}} -e PRIVATE_KEY={{PRIVATE_KEY}} {{DOCKER_IMAGE_NAME}}:{{DOCKER_IMAGE_TAG}} /bin/bash
+
+rm-docker:
+	docker rm pandasia
+
+kill-docker:
+	docker kill pandasia
+
+chain-id:
+	cast chain-id
