@@ -50,10 +50,11 @@ contract Pandasia is Ownable {
 		address owner; // account that contributed the funds
 		address erc20; // claimable asset
 		uint32 expires; // time that airdop expires and no further claims can be made
-		bool union; // if union=t, then an addr in root OR validatorRoot is eligble, else addr must be in root AND validatorRoot
+		bool union; // if union=true, then an addr in root OR (previously seen valdiator in pandasia or googpool) is eligble, else addr must be in root AND validatorRoot
 	}
 
 	// Pandasia DAO will update this root (daily?) with a new tree of all validators
+	// call this set merkleRoot
 	function setValidatorRoot(bytes32 root) external onlyOwner {
 		validatorRoot = root;
 	}
@@ -104,6 +105,7 @@ contract Pandasia is Ownable {
 		token.safeTransferFrom(msg.sender, address(this), fundAmt);
 	}
 
+	// idk if this is a pchain or chcain addresses
 	function canClaimAirdrop(address addr, uint64 airdropId, bytes32[] memory proof) public view returns (bool) {
 		if (claimed[airdropId][addr]) {
 			revert AddressAlreadyClaimed();
@@ -120,6 +122,8 @@ contract Pandasia is Ownable {
 		}
 
 		bool isInAirdropRoot = verify(airdrop.root, addr, proof);
+
+		// this should be isKnownValidator
 		bool isValidator = isRegisteredValidator(addr) || isMinipoolOperator(addr);
 		bool isEligible;
 
@@ -226,6 +230,13 @@ contract Pandasia is Ownable {
 		}
 	}
 
+	function recoverMessage(uint8 v, bytes32 r, bytes32 s) view external returns (address) {
+		bytes32 msgHash = hashChecksummedMessage(msg.sender);
+		(uint256 x, uint256 y) = SECP256K1.recover(uint256(msgHash), v, uint256(r), uint256(s));
+		address paddy = pubKeyBytesToAvaAddressBytes(x, y);
+		return paddy;
+	}
+
 	// Given an address, convert to its checksummed string (mixedcase) format, and hash a message like the avalanche wallet would do
 	function hashChecksummedMessage(address addr) public pure returns (bytes32) {
 		bytes memory header = bytes("\x1AAvalanche Signed Message:\n");
@@ -245,6 +256,9 @@ contract Pandasia is Ownable {
 
 	// Uses about 35K gas for a large proof
 	function verify(bytes32 root, address account, bytes32[] memory proof) public pure returns (bool) {
+		// I want to short circuit this root check somewhere else.
+		// it's weird to me that the negative case is a 0 and onyl checked
+		// when verification happens.
 		return proof.length > 0 && account != address(0) && root != bytes32(0) && MerkleProof.verify(proof, root, _leaf(account));
 	}
 

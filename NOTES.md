@@ -48,6 +48,25 @@ just forge-script createAirdrop
 
 echo "0x0000000000000000000000000000000000000001\n0x0000000000000000000000000000000000000002" | bin/pandasia generate-tree-stdin --db data/pandasia-dev.db --desc "test tree"
 
+
+cast call $PANDASIA_ADDR "getAirdropIds(address)(uint64[])" 0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4
+
+# address to test, id of the airdrop, proof of the address in the merkle tree that the airdrop applies to
+cast call $PANDASIA_ADDR "canClaimAirdrop(address, uint64, bytes32[])" $TEST_ADDR 1 "[0x00000000000000000000000000000000,0x00000000000000000000000000000000]"
+cast call $PANDASIA_ADDR "canClaimAirdrop(address, uint64, bytes32[])(bool)" $TEST_ADDR 1 "[0x6578616d706c6500000000000000000000000000000000000000000000000000,0x6578616d706c6500000000000000000000000000000000000000000000000000]"
+
+cast call $PANDASIA_ADDR "canClaimAirdrop(address, uint64, bytes32[])(bool)" $TEST_ADDR 1 "[]"
+
+cast call $PANDASIA_ADDR "stakingContract()(address)"
+
+# I need to set the staking contract address
+
+cast send $PANDASIA_ADDR "setStakingContract(address)" 0x9946e68490D71Fe976951e360f295c4Cf8531D00 --from $OWNER --private-key $PRIVATE_KEY
+
+
+just forge-script canClaim
+
+
 ```
 
 ```bash

@@ -37,7 +37,7 @@ const fuji = {
 };
 
 const anvil = {
-	id: 31337,
+	id: 31447,
 	name: "anvil",
 	network: "anvil",
 	nativeCurrency: {
@@ -55,6 +55,25 @@ const anvil = {
 	testnet: true,
 };
 
-const chains = { avalanche, fuji, anvil };
+const fork = {
+	id: 43114,
+	name: "anvil",
+	network: "anvil",
+	nativeCurrency: {
+		decimals: 18,
+		name: "AVAX",
+		symbol: "AVAX",
+	},
+	rpcUrls: {
+		public: { http: ["http://localhost:9650"] },
+		default: { http: ["http://localhost:9650"] },
+	},
+	blockExplorers: {
+		default: { name: "Blockscout", url: "https://todo.com" },
+	},
+	testnet: true,
+};
+
+const chains = { avalanche, fuji, anvil, fork };
 
 export { chains };
