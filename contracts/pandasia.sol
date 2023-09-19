@@ -230,12 +230,21 @@ contract Pandasia is Ownable {
 		}
 	}
 
+	// TODO: Test function, remove before going to production
+	function unregisterPChainAddr() external {
+		address paddr = c2p[msg.sender];
+		delete c2p[msg.sender];
+		delete p2c[paddr];
+	}
+
+	// TODO: Test function, remove before going to production
 	function recoverMessage(uint8 v, bytes32 r, bytes32 s) view external returns (address) {
 		bytes32 msgHash = hashChecksummedMessage(msg.sender);
 		(uint256 x, uint256 y) = SECP256K1.recover(uint256(msgHash), v, uint256(r), uint256(s));
 		address paddy = pubKeyBytesToAvaAddressBytes(x, y);
 		return paddy;
 	}
+
 
 	// Given an address, convert to its checksummed string (mixedcase) format, and hash a message like the avalanche wallet would do
 	function hashChecksummedMessage(address addr) public pure returns (bytes32) {

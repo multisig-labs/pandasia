@@ -152,6 +152,37 @@ contract PandasiaTest is Test {
 		assertTrue(ok);
 	}
 
+	function testUnregisterPChainAddr() public {
+		bytes32 root = bytes32(0x1733170f5a465a52692730efa67c11a3c9b1208a5acbe833057fac165ce6947b);
+		address caddy = address(0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4);
+		// address paddy = address(0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02);
+
+		bytes32[] memory proof = new bytes32[](1);
+		proof[0] = bytes32(0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f);
+
+		Pandasia pandasia = new Pandasia();
+		pandasia.setValidatorRoot(root);
+		assertFalse(pandasia.isRegisteredValidator(caddy));
+
+		// Signature generated on wallet.avax.network
+		uint8 v = 0;
+		bytes32 r = bytes32(0x6ac1cc3277dffe75d9cc8264acacc9f464762bab7ef73921a67dee1a398bd337);
+		bytes32 s = bytes32(0x39cf19e2ff4c36ba64ed3684af9a72b59b7ccd16833666c81e84fb001bbb315a);
+
+		vm.prank(caddy);
+		pandasia.unregisterPChainAddr();
+		assertFalse(pandasia.isRegisteredValidator(caddy));
+
+		vm.prank(caddy);
+		pandasia.registerPChainAddr(v, r, s, proof);
+		assertTrue(pandasia.isRegisteredValidator(caddy));
+
+		vm.prank(caddy);
+		pandasia.unregisterPChainAddr();
+		assertFalse(pandasia.isRegisteredValidator(caddy));
+	}
+
+
 	//
 	// HELPERS
 	//
