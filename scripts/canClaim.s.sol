@@ -16,10 +16,6 @@ contract CanClaim is Script {
 		address tester = vm.envAddress("TEST_ADDR");
 
 		uint64[] memory ids = pandasia.getAirdropIds(0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4);
-		for (uint256 i = 0; i < 4; i++) {
-			console.logUint(ids[i]);
-		}
-
 
 		proof.push(0x20bbea9e3ef756ae5bd741e1747488cd45bcbb4190ca0fcb6f6e1f8f4085dadc);
     proof.push(0x7bc7dc6bf7422ff4e29869c118dee787180350debf1321d9f388cd97b310d0b4);
@@ -27,21 +23,13 @@ contract CanClaim is Script {
     proof.push(0xea66d96e5940135479c3ca2224dfdd1761a6dc7b238cf7d8bf389b7f28af74e4);
     proof.push(0x342aeef56cf4f0239ab891ea00dd1bec637eb85d20dd95473a80e88b31506491);
     proof.push(0x912c0f94b90f5fe366b4c0b6b2f9e5428a4388e9ca14be69c98c4c4ee88e6cd9);
-  // ];
-//
+
 		bytes32 root = 0x5575f4c36b81aaa8dc2e6e460d66c6a450187cdd1d220869cbf190e515719cd5;
 
 		bool verified = pandasia.verify(root, tester, proof);
 
-
-		bool canWe = pandasia.canClaimAirdrop(tester, 6, proof);
+		bool canClaim = pandasia.canClaimAirdrop(tester, 6, proof);
 		console.log("verified?", verified);
-		console.log("canwe?", canWe);
-
-		// erc20.mint(deployer, 100 ether);
-		// erc20.approve(address(pandasia), 100 ether);
-		// pandasia.fundAirdrop(id, 100 ether);
-
-		// vm.stopBroadcast();
+		console.log("canClaim?", canClaim);
 	}
 }

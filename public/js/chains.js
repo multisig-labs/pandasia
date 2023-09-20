@@ -37,7 +37,7 @@ const fuji = {
 };
 
 const anvil = {
-	id: 31447,
+	id: 31337,
 	name: "anvil",
 	network: "anvil",
 	nativeCurrency: {

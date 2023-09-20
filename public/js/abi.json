@@ -676,6 +676,13 @@
     },
     {
       "inputs": [],
+      "name": "unregisterPChainAddr",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "validatorRoot",
       "outputs": [
         {

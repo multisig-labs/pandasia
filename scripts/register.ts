@@ -5,7 +5,6 @@
 import { createWalletClient, http } from "https://esm.sh/viem@1.6.4";
 import { mnemonicToAccount } from "https://esm.sh/viem@1.6.4/accounts";
 import { chains } from "http://localhost:8000/js/chains.js";
-// import { chains } from "../public/js/chains";
 const abi = await fetch("http://localhost:8000/js/abi.json").then((res) =>
 	res.json()
 );
@@ -48,7 +47,7 @@ const client = createWalletClient({
 });
 
 // TODO get root from contract instead
-// console.log(`Register ${addrToRegister} with sig ${sigToVerify}`);
+console.log(`Register ${addrToRegister} with sig ${sigToVerify}`);
 let resp = await fetch(`${pandasiaUrl}/trees`);
 const trees = await resp.json();
 const root = trees[0].Root;

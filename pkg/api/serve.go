@@ -14,6 +14,8 @@ import (
 
 	"github.com/AbsaOSS/env-binder/env"
 	"github.com/ava-labs/avalanchego/utils/cb58"
+	"github.com/ava-labs/avalanchego/utils/formatting/address"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -67,6 +69,17 @@ type proofResponse struct {
 	SigV     string
 	SigR     string
 	SigS     string
+}
+
+type sigResponse struct {
+	SigV string
+	SigR string
+	SigS string
+}
+
+type addAddrParams struct {
+	Addrs []string `json:"addrs"`
+	Height int `json:"height"`
 }
 
 func StartHttpServer(dbFileName string, host string, port int, nodeURL string, webContent fs.FS, pandasiaAddr string) {
@@ -130,6 +143,58 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 			Height:   int(t.Height),
 			Root:     t.Root,
 			Addrs:    addrs,
+		}
+
+		return c.JSON(http.StatusOK, r)
+	})
+
+
+	// TODO: Remove before production
+	e.POST("/debug/add-addresses", func(c echo.Context) error {
+		var addrs addAddrParams
+		err := c.Bind(&addrs); if err != nil {
+			slog.Error("Error parsing arguments", err)
+			return c.String(http.StatusBadRequest, err.Error())
+		}
+
+		vaddrs := []merkle.ValidatorAddress{}
+		for _, addr := range addrs.Addrs {
+			_,_, addrBytes, err := address.Parse(addr)
+			if err != nil {
+				slog.Error("Error parsing address", err)
+				return c.JSON(http.StatusInternalServerError, err.Error())
+			}
+			vaddr := merkle.ValidatorAddress{Addr: addr, AddrHex: common.BytesToAddress(addrBytes).Hex()}
+			vaddrs = append(vaddrs, vaddr)
+		}
+
+		tree, err := merkle.GenerateTree(vaddrs)
+		if err !=nil {
+			slog.Error("Error generating tree", err.Error())
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+
+		err = merkle.SaveTreeToDB(ctx, queries, merkle.TREE_TYPE_VALIDATOR, addrs.Height, tree, "debug")
+		if err != nil {
+			slog.Error("Error saving tree to databse", err.Error())
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+
+		return c.JSON(http.StatusOK, "success")
+	})
+
+	e.GET("/sig/:sig", func(c echo.Context) error {
+		sig := c.Param("sig")
+
+		sigBytes, err := cb58.Decode(sig)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err.Error())
+		}
+
+		r := sigResponse{
+			SigR: fmt.Sprintf("0x%x", sigBytes[0:32]),
+			SigS: fmt.Sprintf("0x%x", sigBytes[32:64]),
+			SigV: fmt.Sprintf("0x%x", sigBytes[64:]),
 		}
 
 		return c.JSON(http.StatusOK, r)

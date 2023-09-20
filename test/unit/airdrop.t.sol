@@ -47,7 +47,7 @@ contract AirdropTest is Test {
 		stakingContract.setLastRewardsCycleCompleted(minipoolOperator, 1);
 
 		pandasia = new Pandasia();
-		pandasia.setValidatorRoot(validatorRoot);
+		pandasia.setMerkleRoot(validatorRoot);
 		pandasia.setStakingContract(address(stakingContract));
 		pandasia.transferOwnership(deployer);
 
@@ -69,7 +69,7 @@ contract AirdropTest is Test {
 
 		vm.startPrank(airdropOwner);
 
-		uint64 id = pandasia.newAirdrop(bytes32(0), true, address(erc20), perClaimAmt, uint32(block.timestamp + 1000));
+		uint64 id = pandasia.newAirdrop(bytes32(0), false, address(erc20), perClaimAmt, uint32(block.timestamp + 1000));
 		uint64[] memory ids = pandasia.getAirdropIds(airdropOwner);
 		assertEq(ids[0], id, "getAirdrops");
 
@@ -131,7 +131,7 @@ contract AirdropTest is Test {
 
 		vm.startPrank(airdropOwner);
 
-		uint64 id = pandasia.newAirdrop(otherRoot, true, address(erc20), perClaimAmt, uint32(block.timestamp + 1000));
+		uint64 id = pandasia.newAirdrop(otherRoot, false, address(erc20), perClaimAmt, uint32(block.timestamp + 1000));
 		uint64[] memory ids = pandasia.getAirdropIds(airdropOwner);
 		assertEq(ids[0], id, "getAirdrops");
 
