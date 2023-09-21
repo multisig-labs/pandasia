@@ -78,8 +78,8 @@ type sigResponse struct {
 }
 
 type addAddrParams struct {
-	Addrs []string `json:"addrs"`
-	Height int `json:"height"`
+	Addrs  []string `json:"addrs"`
+	Height int      `json:"height"`
 }
 
 func StartHttpServer(dbFileName string, host string, port int, nodeURL string, webContent fs.FS, pandasiaAddr string) {
@@ -148,18 +148,18 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		return c.JSON(http.StatusOK, r)
 	})
 
-
 	// TODO: Remove before production
 	e.POST("/debug/add-addresses", func(c echo.Context) error {
 		var addrs addAddrParams
-		err := c.Bind(&addrs); if err != nil {
+		err := c.Bind(&addrs)
+		if err != nil {
 			slog.Error("Error parsing arguments", err)
 			return c.String(http.StatusBadRequest, err.Error())
 		}
 
 		vaddrs := []merkle.ValidatorAddress{}
 		for _, addr := range addrs.Addrs {
-			_,_, addrBytes, err := address.Parse(addr)
+			_, _, addrBytes, err := address.Parse(addr)
 			if err != nil {
 				slog.Error("Error parsing address", err)
 				return c.JSON(http.StatusInternalServerError, err.Error())
@@ -169,7 +169,7 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		}
 
 		tree, err := merkle.GenerateTree(vaddrs)
-		if err !=nil {
+		if err != nil {
 			slog.Error("Error generating tree", err.Error())
 			return c.JSON(http.StatusInternalServerError, err.Error())
 		}
