@@ -75,6 +75,9 @@ sync: (_ping ETH_RPC_URL)
 anvil:
 	anvil --port 9650 --mnemonic "${MNEMONIC}"
 
+anvil-fork:
+	anvil --port 9650 --mnemonic "${MNEMONIC}" --fork-url https://nd-058-850-167.p2pify.com/4e4706b8fc3a3bb4a5559c84671a1cf4/ext/bc/C/rpc
+
 # Delete and recreate a dev sqlite db
 create-dev-db:
 	mkdir -p data
@@ -119,3 +122,15 @@ kill-docker:
 
 chain-id:
 	cast chain-id
+
+decoded-errors:
+	#!/usr/bin/env bash
+	join() { local d=$1 s=$2; shift 2 && printf %s "$s${@/#/$d}"; }
+	shopt -s globstar # so /**/ works
+	errors=$(cat artifacts-forge/**/*.json | jq -r '.abi[]? | select(.type == "error") | .name' | sort | uniq)
+	sigsArray=()
+	for x in $errors;	do
+		sigsArray+=("\"$(cast sig "${x}()")\":\"${x}()\"")
+	done
+	sigs=$(join ',' ${sigsArray[*]})
+	echo "{${sigs}}" | jq

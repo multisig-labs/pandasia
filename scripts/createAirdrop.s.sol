@@ -14,9 +14,12 @@ contract CreateAirdrop is Script {
 		address deployer = vm.rememberKey(deployerPk);
 		vm.startBroadcast(deployerPk);
 
-		ERC20PresetMinterPauser erc20 = new ERC20PresetMinterPauser("Mana from Heaven", "MANA");
+		ERC20PresetMinterPauser erc20 = new ERC20PresetMinterPauser("Meme from Heaven", "MEME");
 		uint32 expires = uint32(block.timestamp + 30 days);
-		uint64 id = pandasia.newAirdrop(bytes32(0), false, address(erc20), 1 ether, expires);
+		console.log("addresseerc20", address(erc20));
+
+		uint64 id = pandasia.newAirdrop(bytes32(0x5575f4c36b81aaa8dc2e6e460d66c6a450187cdd1d220869cbf190e515719cd5), true, address(erc20), 1 ether, expires);
+		console.log("AIRDROP ID", id);
 		// Fund it
 		erc20.mint(deployer, 100 ether);
 		erc20.approve(address(pandasia), 100 ether);
