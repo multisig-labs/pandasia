@@ -7,6 +7,8 @@ import {console2} from "forge-std/console2.sol";
 import {Pandasia} from "../../contracts/Pandasia.sol";
 import {StakingMock} from "../../contracts/StakingMock.sol";
 
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+
 contract AirdropTest is Test {
   ERC20Mock public erc20;
   Pandasia public pandasia;
@@ -46,9 +48,15 @@ contract AirdropTest is Test {
     stakingContract = new StakingMock();
     stakingContract.setLastRewardsCycleCompleted(minipoolOperator, 1);
 
-    pandasia = new Pandasia();
+    Pandasia pandasiaImpl = new Pandasia();
+    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(
+      address(pandasiaImpl),
+      address(deployer),
+      bytes("")
+    );
+    pandasia = Pandasia(payable(pandasiaProxy));
     pandasia.setMerkleRoot(validatorRoot);
-    pandasia.setStakingContract(address(stakingContract));
+    // pandasia.setStakingContract(address(stakingContract));
     pandasia.transferOwnership(deployer);
 
     // Signature generated on wallet.avax.network
@@ -131,7 +139,9 @@ contract AirdropTest is Test {
 
     vm.startPrank(airdropOwner);
 
+    startMeasuringGas("createAirdrop");
     uint64 id = pandasia.newAirdrop(otherRoot, false, address(erc20), perClaimAmt, uint32(block.timestamp + 1000));
+    stopMeasuringGas();
     uint64[] memory ids = pandasia.getAirdropIds(airdropOwner);
     assertEq(ids[0], id, "getAirdrops");
 

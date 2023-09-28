@@ -1,22 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-only
 pragma solidity 0.8.19;
 
+import {Airdrop} from "./Airdrop.sol";
 import {AddressChecksumUtils} from "./AddressChecksumUtils.sol";
-import "./SECP256K1.sol";
+import {SECP256K1} from "./SECP256K1.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
+import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 
 interface Staking {
   function getLastRewardsCycleCompleted(address stakerAddr) external view returns (uint256);
 }
 
-// TODO Make this contract a TransparentUpgradeableProxy so we can upgrade without losing state
-
-contract Pandasia is Ownable {
+contract Pandasia is Ownable, Initializable {
   using SafeERC20 for IERC20;
 
   error AddressNotEligible();
@@ -29,37 +30,41 @@ contract Pandasia is Ownable {
   error PAddrAlreadyRegistered();
   error PAddrNotInValidatorMerkleTree();
 
+  address public airdropImplementation;
+
   // Storage is sorted for slot optimization
   // _owner address comes from Ownable Slot 0
   uint64 public airdropCount; // counter for AirdropIds (max 18,446,744,073,709,551,615 LFGG)
-  uint32 public feePct; // 10_000 = 100% fee charged on funding an airdrop
 
-  mapping(uint64 => Airdrop) public airdrops;
-  mapping(uint64 => mapping(address => bool)) public claimed; // airdropIds => users claim status
+  mapping(uint64 => address) public airdrops;
   mapping(address => uint64[]) public airdropIds; // index of owners => airdropIds
 
   bytes32 public merkleRoot; // Merkle root defining all verified validator P-chain addresses
   mapping(address => address) public c2p; // c-chain addr => verified p-chain addr
   mapping(address => address) public p2c; // verified p-chain addr => c-chain addr
 
-  // TODO Switch this to gogopool Storage addr, and then get staking contract addr from storage
+  uint32 public feePct;
   address public stakingContract;
 
-  struct Airdrop {
-    address owner; // account that contributed the funds
-    address erc20; // claimable asset
-    uint256 balance; // current balance of asset in the airdrop
-    bytes32 root; // optional merkle root for this airdrop
-    uint256 claimAmount; // claimAmount claimable by each address
-    uint32 expires; // time that airdop expires and no further claims can be made
-    bool onlyRegistered; // if onlyRegistered=true than addr must be in root AND merkleRoot, else an addr in root OR (previously seen valdiator in pandasia or googpool) is eligble
+  function initialize() public initializer {
+    airdropImplementation = address(new Airdrop());
+  }
+
+  constructor() {
+    _disableInitializers();
   }
 
   /**************************************************************************************************************************************/
   /*** Airdrop Functions                                                                                                              ***/
   /**************************************************************************************************************************************/
 
-  function newAirdrop(bytes32 root, bool onlyRegistered, address erc20, uint256 claimAmount, uint32 expires) external returns (uint64) {
+  function newAirdrop(
+    bytes32 root,
+    bool onlyRegistered,
+    address erc20,
+    uint256 claimAmount,
+    uint32 expires
+  ) external returns (uint64) {
     if (erc20 == address(0)) {
       revert InvalidAddress();
     }
@@ -72,125 +77,26 @@ contract Pandasia is Ownable {
       revert AirdropExpired();
     }
 
+    address clone = Clones.clone(airdropImplementation);
+
+    Airdrop(clone).initialize(
+      _msgSender(),
+      root,
+      onlyRegistered,
+      erc20,
+      claimAmount,
+      expires,
+      feePct,
+      stakingContract,
+      address(this)
+    );
+
     airdropCount++;
-    Airdrop storage airdrop = airdrops[airdropCount];
-
-    // Do we care? Can they set any owner on creation?
-    airdrop.owner = msg.sender;
-    airdrop.erc20 = erc20;
-    airdrop.claimAmount = claimAmount;
-    airdrop.root = root;
-    airdrop.expires = expires;
-    airdrop.onlyRegistered = onlyRegistered;
-
+    airdrops[airdropCount] = clone;
     airdropIds[msg.sender].push(airdropCount);
 
     // TODO Emit event for airdrop creation
     return airdropCount;
-  }
-
-  function fundAirdrop(uint64 airdropId, uint256 claimAmount) external {
-    Airdrop storage airdrop = airdrops[airdropId];
-    IERC20 token = IERC20(airdrop.erc20);
-
-    uint256 balance = token.balanceOf(msg.sender);
-    if (claimAmount == 0 || balance < claimAmount) {
-      revert InvalidAmount();
-    }
-
-    uint256 feeAmt = (claimAmount * feePct) / 10_000;
-    uint256 fundAmt = claimAmount - feeAmt;
-    airdrop.balance = airdrop.balance + fundAmt;
-    token.safeTransferFrom(msg.sender, address(this), fundAmt);
-  }
-
-  function withdrawFunding(uint64 airdropId, uint256 withdrawAmt) external {
-    Airdrop memory airdrop = airdrops[airdropId];
-    if (airdrop.owner != msg.sender || airdrop.balance < withdrawAmt || block.timestamp < airdrop.expires) {
-      revert InvalidWithdrawRequest();
-    }
-    airdrop.balance = airdrop.balance - withdrawAmt;
-    IERC20(airdrop.erc20).safeTransfer(msg.sender, withdrawAmt);
-  }
-
-  // do we want to be able to withdraw funding like this?
-  function emergencyWithdraw(uint64 airdropId, uint256 withdrawAmt) external onlyOwner {
-    Airdrop memory airdrop = airdrops[airdropId];
-    if (airdrop.balance < withdrawAmt) {
-      revert InvalidWithdrawRequest();
-    }
-    airdrop.balance = airdrop.balance - withdrawAmt;
-    IERC20(airdrop.erc20).safeTransfer(msg.sender, withdrawAmt);
-  }
-
-  function getAirdropIds(address owner) public view returns (uint64[] memory) {
-    return airdropIds[owner];
-  }
-
-  /**************************************************************************************************************************************/
-  /*** Claimant Functions                                                                                                             ***/
-  /**************************************************************************************************************************************/
-
-  function claimAirdrop(uint64 airdropId, bytes32[] memory proof) external {
-    Airdrop memory airdrop = airdrops[airdropId];
-    if (canClaimAirdrop(msg.sender, airdropId, proof)) {
-      claimed[airdropId][msg.sender] = true;
-      airdrop.balance = airdrop.balance - airdrop.claimAmount;
-      IERC20(airdrop.erc20).safeTransfer(msg.sender, airdrop.claimAmount);
-    }
-
-    // emit some event
-  }
-
-  function canClaimAirdrop(address cChainAddr, uint64 airdropId, bytes32[] memory proof) public view returns (bool) {
-    if (claimed[airdropId][cChainAddr]) {
-      revert AddressAlreadyClaimed();
-    }
-
-    Airdrop memory airdrop = airdrops[airdropId];
-
-    if (block.timestamp > airdrop.expires) {
-      revert AirdropExpired();
-    }
-
-    if (airdrop.balance < airdrop.claimAmount) {
-      revert AirdropOutOfFunds();
-    }
-
-    bool isInAirdropRoot = verify(airdrop.root, cChainAddr, proof);
-
-    // this should be isKnownValidator
-    bool isKnownValidator = isRegisteredValidator(cChainAddr) || isMinipoolOperator(cChainAddr);
-    bool isEligible;
-    if (airdrop.onlyRegistered) {
-      if (isKnownValidator && isInAirdropRoot) {
-        isEligible = true;
-      }
-    } else {
-      if (isKnownValidator || isInAirdropRoot) {
-        isEligible = true;
-      }
-    }
-
-    if (!isEligible) {
-      revert AddressNotEligible();
-    }
-
-    // I wonder if this should return true or false rather than that last revert
-    return true;
-  }
-
-  function hasClaimed(uint64 airdropId, address addr) public view returns (bool) {
-    return claimed[airdropId][addr] == true;
-  }
-
-  function isRegisteredValidator(address addr) public view returns (bool) {
-    return c2p[addr] != address(0);
-  }
-
-  function isMinipoolOperator(address addr) public view returns (bool) {
-    // TODO verify this is going to work
-    return Staking(stakingContract).getLastRewardsCycleCompleted(addr) > 0;
   }
 
   /**************************************************************************************************************************************/
@@ -225,7 +131,11 @@ contract Pandasia is Ownable {
     // I want to short circuit this root check somewhere else.
     // it's weird to me that the negative case is a 0 and onyl checked
     // when verification happens.
-    return proof.length > 0 && account != address(0) && root != bytes32(0) && MerkleProof.verify(proof, root, _leaf(account));
+    return
+      proof.length > 0 &&
+      account != address(0) &&
+      root != bytes32(0) &&
+      MerkleProof.verify(proof, root, _leaf(account));
   }
 
   function _leaf(address account) internal pure returns (bytes32) {
@@ -257,22 +167,41 @@ contract Pandasia is Ownable {
     return address(ripemd160(abi.encodePacked(pubKeySha)));
   }
 
-  /**************************************************************************************************************************************/
-  /*** Owner Functions                                                                                                                ***/
-  /**************************************************************************************************************************************/
+  /********************************************************************************************************************/
+  /*** Owner Functions                                                                                             ****/
+  /********************************************************************************************************************/
 
-  function withdrawFees(uint64 airdropId) external onlyOwner {
-    Airdrop memory airdrop = airdrops[airdropId];
-    uint256 fees = IERC20(airdrop.erc20).balanceOf(address(this)) - airdrop.balance;
-    IERC20(airdrop.erc20).safeTransfer(msg.sender, fees);
+  function setMerkleRoot(bytes32 root) external onlyOwner {
+    merkleRoot = root;
   }
 
-  function getAirdrops(uint64 offset, uint64 limit) external view returns (Airdrop[] memory pageOfAirdrops) {
+  function setFeePct(uint32 _feePct) external onlyOwner {
+    feePct = _feePct;
+  }
+
+  function setStakingContract(address _stakingContract) external onlyOwner {
+    stakingContract = _stakingContract;
+  }
+
+  /********************************************************************************************************************/
+  /*** Read Functions                                                                                               ***/
+  /********************************************************************************************************************/
+
+  function isRegisteredValidator(address addr) public view returns (bool) {
+    return c2p[addr] != address(0);
+  }
+
+  function isMinipoolOperator(address addr) public view returns (bool) {
+    // TODO verify this is going to work
+    return Staking(stakingContract).getLastRewardsCycleCompleted(addr) > 0;
+  }
+
+  function getAirdrops(uint64 offset, uint64 limit) external view returns (address[] memory pageOfAirdrops) {
     uint64 max = offset + limit;
     if (max > airdropCount || limit == 0) {
       max = airdropCount;
     }
-    pageOfAirdrops = new Airdrop[](max - offset);
+    pageOfAirdrops = new address[](max - offset);
     uint64 total = 0;
     for (uint64 i = offset; i < max; i++) {
       pageOfAirdrops[total] = airdrops[i];
@@ -283,17 +212,5 @@ contract Pandasia is Ownable {
     assembly {
       mstore(pageOfAirdrops, total)
     }
-  }
-
-  function setMerkleRoot(bytes32 root) external onlyOwner {
-    merkleRoot = root;
-  }
-
-  function setFee(uint32 fee) external onlyOwner {
-    feePct = fee;
-  }
-
-  function setStakingContract(address addr) external onlyOwner {
-    stakingContract = addr;
   }
 }

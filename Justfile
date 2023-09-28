@@ -61,6 +61,12 @@ forge-script cmd:
 	fn={{cmd}}
 	forge script --broadcast --slow --ffi --fork-url=${ETH_RPC_URL} --private-key=${PRIVATE_KEY} scripts/${fn%.*.*}.s.sol
 
+# Execute a Forge script
+forge-script-test cmd:
+	#!/usr/bin/env bash
+	fn={{cmd}}
+	forge script --slow --ffi --fork-url=${ETH_RPC_URL} --private-key=${PRIVATE_KEY} scripts/${fn%.*.*}.s.sol
+
 cast-submit-root root: (_ping ETH_RPC_URL)
 	cast send --private-key=${PRIVATE_KEY} ${PANDASIA_ADDR} "setValidatorRoot(bytes32)" {{root}}
 
