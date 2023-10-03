@@ -53,7 +53,7 @@ deploy: (_ping ETH_RPC_URL)
 	echo "Pandasia deployed to $addr"
 	sed -i '' "s/^PANDASIA_ADDR=.*/PANDASIA_ADDR=${addr}/" .env
 	rm -f public/js/abi.json
-	cat artifacts-forge/contracts/Pandasia.sol/Pandasia.json | jq "{abi: .abi}" > public/js/abi.json
+	cat artifacts-forge/pandasia.sol/Pandasia.json | jq "{abi: .abi}" > public/js/abi.json
 
 # Execute a Forge script
 forge-script cmd:
@@ -62,7 +62,7 @@ forge-script cmd:
 	forge script --broadcast --slow --ffi --fork-url=${ETH_RPC_URL} --private-key=${PRIVATE_KEY} scripts/${fn%.*.*}.s.sol
 
 cast-submit-root root: (_ping ETH_RPC_URL)
-	cast send --private-key=${PRIVATE_KEY} ${PANDASIA_ADDR} "setValidatorRoot(bytes32)" {{root}}
+	cast send --private-key=${PRIVATE_KEY} ${PANDASIA_ADDR} "setMerkleRoot(bytes32)" {{root}}
 
 cast-is-validator caddr: (_ping ETH_RPC_URL)
 	cast call ${PANDASIA_ADDR} "isRegisteredValidator(address)" {{caddr}}

@@ -112,21 +112,6 @@
       "name": "airdrops",
       "outputs": [
         {
-          "internalType": "bytes32",
-          "name": "root",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "uint256",
-          "name": "balance",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
           "internalType": "address",
           "name": "owner",
           "type": "address"
@@ -137,13 +122,28 @@
           "type": "address"
         },
         {
+          "internalType": "uint256",
+          "name": "balance",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "root",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint256",
+          "name": "claimAmount",
+          "type": "uint256"
+        },
+        {
           "internalType": "uint32",
           "name": "expires",
           "type": "uint32"
         },
         {
           "internalType": "bool",
-          "name": "union",
+          "name": "onlyRegistered",
           "type": "bool"
         }
       ],
@@ -173,7 +173,7 @@
       "inputs": [
         {
           "internalType": "address",
-          "name": "addr",
+          "name": "cChainAddr",
           "type": "address"
         },
         {
@@ -280,7 +280,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "amount",
+          "name": "claimAmount",
           "type": "uint256"
         }
       ],
@@ -326,21 +326,6 @@
         {
           "components": [
             {
-              "internalType": "bytes32",
-              "name": "root",
-              "type": "bytes32"
-            },
-            {
-              "internalType": "uint256",
-              "name": "balance",
-              "type": "uint256"
-            },
-            {
-              "internalType": "uint256",
-              "name": "amount",
-              "type": "uint256"
-            },
-            {
               "internalType": "address",
               "name": "owner",
               "type": "address"
@@ -351,13 +336,28 @@
               "type": "address"
             },
             {
+              "internalType": "uint256",
+              "name": "balance",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "root",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint256",
+              "name": "claimAmount",
+              "type": "uint256"
+            },
+            {
               "internalType": "uint32",
               "name": "expires",
               "type": "uint32"
             },
             {
               "internalType": "bool",
-              "name": "union",
+              "name": "onlyRegistered",
               "type": "bool"
             }
           ],
@@ -451,6 +451,19 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "merkleRoot",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "bytes32",
@@ -459,7 +472,7 @@
         },
         {
           "internalType": "bool",
-          "name": "union",
+          "name": "onlyRegistered",
           "type": "bool"
         },
         {
@@ -469,7 +482,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "amount",
+          "name": "claimAmount",
           "type": "uint256"
         },
         {
@@ -625,12 +638,12 @@
     {
       "inputs": [
         {
-          "internalType": "address",
-          "name": "addr",
-          "type": "address"
+          "internalType": "bytes32",
+          "name": "root",
+          "type": "bytes32"
         }
       ],
-      "name": "setStakingContract",
+      "name": "setMerkleRoot",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -638,12 +651,12 @@
     {
       "inputs": [
         {
-          "internalType": "bytes32",
-          "name": "root",
-          "type": "bytes32"
+          "internalType": "address",
+          "name": "addr",
+          "type": "address"
         }
       ],
-      "name": "setValidatorRoot",
+      "name": "setStakingContract",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
@@ -679,19 +692,6 @@
       "name": "unregisterPChainAddr",
       "outputs": [],
       "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "validatorRoot",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
       "type": "function"
     },
     {
