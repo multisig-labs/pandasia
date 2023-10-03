@@ -183,12 +183,12 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		return c.JSON(http.StatusOK, "success")
 	})
 
-	e.GET("/sig/:sig", func(c echo.Context) error {
+	e.GET("/signature/:sig", func(c echo.Context) error {
 		sig := c.Param("sig")
 
 		sigBytes, err := cb58.Decode(sig)
 		if err != nil {
-			return c.JSON(http.StatusInternalServerError, err.Error())
+			return c.JSON(http.StatusUnprocessableEntity, err.Error())
 		}
 
 		r := sigResponse{
