@@ -50,6 +50,7 @@ echo "0x0000000000000000000000000000000000000001\n0x0000000000000000000000000000
 
 
 cast call $PANDASIA_ADDR "getAirdropIds(address)(uint64[])" 0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4
+cast call $PANDASIA_ADDR "getAirdrops(uint64,uint64)()" 0 10
 
 cast call $PANDASIA_ADDR "canClaimAirdrop(address, uint64, bytes32[])(bool)" $TEST_ADDR 1 "[0x6578616d706c6500000000000000000000000000000000000000000000000000,0x6578616d706c6500000000000000000000000000000000000000000000000000]"
 
@@ -95,29 +96,29 @@ signature: 24eWufzWvm38teEhNQmtE9N5BD12CWUawv1YtbYkuxeS5gGCN6CoZBgU4V4WDrLa5anYy
 
 ```json
 {
-	"format": "standard-v1",
-	"tree": [
-		"0x2e1dea9890e94d280361af414f0696bc7ba251d4e52a5f786d15629d5185a89c",
-		"0x9fec67521532e3df3ca2461c12c79c2b89e8f633311a6b525fb8488fbcd1d177",
-		"0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22",
-		"0x20b2f891eaf390d96349554ee7297a8a8972c13215d1aa9dd752f9c6822c1888",
-		"0x1ab0c6948a275349ae45a06aad66a8bd65ac18074615d53676c09b67809099e0"
-	],
-	"values": [
-		{
-			"value": ["0x0000000000000000000000000000000000000001"],
-			"treeIndex": 2
-		},
-		{
-			"value": ["0x0000000000000000000000000000000000000002"],
-			"treeIndex": 4
-		},
-		{
-			"value": ["0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02"],
-			"treeIndex": 3
-		}
-	],
-	"leafEncoding": ["address"]
+  "format": "standard-v1",
+  "tree": [
+    "0x2e1dea9890e94d280361af414f0696bc7ba251d4e52a5f786d15629d5185a89c",
+    "0x9fec67521532e3df3ca2461c12c79c2b89e8f633311a6b525fb8488fbcd1d177",
+    "0xb5d9d894133a730aa651ef62d26b0ffa846233c74177a591a4a896adfda97d22",
+    "0x20b2f891eaf390d96349554ee7297a8a8972c13215d1aa9dd752f9c6822c1888",
+    "0x1ab0c6948a275349ae45a06aad66a8bd65ac18074615d53676c09b67809099e0"
+  ],
+  "values": [
+    {
+      "value": ["0x0000000000000000000000000000000000000001"],
+      "treeIndex": 2
+    },
+    {
+      "value": ["0x0000000000000000000000000000000000000002"],
+      "treeIndex": 4
+    },
+    {
+      "value": ["0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02"],
+      "treeIndex": 3
+    }
+  ],
+  "leafEncoding": ["address"]
 }
 ```
 

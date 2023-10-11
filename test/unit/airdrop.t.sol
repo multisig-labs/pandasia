@@ -169,6 +169,49 @@ contract AirdropTest is Test {
     assertEq(erc20.balanceOf(minipoolOperator), perClaimAmt);
   }
 
+  function testGetAirdropWithoutCreating() public {
+    Pandasia.Airdrop memory airdrop = pandasia.getAirdrop(0);
+    Pandasia.Airdrop memory expected = Pandasia.Airdrop(0, address(0), address(0), 0, bytes32(0), 0, 0, false);
+
+    assertEq(airdrop.balance, expected.balance);
+    assertEq(airdrop.claimAmount, expected.claimAmount);
+    assertEq(airdrop.erc20, expected.erc20);
+    assertEq(airdrop.expires, expected.expires);
+    assertEq(airdrop.onlyRegistered, expected.onlyRegistered);
+    assertEq(airdrop.owner, expected.owner);
+    assertEq(airdrop.root, expected.root);
+  }
+
+  function testGetAirdrop() public {
+    uint256 perClaimAmt = 10 ether;
+    uint256 totalFundingAmt = 50 ether;
+    uint32 expiresAt = uint32(block.timestamp + 1000);
+
+    vm.startPrank(airdropOwner);
+
+    uint64 id = pandasia.newAirdrop(otherRoot, false, address(erc20), perClaimAmt, uint32(block.timestamp + 1000));
+    uint64[] memory ids = pandasia.getAirdropIds(airdropOwner);
+    assertEq(ids[0], id, "getAirdrops");
+
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+
+    // Fund it
+    pandasia.fundAirdrop(id, totalFundingAmt);
+    assertEq(erc20.balanceOf(airdropOwner), 0);
+
+    Pandasia.Airdrop memory airdrop = pandasia.getAirdrop(ids[0]);
+    Pandasia.Airdrop memory expected = Pandasia.Airdrop(0, airdropOwner, address(erc20), totalFundingAmt, otherRoot, perClaimAmt, expiresAt, false);
+
+    assertEq(airdrop.balance, expected.balance);
+    assertEq(airdrop.claimAmount, expected.claimAmount);
+    assertEq(airdrop.erc20, expected.erc20);
+    assertEq(airdrop.expires, expected.expires);
+    assertEq(airdrop.onlyRegistered, expected.onlyRegistered);
+    assertEq(airdrop.owner, expected.owner);
+    assertEq(airdrop.root, expected.root);
+  }
+
   //
   // HELPERS
   //
@@ -201,5 +244,15 @@ contract AirdropTest is Test {
     string memory label = checkpointLabel;
 
     emit log_named_uint(string(abi.encodePacked(label, " Gas")), checkpointGasLeft - checkpointGasLeft2);
+  }
+
+  function logAirdrop(Pandasia.Airdrop memory airdrop) internal virtual {
+    console2.log(airdrop.balance);
+    console2.log(airdrop.claimAmount);
+    console2.log(airdrop.erc20);
+    console2.log(airdrop.expires);
+    console2.log(airdrop.onlyRegistered);
+    console2.log(airdrop.owner);
+    console2.logBytes32(airdrop.root);
   }
 }

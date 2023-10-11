@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import {AddressChecksumUtils} from "./AddressChecksumUtils.sol";
 import "./SECP256K1.sol";
+import {console2} from "forge-std/console2.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
@@ -46,6 +47,7 @@ contract Pandasia is Ownable {
   address public stakingContract;
 
   struct Airdrop {
+    uint64 id;
     address owner; // account that contributed the funds
     address erc20; // claimable asset
     uint256 balance; // current balance of asset in the airdrop
@@ -72,10 +74,13 @@ contract Pandasia is Ownable {
       revert AirdropExpired();
     }
 
+    uint64 currentAirdropId = airdropCount;
     airdropCount++;
-    Airdrop storage airdrop = airdrops[airdropCount];
+
+    Airdrop storage airdrop = airdrops[currentAirdropId];
 
     // Do we care? Can they set any owner on creation?
+    airdrop.id = currentAirdropId;
     airdrop.owner = msg.sender;
     airdrop.erc20 = erc20;
     airdrop.claimAmount = claimAmount;
@@ -83,10 +88,10 @@ contract Pandasia is Ownable {
     airdrop.expires = expires;
     airdrop.onlyRegistered = onlyRegistered;
 
-    airdropIds[msg.sender].push(airdropCount);
+    airdropIds[msg.sender].push(currentAirdropId);
 
     // TODO Emit event for airdrop creation
-    return airdropCount;
+    return currentAirdropId;
   }
 
   function fundAirdrop(uint64 airdropId, uint256 claimAmount) external {
@@ -125,6 +130,10 @@ contract Pandasia is Ownable {
 
   function getAirdropIds(address owner) public view returns (uint64[] memory) {
     return airdropIds[owner];
+  }
+
+  function getAirdrop(uint64 airdropId) external view returns (Airdrop memory) {
+    return airdrops[airdropId];
   }
 
   /**************************************************************************************************************************************/
@@ -267,7 +276,7 @@ contract Pandasia is Ownable {
     IERC20(airdrop.erc20).safeTransfer(msg.sender, fees);
   }
 
-  function getAirdrops(uint64 offset, uint64 limit) external view returns (Airdrop[] memory pageOfAirdrops) {
+  function getAirdrops(uint64 offset, uint64 limit) external returns (Airdrop[] memory pageOfAirdrops) {
     uint64 max = offset + limit;
     if (max > airdropCount || limit == 0) {
       max = airdropCount;
@@ -275,7 +284,12 @@ contract Pandasia is Ownable {
     pageOfAirdrops = new Airdrop[](max - offset);
     uint64 total = 0;
     for (uint64 i = offset; i < max; i++) {
-      pageOfAirdrops[total] = airdrops[i];
+      Airdrop memory airdrop = airdrops[i];
+      logAirdrop(airdrop);
+
+      logAirdrop(airdrops[i]);
+
+      pageOfAirdrops[total] = airdrop;
       total++;
     }
     // Dirty hack to cut unused elements off end of return value (from RP)
@@ -283,6 +297,16 @@ contract Pandasia is Ownable {
     assembly {
       mstore(pageOfAirdrops, total)
     }
+  }
+
+  function logAirdrop(Pandasia.Airdrop memory airdrop) internal virtual {
+    console2.log(airdrop.balance);
+    console2.log(airdrop.claimAmount);
+    console2.log(airdrop.erc20);
+    console2.log(airdrop.expires);
+    console2.log(airdrop.onlyRegistered);
+    console2.log(airdrop.owner);
+    console2.logBytes32(airdrop.root);
   }
 
   function setMerkleRoot(bytes32 root) external onlyOwner {
