@@ -53,7 +53,7 @@ contract Pandasia is Ownable {
     uint256 balance; // current balance of asset in the airdrop
     bytes32 root; // optional merkle root for this airdrop
     uint256 claimAmount; // claimAmount claimable by each address
-    uint32 expires; // time that airdop expires and no further claims can be made
+    uint32 expiresAt; // time that airdop expires and no further claims can be made
     bool onlyRegistered; // if onlyRegistered=true than addr must be in root AND merkleRoot, else an addr in root OR (previously seen valdiator in pandasia or googpool) is eligble
   }
 
@@ -61,7 +61,7 @@ contract Pandasia is Ownable {
   /*** Airdrop Functions                                                                                                              ***/
   /**************************************************************************************************************************************/
 
-  function newAirdrop(bytes32 root, bool onlyRegistered, address erc20, uint256 claimAmount, uint32 expires) external returns (uint64) {
+  function newAirdrop(bytes32 root, bool onlyRegistered, address erc20, uint256 claimAmount, uint32 expiresAt) external returns (uint64) {
     if (erc20 == address(0)) {
       revert InvalidAddress();
     }
@@ -70,7 +70,7 @@ contract Pandasia is Ownable {
       revert InvalidAmount();
     }
 
-    if (expires < block.timestamp) {
+    if (expiresAt < block.timestamp) {
       revert AirdropExpired();
     }
 
@@ -85,7 +85,7 @@ contract Pandasia is Ownable {
     airdrop.erc20 = erc20;
     airdrop.claimAmount = claimAmount;
     airdrop.root = root;
-    airdrop.expires = expires;
+    airdrop.expiresAt = expiresAt;
     airdrop.onlyRegistered = onlyRegistered;
 
     airdropIds[msg.sender].push(currentAirdropId);
@@ -111,7 +111,7 @@ contract Pandasia is Ownable {
 
   function withdrawFunding(uint64 airdropId, uint256 withdrawAmt) external {
     Airdrop memory airdrop = airdrops[airdropId];
-    if (airdrop.owner != msg.sender || airdrop.balance < withdrawAmt || block.timestamp < airdrop.expires) {
+    if (airdrop.owner != msg.sender || airdrop.balance < withdrawAmt || block.timestamp < airdrop.expiresAt) {
       revert InvalidWithdrawRequest();
     }
     airdrop.balance = airdrop.balance - withdrawAmt;
@@ -158,7 +158,7 @@ contract Pandasia is Ownable {
 
     Airdrop memory airdrop = airdrops[airdropId];
 
-    if (block.timestamp > airdrop.expires) {
+    if (block.timestamp > airdrop.expiresAt) {
       revert AirdropExpired();
     }
 
@@ -303,7 +303,7 @@ contract Pandasia is Ownable {
     console2.log(airdrop.balance);
     console2.log(airdrop.claimAmount);
     console2.log(airdrop.erc20);
-    console2.log(airdrop.expires);
+    console2.log(airdrop.expiresAt);
     console2.log(airdrop.onlyRegistered);
     console2.log(airdrop.owner);
     console2.logBytes32(airdrop.root);

@@ -176,7 +176,7 @@ contract AirdropTest is Test {
     assertEq(airdrop.balance, expected.balance);
     assertEq(airdrop.claimAmount, expected.claimAmount);
     assertEq(airdrop.erc20, expected.erc20);
-    assertEq(airdrop.expires, expected.expires);
+    assertEq(airdrop.expiresAt, expected.expiresAt);
     assertEq(airdrop.onlyRegistered, expected.onlyRegistered);
     assertEq(airdrop.owner, expected.owner);
     assertEq(airdrop.root, expected.root);
@@ -206,7 +206,7 @@ contract AirdropTest is Test {
     assertEq(airdrop.balance, expected.balance);
     assertEq(airdrop.claimAmount, expected.claimAmount);
     assertEq(airdrop.erc20, expected.erc20);
-    assertEq(airdrop.expires, expected.expires);
+    assertEq(airdrop.expiresAt, expected.expiresAt);
     assertEq(airdrop.onlyRegistered, expected.onlyRegistered);
     assertEq(airdrop.owner, expected.owner);
     assertEq(airdrop.root, expected.root);
@@ -250,7 +250,7 @@ contract AirdropTest is Test {
     console2.log(airdrop.balance);
     console2.log(airdrop.claimAmount);
     console2.log(airdrop.erc20);
-    console2.log(airdrop.expires);
+    console2.log(airdrop.expiresAt);
     console2.log(airdrop.onlyRegistered);
     console2.log(airdrop.owner);
     console2.logBytes32(airdrop.root);
