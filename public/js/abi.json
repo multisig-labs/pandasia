@@ -17,6 +17,11 @@
     },
     {
       "inputs": [],
+      "name": "AirdropNotStarted",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "AirdropOutOfFunds",
       "type": "error"
     },
@@ -140,6 +145,11 @@
           "internalType": "uint256",
           "name": "claimAmount",
           "type": "uint256"
+        },
+        {
+          "internalType": "uint64",
+          "name": "startsAt",
+          "type": "uint64"
         },
         {
           "internalType": "uint64",
@@ -338,6 +348,11 @@
             },
             {
               "internalType": "uint64",
+              "name": "startsAt",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
               "name": "expiresAt",
               "type": "uint64"
             },
@@ -420,6 +435,11 @@
               "internalType": "uint256",
               "name": "claimAmount",
               "type": "uint256"
+            },
+            {
+              "internalType": "uint64",
+              "name": "startsAt",
+              "type": "uint64"
             },
             {
               "internalType": "uint64",
@@ -555,6 +575,11 @@
           "internalType": "uint256",
           "name": "claimAmount",
           "type": "uint256"
+        },
+        {
+          "internalType": "uint64",
+          "name": "startsAt",
+          "type": "uint64"
         },
         {
           "internalType": "uint64",
