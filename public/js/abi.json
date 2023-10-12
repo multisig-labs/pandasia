@@ -142,9 +142,9 @@
           "type": "uint256"
         },
         {
-          "internalType": "uint32",
+          "internalType": "uint64",
           "name": "expiresAt",
-          "type": "uint32"
+          "type": "uint64"
         },
         {
           "internalType": "bool",
@@ -337,9 +337,9 @@
               "type": "uint256"
             },
             {
-              "internalType": "uint32",
+              "internalType": "uint64",
               "name": "expiresAt",
-              "type": "uint32"
+              "type": "uint64"
             },
             {
               "internalType": "bool",
@@ -422,9 +422,9 @@
               "type": "uint256"
             },
             {
-              "internalType": "uint32",
+              "internalType": "uint64",
               "name": "expiresAt",
-              "type": "uint32"
+              "type": "uint64"
             },
             {
               "internalType": "bool",
@@ -557,9 +557,9 @@
           "type": "uint256"
         },
         {
-          "internalType": "uint32",
+          "internalType": "uint64",
           "name": "expiresAt",
-          "type": "uint32"
+          "type": "uint64"
         }
       ],
       "name": "newAirdrop",
