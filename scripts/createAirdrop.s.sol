@@ -15,7 +15,8 @@ contract CreateAirdrop is Script {
     vm.startBroadcast(deployerPk);
 
     ERC20PresetMinterPauser erc20 = new ERC20PresetMinterPauser("Meme from Heaven", "MEME");
-    uint32 expiresAt = uint32(block.timestamp + 30 days);
+    uint64 startsAt = uint64(block.timestamp + 1 days);
+    uint64 expiresAt = uint64(block.timestamp + 30 days);
     console.log("addresseerc20", address(erc20));
 
     uint64 id = pandasia.newAirdrop(
@@ -23,6 +24,7 @@ contract CreateAirdrop is Script {
       true,
       address(erc20),
       1 ether,
+      startsAt,
       expiresAt
     );
     console.log("AIRDROP ID", id);

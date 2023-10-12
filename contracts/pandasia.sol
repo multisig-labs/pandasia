@@ -23,6 +23,7 @@ contract Pandasia is Ownable {
   error AddressNotEligible();
   error AddressAlreadyClaimed();
   error AirdropExpired();
+  error AirdropNotStarted();
   error AirdropOutOfFunds();
   error InvalidAddress();
   error InvalidAmount();
@@ -53,6 +54,7 @@ contract Pandasia is Ownable {
     uint256 balance; // current balance of asset in the airdrop
     bytes32 root; // optional merkle root for this airdrop
     uint256 claimAmount; // claimAmount claimable by each address
+    uint64 startsAt; // time that airdop starts and claims can be made
     uint64 expiresAt; // time that airdop expires and no further claims can be made
     bool onlyRegistered; // if onlyRegistered=true than addr must be in root AND merkleRoot, else an addr in root OR (previously seen valdiator in pandasia or googpool) is eligble
   }
@@ -61,7 +63,14 @@ contract Pandasia is Ownable {
   /*** Airdrop Functions                                                                                                              ***/
   /**************************************************************************************************************************************/
 
-  function newAirdrop(bytes32 root, bool onlyRegistered, address erc20, uint256 claimAmount, uint64 expiresAt) external returns (uint64) {
+  function newAirdrop(
+    bytes32 root,
+    bool onlyRegistered,
+    address erc20,
+    uint256 claimAmount,
+    uint64 startsAt,
+    uint64 expiresAt
+  ) external returns (uint64) {
     if (erc20 == address(0)) {
       revert InvalidAddress();
     }
@@ -85,6 +94,7 @@ contract Pandasia is Ownable {
     airdrop.erc20 = erc20;
     airdrop.claimAmount = claimAmount;
     airdrop.root = root;
+    airdrop.startsAt = startsAt;
     airdrop.expiresAt = expiresAt;
     airdrop.onlyRegistered = onlyRegistered;
 
@@ -157,6 +167,10 @@ contract Pandasia is Ownable {
     }
 
     Airdrop memory airdrop = airdrops[airdropId];
+
+    if (block.timestamp < airdrop.startsAt) {
+      revert AirdropNotStarted();
+    }
 
     if (block.timestamp > airdrop.expiresAt) {
       revert AirdropExpired();
