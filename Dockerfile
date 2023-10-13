@@ -47,4 +47,4 @@ COPY --from=builder /src/bin/overmind /app/bin/overmind
 # copy cast command to /app/bin
 COPY --from=foundry /usr/local/bin/cast /app/bin/cast
 
-CMD /app/bin/overmind start -f /app/Procfile
+CMD /app/bin/overmind start -f /app/Procfile -r all
