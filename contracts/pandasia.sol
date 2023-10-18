@@ -180,7 +180,9 @@ contract Pandasia is Ownable {
       revert AirdropOutOfFunds();
     }
 
-    bool isInAirdropRoot = verify(airdrop.root, cChainAddr, proof);
+    address pChainAddr = c2p[cChainAddr];
+
+    bool isInAirdropRoot = verify(airdrop.root, pChainAddr, proof);
 
     // this should be isKnownValidator
     bool isKnownValidator = isRegisteredValidator(cChainAddr) || isMinipoolOperator(cChainAddr);
