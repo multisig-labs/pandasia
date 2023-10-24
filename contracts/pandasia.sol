@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity ^0.8.19;
 
 import {AddressChecksumUtils} from "./AddressChecksumUtils.sol";
 import "./SECP256K1.sol";
@@ -8,7 +8,7 @@ import {console2} from "forge-std/console2.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 interface Staking {
@@ -17,7 +17,7 @@ interface Staking {
 
 // TODO Make this contract a TransparentUpgradeableProxy so we can upgrade without losing state
 
-contract Pandasia is Ownable {
+contract Pandasia is OwnableUpgradeable {
   using SafeERC20 for IERC20;
 
   error AddressNotEligible();
@@ -57,6 +57,14 @@ contract Pandasia is Ownable {
     uint64 startsAt; // time that airdop starts and claims can be made
     uint64 expiresAt; // time that airdop expires and no further claims can be made
     bool onlyRegistered; // if onlyRegistered=true than addr must be in root AND merkleRoot, else an addr in root OR (previously seen valdiator in pandasia or googpool) is eligble
+  }
+
+  constructor() {
+    _disableInitializers();
+  }
+
+  function initialize() public initializer {
+    __Ownable_init(msg.sender);
   }
 
   /**************************************************************************************************************************************/
