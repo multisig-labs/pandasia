@@ -188,9 +188,12 @@ contract Pandasia is OwnableUpgradeable {
       revert AirdropOutOfFunds();
     }
 
-    address pChainAddr = c2p[cChainAddr];
+    address addr = c2p[cChainAddr];
+    if (addr == address(0)) {
+      addr = cChainAddr;
+    }
 
-    bool isInAirdropRoot = verify(airdrop.root, pChainAddr, proof);
+    bool isInAirdropRoot = verify(airdrop.root, addr, proof);
 
     // this should be isKnownValidator
     bool isKnownValidator = isRegisteredValidator(cChainAddr) || isMinipoolOperator(cChainAddr);
