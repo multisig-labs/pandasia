@@ -8,6 +8,7 @@ import {Pandasia} from "../../contracts/Pandasia.sol";
 import {StakingMock} from "../../contracts/StakingMock.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract AirdropTest is Test {
   ERC20Mock public erc20;
@@ -31,9 +32,7 @@ contract AirdropTest is Test {
     ProxyAdmin proxyAdmin = new ProxyAdmin();
     Pandasia pandasiaImpl = new Pandasia();
 
-    bytes memory data = "";
-
-    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(proxyAdmin), data);
+    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(proxyAdmin), bytes(""));
     pandasia = Pandasia(payable(pandasiaProxy));
     pandasia.initialize();
 
@@ -126,7 +125,8 @@ contract AirdropTest is Test {
     assertEq(erc20.balanceOf(airdropOwner), 1 ether);
     vm.stopPrank();
 
-    vm.expectRevert("Ownable: caller is not the owner");
+    bytes4 selector = bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
+    vm.expectRevert(abi.encodeWithSelector(selector, address(this)));
     pandasia.emergencyWithdraw(id, 1 ether);
 
     vm.prank(deployer);

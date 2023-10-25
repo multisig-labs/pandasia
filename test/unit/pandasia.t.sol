@@ -7,6 +7,8 @@ import {Pandasia} from "../../contracts/pandasia.sol";
 import {SECP256K1} from "../../contracts/SECP256K1.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 // Test Data
 // Mnemonic: test test test test test test test test test test test test test test test test test test test test test test test blade
@@ -34,9 +36,7 @@ contract PandasiaTest is Test {
     ProxyAdmin proxyAdmin = new ProxyAdmin();
     Pandasia pandasiaImpl = new Pandasia();
 
-    bytes memory data = "";
-
-    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(proxyAdmin), data);
+    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(proxyAdmin), bytes(""));
     pandasia = Pandasia(payable(pandasiaProxy));
     pandasia.initialize();
   }
@@ -186,6 +186,32 @@ contract PandasiaTest is Test {
     vm.prank(caddy);
     pandasia.unregisterPChainAddr();
     assertFalse(pandasia.isRegisteredValidator(caddy));
+  }
+
+  function testUpgrades() public {
+    ProxyAdmin proxyAdmin = new ProxyAdmin();
+    Pandasia pandasiaImpl = new Pandasia();
+
+    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(proxyAdmin), bytes(""));
+    Pandasia v1 = Pandasia(payable(pandasiaProxy));
+    v1.initialize();
+
+    // Can't initialize the implementation contract
+    vm.expectRevert(Initializable.InvalidInitialization.selector);
+    pandasiaImpl.initialize();
+
+    // Can't re-initialize the same proxy contract
+    vm.expectRevert(Initializable.InvalidInitialization.selector);
+    v1.initialize();
+
+    console2.log(address(this));
+    console2.log(proxyAdmin.owner());
+    console2.log(proxyAdmin.getProxyAdmin(ITransparentUpgradeableProxy(address(pandasiaProxy))));
+    console2.log(address(proxyAdmin));
+
+    Pandasia v2Implementation = new Pandasia();
+
+    proxyAdmin.upgrade(ITransparentUpgradeableProxy(address(pandasiaProxy)), address(v2Implementation));
   }
 
   //
