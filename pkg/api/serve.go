@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -87,6 +88,7 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 
 	ctx, cancel := context.WithCancel(context.Background())
 	dbFile, queries := db.OpenDB(dbFileName)
+	g, gCtx := errgroup.WithContext(ctx)
 
 	e := echo.New()
 	e.HideBanner = true
@@ -146,6 +148,18 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		}
 
 		return c.JSON(http.StatusOK, r)
+	})
+
+	e.GET("/sync", func(c echo.Context) error {
+		// spawn a new goroutine to do the work
+		go func() {
+			err := updatePChain(gCtx, dbFile, queries, nodeURL)
+			if err != nil {
+				slog.Error("Error updating pchain", err)
+			}
+		}()
+
+		return c.JSON(http.StatusOK, "success")
 	})
 
 	// TODO: Remove before production
@@ -285,8 +299,6 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		cancel()
 	}()
 
-	g, gCtx := errgroup.WithContext(ctx)
-
 	g.Go(func() error {
 		listenAddr := fmt.Sprintf("%s:%v", host, port)
 		return e.Start(listenAddr)
@@ -303,40 +315,10 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 			case <-ctx.Done():
 				return nil
 			case <-time.After(EnvConfig.jobPeriod):
-				slog.Info("starting sync job")
-				err := syncer.SyncPChain(gCtx, queries, nodeURL, nil)
+				err := updatePChain(gCtx, dbFile, queries, nodeURL)
 				if err != nil {
 					return err
 				}
-
-				slog.Info("updating rewards")
-				err = syncer.UpdateRewards(gCtx, dbFile)
-				if err != nil {
-					return err
-				}
-
-				height, err := queries.MaxHeight(gCtx)
-				if err != nil {
-					return err
-				}
-
-				slog.Info("loading addrs", "height", height)
-				vaddrs, err := merkle.LoadAddrsFromDB(gCtx, queries, pchain.AddValidatorTxId, int(height))
-				if err != nil {
-					return err
-				}
-
-				slog.Info("calculating tree", "len(addrs)", len(vaddrs))
-				tree, err := merkle.GenerateTree(vaddrs)
-				if err != nil {
-					return err
-				}
-
-				err = merkle.SaveTreeToDB(gCtx, queries, merkle.TREE_TYPE_VALIDATOR, int(height), tree, "")
-				if err != nil {
-					return err
-				}
-				slog.Info("tree saved to db", "height", height)
 			}
 		}
 	})
@@ -345,4 +327,42 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		slog.Error("server", "msg", err)
 	}
 
+}
+
+func updatePChain(gCtx context.Context, dbFile *sql.DB, queries *db.Queries, nodeURL string) error {
+	slog.Info("starting sync job")
+	err := syncer.SyncPChain(gCtx, queries, nodeURL, nil)
+	if err != nil {
+		return err
+	}
+
+	slog.Info("updating rewards")
+	err = syncer.UpdateRewards(gCtx, dbFile)
+	if err != nil {
+		return err
+	}
+
+	height, err := queries.MaxHeight(gCtx)
+	if err != nil {
+		return err
+	}
+
+	slog.Info("loading addrs", "height", height)
+	vaddrs, err := merkle.LoadAddrsFromDB(gCtx, queries, pchain.AddValidatorTxId, int(height))
+	if err != nil {
+		return err
+	}
+
+	slog.Info("calculating tree", "len(addrs)", len(vaddrs))
+	tree, err := merkle.GenerateTree(vaddrs)
+	if err != nil {
+		return err
+	}
+
+	err = merkle.SaveTreeToDB(gCtx, queries, merkle.TREE_TYPE_VALIDATOR, int(height), tree, "")
+	if err != nil {
+		return err
+	}
+	slog.Info("tree saved to db", "height", height)
+	return nil
 }
