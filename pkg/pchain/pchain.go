@@ -145,7 +145,11 @@ func FetchBlocks(uri string, startHeight int, num int) ([]*Block, error) {
 func MaxHeight(uri string) int64 {
 	ctx := context.Background()
 	c := platformvm.NewClient(uri)
-	height, _ := c.GetHeight(ctx)
+	height, err := c.GetHeight(ctx)
+	if err != nil {
+		slog.Warn("error fetching height", "err", err, "ur")
+		return 0
+	}
 	return int64(height)
 }
 

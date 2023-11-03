@@ -134,3 +134,5 @@ decoded-errors:
 	done
 	sigs=$(join ',' ${sigsArray[*]})
 	echo "{${sigs}}" | jq
+
+dev: build serve
