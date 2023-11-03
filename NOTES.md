@@ -20,13 +20,13 @@ just anvil
 just deploy
 
 # Start Pandasia API server in another terminal
-JOB_PERIOD=10h SERVE_EMBEDDED=false bin/pandasia serve --db data/pandasia-dev.db --node-url http://localhost:9650 --pandasia-addr $PANDASIA_ADDR
+JOB_PERIOD=10h SERVE_EMBEDDED=false bin/pandasia serve --db data/pandasia-dev.db --node-url $ETH_RPC_URL --pandasia-addr $PANDASIA_ADDR
 
 # Generate a merkle tree at current height and store in DB
 bin/pandasia generate-tree --db data/pandasia-dev.db
 
 # Submit current root to contract
-export CURRENT_ROOT=$(curl --silent localhost:8000/trees | jq -r '.[0].Root'); echo ${CURRENT_ROOT}
+export CURRENT_ROOT=$(curl --silent $PANDASIA_URL/trees | jq -r '.[0].Root'); echo ${CURRENT_ROOT}
 just cast-submit-root ${CURRENT_ROOT}
 
 
