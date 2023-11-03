@@ -19,7 +19,7 @@ while true; do
 		CURRENT_ROOT=$(curl --silent localhost:8000/trees | jq -r '.[0].Root')
 		echo "Posting root to contract..."
 		if ! /app/bin/cast send --private-key=$PRIVATE_KEY $PANDASIA_ADDR "setValidatorRoot(bytes32)" $CURRENT_ROOT; then
-		    echo "Error posting root to contract. Will try again after sleeping..."
+		    echo "Error posting root to contract to $ETH_RPC_URL. Will try again after sleeping..."
 		fi
 		echo "Done. Sleeping..."
 		sleep $INTERVAL
