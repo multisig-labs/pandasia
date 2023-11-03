@@ -9,6 +9,7 @@ if [ $# -ne 1 ]; then
 fi
 
 INTERVAL=$1
+ETH_RPC_URL=$ETH_RPC_URL/ext/bc/C/rpc
 
 # sleep for a minute to let the server come online
 sleep 60
