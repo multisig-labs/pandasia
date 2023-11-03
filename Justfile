@@ -45,11 +45,12 @@ build:
 test contract="." test="." *flags="":
 	forge test --match-contract {{contract}} --match-test {{test}} {{flags}}
 
+# after going to upgradeable mode, the 4th transaction actually deploys the proxy contract
 deploy: (_ping ETH_RPC_URL)
 	#!/bin/bash
 	forge script --broadcast --slow --ffi --fork-url=${ETH_RPC_URL} --private-key=${PRIVATE_KEY} scripts/deploy.s.sol
 	chain_id=$(cast chain-id)
-	addr=$(cat broadcast/deploy.s.sol/$chain_id/run-latest.json | jq -r ".transactions[2].contractAddress")
+	addr=$(cat broadcast/deploy.s.sol/$chain_id/run-latest.json | jq -r ".transactions[4].contractAddress")
 	echo "Pandasia deployed to $addr"
 	sed -i '' "s/^PANDASIA_ADDR=.*/PANDASIA_ADDR=${addr}/" .env
 	rm -f public/js/abi.json
@@ -66,6 +67,9 @@ cast-submit-root root: (_ping ETH_RPC_URL)
 
 cast-is-validator caddr: (_ping ETH_RPC_URL)
 	cast call ${PANDASIA_ADDR} "isRegisteredValidator(address)" {{caddr}}
+
+cast method args="":
+  cast call ${PANDASIA_ADDR} "{{method}}" {{args}}
 
 # TODO create a P Chain testing table
 
