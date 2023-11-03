@@ -94,8 +94,8 @@ func GenerateTree(vaddrs []ValidatorAddress) ([]byte, error) {
 	}
 
 	// Add in a known test addr
-	// "test ... blade" P-avax1gfpj30csekhwmf4mqkncelus5zl2ztqzvv7aww 0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02
-	values = append(values, []interface{}{smt.SolAddress("0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02")})
+	// P-avax19c57pst8wzrealc66lgkamfhkwvrc6gv2x3pns 0x2e29E0C16770879EFf1Ad7D16Eed37b3983C690C
+	values = append(values, []interface{}{smt.SolAddress("0x2e29E0C16770879EFf1Ad7D16Eed37b3983C690C")})
 
 	tree, err := smt.Of(values, leafEncodings)
 	if err != nil {
