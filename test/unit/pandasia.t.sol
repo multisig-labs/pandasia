@@ -196,6 +196,9 @@ contract PandasiaTest is Test {
     Pandasia v1 = Pandasia(payable(pandasiaProxy));
     v1.initialize();
 
+    address stakingContract = address(0x01);
+    v1.setStakingContract(stakingContract);
+
     // Can't initialize the implementation contract
     vm.expectRevert(Initializable.InvalidInitialization.selector);
     pandasiaImpl.initialize();
@@ -204,14 +207,19 @@ contract PandasiaTest is Test {
     vm.expectRevert(Initializable.InvalidInitialization.selector);
     v1.initialize();
 
-    console2.log(address(this));
-    console2.log(proxyAdmin.owner());
-    console2.log(proxyAdmin.getProxyAdmin(ITransparentUpgradeableProxy(address(pandasiaProxy))));
-    console2.log(address(proxyAdmin));
+    // ownership checks
+    assertEq(address(this), proxyAdmin.owner());
+    assertEq(proxyAdmin.getProxyAdmin(ITransparentUpgradeableProxy(address(pandasiaProxy))), address(proxyAdmin));
 
     Pandasia v2Implementation = new Pandasia();
 
+    vm.prank(address(0x01));
+    vm.expectRevert("Ownable: caller is not the owner");
     proxyAdmin.upgrade(ITransparentUpgradeableProxy(address(pandasiaProxy)), address(v2Implementation));
+
+    proxyAdmin.upgrade(ITransparentUpgradeableProxy(address(pandasiaProxy)), address(v2Implementation));
+
+    assertEq(v1.stakingContract(), stakingContract);
   }
 
   //

@@ -306,6 +306,10 @@ contract Pandasia is OwnableUpgradeable {
     stakingContract = addr;
   }
 
+  /**************************************************************************************************************************************/
+  /*** View Functions                                                                                                                 ***/
+  /**************************************************************************************************************************************/
+
   function getAirdropIds(address owner) public view returns (uint64[] memory) {
     return airdropIds[owner];
   }
@@ -313,10 +317,6 @@ contract Pandasia is OwnableUpgradeable {
   function getAirdrop(uint64 airdropId) external view returns (Airdrop memory) {
     return airdrops[airdropId];
   }
-
-  /**************************************************************************************************************************************/
-  /*** View Functions                                                                                                                 ***/
-  /**************************************************************************************************************************************/
 
   function getAirdrops(uint64 offset, uint64 limit) external returns (Airdrop[] memory pageOfAirdrops) {
     uint64 max = offset + limit;
