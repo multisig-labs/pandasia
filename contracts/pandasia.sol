@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-pragma solidity 0.8.19;
+pragma solidity ^0.8.19;
 
 import {AddressChecksumUtils} from "./AddressChecksumUtils.sol";
 import "./SECP256K1.sol";
@@ -8,7 +8,7 @@ import {console2} from "forge-std/console2.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 interface Staking {
@@ -17,7 +17,7 @@ interface Staking {
 
 // TODO Make this contract a TransparentUpgradeableProxy so we can upgrade without losing state
 
-contract Pandasia is Ownable {
+contract Pandasia is OwnableUpgradeable {
   using SafeERC20 for IERC20;
 
   error AddressNotEligible();
@@ -57,6 +57,14 @@ contract Pandasia is Ownable {
     uint64 startsAt; // time that airdop starts and claims can be made
     uint64 expiresAt; // time that airdop expires and no further claims can be made
     bool onlyRegistered; // if onlyRegistered=true than addr must be in root AND merkleRoot, else an addr in root OR (previously seen valdiator in pandasia or googpool) is eligble
+  }
+
+  constructor() {
+    _disableInitializers();
+  }
+
+  function initialize() public initializer {
+    __Ownable_init(msg.sender);
   }
 
   /**************************************************************************************************************************************/
@@ -128,24 +136,6 @@ contract Pandasia is Ownable {
     IERC20(airdrop.erc20).safeTransfer(msg.sender, withdrawAmt);
   }
 
-  // do we want to be able to withdraw funding like this?
-  function emergencyWithdraw(uint64 airdropId, uint256 withdrawAmt) external onlyOwner {
-    Airdrop memory airdrop = airdrops[airdropId];
-    if (airdrop.balance < withdrawAmt) {
-      revert InvalidWithdrawRequest();
-    }
-    airdrop.balance = airdrop.balance - withdrawAmt;
-    IERC20(airdrop.erc20).safeTransfer(msg.sender, withdrawAmt);
-  }
-
-  function getAirdropIds(address owner) public view returns (uint64[] memory) {
-    return airdropIds[owner];
-  }
-
-  function getAirdrop(uint64 airdropId) external view returns (Airdrop memory) {
-    return airdrops[airdropId];
-  }
-
   /**************************************************************************************************************************************/
   /*** Claimant Functions                                                                                                             ***/
   /**************************************************************************************************************************************/
@@ -180,9 +170,12 @@ contract Pandasia is Ownable {
       revert AirdropOutOfFunds();
     }
 
-    address pChainAddr = c2p[cChainAddr];
+    address addr = c2p[cChainAddr];
+    if (addr == address(0)) {
+      addr = cChainAddr;
+    }
 
-    bool isInAirdropRoot = verify(airdrop.root, pChainAddr, proof);
+    bool isInAirdropRoot = verify(airdrop.root, addr, proof);
 
     // this should be isKnownValidator
     bool isKnownValidator = isRegisteredValidator(cChainAddr) || isMinipoolOperator(cChainAddr);
@@ -292,6 +285,39 @@ contract Pandasia is Ownable {
     IERC20(airdrop.erc20).safeTransfer(msg.sender, fees);
   }
 
+  function emergencyWithdraw(uint64 airdropId, uint256 withdrawAmt) external onlyOwner {
+    Airdrop memory airdrop = airdrops[airdropId];
+    if (airdrop.balance < withdrawAmt) {
+      revert InvalidWithdrawRequest();
+    }
+    airdrop.balance = airdrop.balance - withdrawAmt;
+    IERC20(airdrop.erc20).safeTransfer(msg.sender, withdrawAmt);
+  }
+
+  function setMerkleRoot(bytes32 root) external onlyOwner {
+    merkleRoot = root;
+  }
+
+  function setFee(uint32 fee) external onlyOwner {
+    feePct = fee;
+  }
+
+  function setStakingContract(address addr) external onlyOwner {
+    stakingContract = addr;
+  }
+
+  /**************************************************************************************************************************************/
+  /*** View Functions                                                                                                                 ***/
+  /**************************************************************************************************************************************/
+
+  function getAirdropIds(address owner) public view returns (uint64[] memory) {
+    return airdropIds[owner];
+  }
+
+  function getAirdrop(uint64 airdropId) external view returns (Airdrop memory) {
+    return airdrops[airdropId];
+  }
+
   function getAirdrops(uint64 offset, uint64 limit) external returns (Airdrop[] memory pageOfAirdrops) {
     uint64 max = offset + limit;
     if (max > airdropCount || limit == 0) {
@@ -323,17 +349,5 @@ contract Pandasia is Ownable {
     console2.log(airdrop.onlyRegistered);
     console2.log(airdrop.owner);
     console2.logBytes32(airdrop.root);
-  }
-
-  function setMerkleRoot(bytes32 root) external onlyOwner {
-    merkleRoot = root;
-  }
-
-  function setFee(uint32 fee) external onlyOwner {
-    feePct = fee;
-  }
-
-  function setStakingContract(address addr) external onlyOwner {
-    stakingContract = addr;
   }
 }

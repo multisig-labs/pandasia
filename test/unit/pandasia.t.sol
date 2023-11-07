@@ -1,10 +1,14 @@
-pragma solidity 0.8.19;
+pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {console2} from "forge-std/console2.sol";
 import {Pandasia} from "../../contracts/pandasia.sol";
 import {SECP256K1} from "../../contracts/SECP256K1.sol";
+import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 // Test Data
 // Mnemonic: test test test test test test test test test test test test test test test test test test test test test test test blade
@@ -26,7 +30,16 @@ import {SECP256K1} from "../../contracts/SECP256K1.sol";
 // Proof for 0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4: [0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f]
 
 contract PandasiaTest is Test {
-  function setUp() public {}
+  Pandasia public pandasia;
+
+  function setUp() public {
+    ProxyAdmin proxyAdmin = new ProxyAdmin();
+    Pandasia pandasiaImpl = new Pandasia();
+
+    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(proxyAdmin), bytes(""));
+    pandasia = Pandasia(payable(pandasiaProxy));
+    pandasia.initialize();
+  }
 
   function testRegisterPChainAddr() public {
     bytes32 root = bytes32(0x1733170f5a465a52692730efa67c11a3c9b1208a5acbe833057fac165ce6947b);
@@ -35,7 +48,6 @@ contract PandasiaTest is Test {
     bytes32[] memory proof = new bytes32[](1);
     proof[0] = bytes32(0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f);
 
-    Pandasia pandasia = new Pandasia();
     pandasia.setMerkleRoot(root);
     assertFalse(pandasia.isRegisteredValidator(caddy));
 
@@ -76,7 +88,6 @@ contract PandasiaTest is Test {
   }
 
   // function testMessageHash() public {
-  // 	Pandasia pandasia = new Pandasia();
   // 	bytes32 msgHash = pandasia.hashMessage(address(0x63682bDC5f875e9bF69E201550658492C9763F89));
   // 	bytes32 hashFromWallet = 0x68C88E730ECED13EE4A68EFF65D3D250BB7B0F27C1CB4C8E20C52514D45D9390;
   // 	assertEq(msgHash, hashFromWallet);
@@ -84,7 +95,6 @@ contract PandasiaTest is Test {
 
   // Ensure pandasia is hashing messages the same as the avax wallet
   function testMessageHash() public {
-    Pandasia pandasia = new Pandasia();
     bytes32 msgHash = pandasia.hashChecksummedMessage(address(0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4));
     // Use gogotools ggt utils msgdigest 0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4 to get hashFromWallet
     bytes32 hashFromWallet = 0x1627404f56d262d498dd02e4fd880f38fafd6ed220dc9a3c3c9e75fe9846dc30;
@@ -98,7 +108,6 @@ contract PandasiaTest is Test {
     // using that we can then check the Merkle tree to see if that addr was a validator
     address actualPchainAddrBytes = address(0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02);
 
-    Pandasia pandasia = new Pandasia();
     bytes32 msgHash = pandasia.hashChecksummedMessage(address(0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4));
     // Known-good sig from wallet.avax.network
     // signer: P-avax1gfpj30csekhwmf4mqkncelus5zl2ztqzvv7aww msg: 0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4
@@ -113,7 +122,6 @@ contract PandasiaTest is Test {
   }
 
   function testProof() public {
-    Pandasia pandasia = new Pandasia();
     bytes32 root = bytes32(0xfcd7a701a861392c67cef2baaaf08063a1214f4ba4c3948c45b8e2008d28a35e);
     bytes32[] memory proof = new bytes32[](1);
     proof[0] = bytes32(0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f);
@@ -124,7 +132,6 @@ contract PandasiaTest is Test {
 
   // Merkle tree generated from P-chain snapshot
   function testLargeProof() public {
-    Pandasia pandasia = new Pandasia();
     bytes32 root = bytes32(0x1e2e8273c778f47235885ca5ab7db6645b768acc25c307b3069e6dc403b09551);
     bytes32[] memory proof = new bytes32[](18);
     proof[0] = bytes32(0x2fac3b7f6bf64f871937debc74f5086362a5da55855b0af732f80c9c0e547a17);
@@ -160,7 +167,6 @@ contract PandasiaTest is Test {
     bytes32[] memory proof = new bytes32[](1);
     proof[0] = bytes32(0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f);
 
-    Pandasia pandasia = new Pandasia();
     pandasia.setMerkleRoot(root);
     assertFalse(pandasia.isRegisteredValidator(caddy));
 
@@ -180,6 +186,40 @@ contract PandasiaTest is Test {
     vm.prank(caddy);
     pandasia.unregisterPChainAddr();
     assertFalse(pandasia.isRegisteredValidator(caddy));
+  }
+
+  function testUpgrades() public {
+    ProxyAdmin proxyAdmin = new ProxyAdmin();
+    Pandasia pandasiaImpl = new Pandasia();
+
+    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(proxyAdmin), bytes(""));
+    Pandasia v1 = Pandasia(payable(pandasiaProxy));
+    v1.initialize();
+
+    address stakingContract = address(0x01);
+    v1.setStakingContract(stakingContract);
+
+    // Can't initialize the implementation contract
+    vm.expectRevert(Initializable.InvalidInitialization.selector);
+    pandasiaImpl.initialize();
+
+    // Can't re-initialize the same proxy contract
+    vm.expectRevert(Initializable.InvalidInitialization.selector);
+    v1.initialize();
+
+    // ownership checks
+    assertEq(address(this), proxyAdmin.owner());
+    assertEq(proxyAdmin.getProxyAdmin(ITransparentUpgradeableProxy(address(pandasiaProxy))), address(proxyAdmin));
+
+    Pandasia v2Implementation = new Pandasia();
+
+    vm.prank(address(0x01));
+    vm.expectRevert("Ownable: caller is not the owner");
+    proxyAdmin.upgrade(ITransparentUpgradeableProxy(address(pandasiaProxy)), address(v2Implementation));
+
+    proxyAdmin.upgrade(ITransparentUpgradeableProxy(address(pandasiaProxy)), address(v2Implementation));
+
+    assertEq(v1.stakingContract(), stakingContract);
   }
 
   //

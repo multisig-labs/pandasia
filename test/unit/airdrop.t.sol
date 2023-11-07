@@ -1,4 +1,4 @@
-pragma solidity 0.8.19;
+pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
@@ -6,6 +6,9 @@ import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
 import {console2} from "forge-std/console2.sol";
 import {Pandasia} from "../../contracts/Pandasia.sol";
 import {StakingMock} from "../../contracts/StakingMock.sol";
+import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 contract AirdropTest is Test {
   ERC20Mock public erc20;
@@ -26,6 +29,13 @@ contract AirdropTest is Test {
   bytes32 public otherRoot;
 
   function setUp() public {
+    ProxyAdmin proxyAdmin = new ProxyAdmin();
+    Pandasia pandasiaImpl = new Pandasia();
+
+    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(proxyAdmin), bytes(""));
+    pandasia = Pandasia(payable(pandasiaProxy));
+    pandasia.initialize();
+
     deployer = getActor("deployer");
     airdropOwner = getActor("airdropOwner");
     minipoolOperator = getActor("minipoolOperator");
@@ -46,7 +56,6 @@ contract AirdropTest is Test {
     stakingContract = new StakingMock();
     stakingContract.setLastRewardsCycleCompleted(minipoolOperator, 1);
 
-    pandasia = new Pandasia();
     pandasia.setMerkleRoot(validatorRoot);
     pandasia.setStakingContract(address(stakingContract));
     pandasia.transferOwnership(deployer);
@@ -116,7 +125,8 @@ contract AirdropTest is Test {
     assertEq(erc20.balanceOf(airdropOwner), 1 ether);
     vm.stopPrank();
 
-    vm.expectRevert("Ownable: caller is not the owner");
+    bytes4 selector = bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
+    vm.expectRevert(abi.encodeWithSelector(selector, address(this)));
     pandasia.emergencyWithdraw(id, 1 ether);
 
     vm.prank(deployer);
