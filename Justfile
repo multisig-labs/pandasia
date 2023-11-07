@@ -71,6 +71,12 @@ cast-is-validator caddr: (_ping ETH_RPC_URL)
 cast method args="":
   cast call ${PANDASIA_ADDR} "{{method}}" {{args}}
 
+approve-token token_addr amount:
+  cast send {{token_addr}} "approve(address,uint256)" ${PANDASIA_ADDR} {{amount}} --private-key=${PRIVATE_KEY}
+
+fund-airdrop airdrop_id amount:
+  cast send ${PANDASIA_ADDR} "fundAirdrop(uint64,uint256)" {{airdrop_id}} {{amount}} --private-key=${PRIVATE_KEY}
+
 # TODO create a P Chain testing table
 
 sync: (_ping ETH_RPC_URL)
