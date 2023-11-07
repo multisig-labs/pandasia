@@ -6,5 +6,4 @@ optimizer = true
 optimizer_runs = 5_000
 gas-reports = ["*"]
 solc-version = "0.8.20"
-# auto_detect_solc = true
 verbosity = 2

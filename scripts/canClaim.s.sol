@@ -29,15 +29,6 @@ contract CanClaim is Script {
 
     address tester = address(0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02);
 
-    // uint64[] memory ids = pandasia.getAirdropIds(0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4);
-
-    // proof.push(0x20bbea9e3ef756ae5bd741e1747488cd45bcbb4190ca0fcb6f6e1f8f4085dadc);
-    // proof.push(0x7bc7dc6bf7422ff4e29869c118dee787180350debf1321d9f388cd97b310d0b4);
-    // proof.push(0xe2be3db3f680ad7b8bed5efcd5b47c8abfd716e9608aeb9265be1be5c9f2d2f8);
-    // proof.push(0xea66d96e5940135479c3ca2224dfdd1761a6dc7b238cf7d8bf389b7f28af74e4);
-    // proof.push(0x342aeef56cf4f0239ab891ea00dd1bec637eb85d20dd95473a80e88b31506491);
-    // proof.push(0x912c0f94b90f5fe366b4c0b6b2f9e5428a4388e9ca14be69c98c4c4ee88e6cd9);
-
     bytes32 root = 0x6128219813313b6056381b56d5699edcda31e2afa6558aa9866e0f9021f7725d;
 
     bool verified = pandasia.verify(root, tester, proof);
