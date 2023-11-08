@@ -30,6 +30,7 @@ contract Pandasia is OwnableUpgradeable {
   error InvalidWithdrawRequest();
   error PAddrAlreadyRegistered();
   error PAddrNotInValidatorMerkleTree();
+  error ZeroAmount();
 
   // Storage is sorted for slot optimization
   // _owner address comes from Ownable Slot 0
@@ -117,7 +118,12 @@ contract Pandasia is OwnableUpgradeable {
     IERC20 token = IERC20(airdrop.erc20);
 
     uint256 balance = token.balanceOf(msg.sender);
-    if (fundAmount == 0 || balance < fundAmount) {
+
+    if (fundAmount == 0) {
+      revert ZeroAmount();
+    }
+
+    if (balance < fundAmount) {
       revert InvalidAmount();
     }
 

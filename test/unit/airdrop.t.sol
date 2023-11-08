@@ -262,7 +262,7 @@ contract AirdropTest is Test {
     vm.expectRevert(Pandasia.InvalidAmount.selector);
     pandasia.fundAirdrop(id, totalFundingAmt + 10);
 
-    vm.expectRevert(Pandasia.InvalidAmount.selector);
+    vm.expectRevert(Pandasia.ZeroAmount.selector);
     pandasia.fundAirdrop(id, 0);
   }
 
