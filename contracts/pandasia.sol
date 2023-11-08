@@ -25,9 +25,11 @@ contract Pandasia is OwnableUpgradeable {
   error AirdropExpired();
   error AirdropNotStarted();
   error AirdropOutOfFunds();
+  error AirdropStillActive();
   error InvalidAddress();
   error InvalidAmount();
   error InvalidWithdrawRequest();
+  error NotOwner();
   error PAddrAlreadyRegistered();
   error PAddrNotInValidatorMerkleTree();
   error ZeroAmount();
@@ -135,8 +137,16 @@ contract Pandasia is OwnableUpgradeable {
 
   function withdrawFunding(uint64 airdropId, uint256 withdrawAmt) external {
     Airdrop memory airdrop = airdrops[airdropId];
-    if (airdrop.owner != msg.sender || airdrop.balance < withdrawAmt || block.timestamp < airdrop.expiresAt) {
-      revert InvalidWithdrawRequest();
+    if (airdrop.owner != msg.sender) {
+      revert NotOwner();
+    }
+
+    if (airdrop.balance < withdrawAmt) {
+      revert InvalidAmount();
+    }
+
+    if (block.timestamp < airdrop.expiresAt) {
+      revert AirdropStillActive();
     }
     airdrop.balance = airdrop.balance - withdrawAmt;
     IERC20(airdrop.erc20).safeTransfer(msg.sender, withdrawAmt);
@@ -147,7 +157,7 @@ contract Pandasia is OwnableUpgradeable {
   /**************************************************************************************************************************************/
 
   function claimAirdrop(uint64 airdropId, bytes32[] memory proof) external {
-    Airdrop memory airdrop = airdrops[airdropId];
+    Airdrop storage airdrop = airdrops[airdropId];
     if (canClaimAirdrop(msg.sender, airdropId, proof)) {
       claimed[airdropId][msg.sender] = true;
       airdrop.balance = airdrop.balance - airdrop.claimAmount;

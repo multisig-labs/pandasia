@@ -110,14 +110,17 @@ contract AirdropTest is Test {
     pandasia.claimAirdrop(id, emptyProof);
     vm.stopPrank();
 
-    vm.expectRevert(Pandasia.InvalidWithdrawRequest.selector);
+    Pandasia.Airdrop memory ad = pandasia.getAirdrop(id);
+    console2.log(ad.balance);
+
+    vm.expectRevert(Pandasia.NotOwner.selector);
     pandasia.withdrawFunding(id, 1 ether);
 
     vm.startPrank(airdropOwner);
-    vm.expectRevert(Pandasia.InvalidWithdrawRequest.selector);
+    vm.expectRevert(Pandasia.InvalidAmount.selector);
     pandasia.withdrawFunding(id, totalFundingAmt);
 
-    vm.expectRevert(Pandasia.InvalidWithdrawRequest.selector);
+    vm.expectRevert(Pandasia.AirdropStillActive.selector);
     pandasia.withdrawFunding(id, 1 ether);
 
     vm.warp(block.timestamp + 1001);
