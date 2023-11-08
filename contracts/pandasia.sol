@@ -112,19 +112,19 @@ contract Pandasia is OwnableUpgradeable {
     return currentAirdropId;
   }
 
-  function fundAirdrop(uint64 airdropId, uint256 claimAmount) external {
+  function fundAirdrop(uint64 airdropId, uint256 fundAmount) external {
     Airdrop storage airdrop = airdrops[airdropId];
     IERC20 token = IERC20(airdrop.erc20);
 
     uint256 balance = token.balanceOf(msg.sender);
-    if (claimAmount == 0 || balance < claimAmount) {
+    if (fundAmount == 0 || balance < fundAmount) {
       revert InvalidAmount();
     }
 
-    uint256 feeAmt = (claimAmount * feePct) / 10_000;
-    uint256 fundAmt = claimAmount - feeAmt;
+    uint256 feeAmt = (fundAmount * feePct) / 10_000;
+    uint256 fundAmt = fundAmount - feeAmt;
     airdrop.balance = airdrop.balance + fundAmt;
-    token.safeTransferFrom(msg.sender, address(this), fundAmt);
+    token.safeTransferFrom(msg.sender, address(this), fundAmt + feeAmt);
   }
 
   function withdrawFunding(uint64 airdropId, uint256 withdrawAmt) external {
