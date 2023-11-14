@@ -71,25 +71,231 @@ contract AirdropTest is Test {
     erc20 = new ERC20Mock();
   }
 
+  /**************************************************************************************************************************************/
+  /*** New Airdrop Tests                                                                                                              ***/
+  /**************************************************************************************************************************************/
+
   function testNewAirdropNoAdditionalMerkeRoot() public {
-    bool isEligible;
     uint256 perClaimAmt = 10 ether;
     uint256 totalFundingAmt = 20 ether;
 
     vm.startPrank(airdropOwner);
-
     uint64 id = pandasia.newAirdrop(bytes32(0), false, address(erc20), perClaimAmt, uint64(block.timestamp), uint64(block.timestamp + 1000));
-    uint64[] memory ids = pandasia.getAirdropIds(airdropOwner);
-    assertEq(ids[0], id, "getAirdrops");
+
+    // fund it
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+    pandasia.fundAirdrop(id, totalFundingAmt);
+    vm.stopPrank();
+
+    vm.expectRevert(Pandasia.AddressNotEligible.selector);
+    pandasia.canClaimAirdrop(notEligibleUser, id, emptyProof);
+
+    assertTrue(pandasia.canClaimAirdrop(validator, id, emptyProof));
+
+    // other is not registered with pandasia and is not in this merkleProof
+    vm.expectRevert(Pandasia.AddressNotEligible.selector);
+    pandasia.canClaimAirdrop(otherUser, id, emptyProof);
+    vm.expectRevert(Pandasia.AddressNotEligible.selector);
+    pandasia.canClaimAirdrop(otherUser, id, otherProof);
+
+    // minipool operator is elgible
+    assertTrue(pandasia.canClaimAirdrop(minipoolOperator, id, emptyProof));
+  }
+
+  function testNewAirdropWithAdditionalMerkeRoot() public {
+    uint256 perClaimAmt = 10 ether;
+    uint256 totalFundingAmt = 50 ether;
+
+    vm.startPrank(airdropOwner);
+    uint64 id = pandasia.newAirdrop(otherRoot, false, address(erc20), perClaimAmt, uint64(block.timestamp), uint64(block.timestamp + 1000));
+    // fund it
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+    pandasia.fundAirdrop(id, totalFundingAmt);
+    vm.stopPrank();
+
+    vm.expectRevert(Pandasia.AddressNotEligible.selector);
+    pandasia.canClaimAirdrop(notEligibleUser, id, emptyProof);
+
+    // validator is registered with pandasia but not in the merkle proof
+    assertTrue(pandasia.canClaimAirdrop(validator, id, emptyProof));
+
+    // other is not registered with pandasia but is in the merkle proof
+    // no proof
+    vm.expectRevert(Pandasia.AddressNotEligible.selector);
+    pandasia.canClaimAirdrop(otherUser, id, emptyProof);
+
+    // pass proof
+    assertTrue(pandasia.canClaimAirdrop(otherUser, id, otherProof));
+
+    // minipool operfator is elgible
+    assertTrue(pandasia.canClaimAirdrop(minipoolOperator, id, emptyProof));
+  }
+
+  function testNewAirdropWithAdditionalMerkeRootOnlyRegistered() public {
+    uint256 perClaimAmt = 10 ether;
+    uint256 totalFundingAmt = 50 ether;
+    bool onlyRegistered = true;
+
+    vm.startPrank(airdropOwner);
+    uint64 id = pandasia.newAirdrop(
+      validatorRoot,
+      onlyRegistered,
+      address(erc20),
+      perClaimAmt,
+      uint64(block.timestamp),
+      uint64(block.timestamp + 1000)
+    );
+    // fund it
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+    pandasia.fundAirdrop(id, totalFundingAmt);
+    vm.stopPrank();
+
+    vm.expectRevert(Pandasia.AddressNotEligible.selector);
+    pandasia.canClaimAirdrop(notEligibleUser, id, emptyProof);
+
+    // will pass because validator is registered and in validator root
+    assertTrue(pandasia.canClaimAirdrop(validator, id, validatorProof));
+
+    // must pass in a proof for the merkleroot
+    vm.expectRevert(Pandasia.AddressNotEligible.selector);
+    pandasia.canClaimAirdrop(otherUser, id, emptyProof);
+
+    // But other is not a registered validator
+    vm.expectRevert(Pandasia.AddressNotEligible.selector);
+    pandasia.canClaimAirdrop(otherUser, id, otherProof);
+
+    // minipool operator is not elgible since they are not in merkleRoot
+    vm.expectRevert(Pandasia.AddressNotEligible.selector);
+    pandasia.canClaimAirdrop(minipoolOperator, id, emptyProof);
+  }
+
+  function testNewAirdropInvalidERC20() public {
+    address invalidErc20 = address(0);
+    address validErc20 = address(erc20);
+    vm.expectRevert(Pandasia.InvalidAddress.selector);
+    pandasia.newAirdrop(bytes32(0), false, invalidErc20, 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
+
+    uint64 id = pandasia.newAirdrop(bytes32(0), false, validErc20, 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
+    Pandasia.Airdrop memory airdrop = pandasia.getAirdrop(id);
+    assertEq(airdrop.erc20, validErc20);
+  }
+
+  function testNewAirdropInvalidAmount() public {
+    uint256 invalidAmount = 0 ether;
+    uint256 validAmount = 10 ether;
+    vm.expectRevert(Pandasia.InvalidAmount.selector);
+    pandasia.newAirdrop(bytes32(0), false, address(erc20), invalidAmount, uint32(block.timestamp), uint64(block.timestamp + 1000));
+
+    uint64 id = pandasia.newAirdrop(bytes32(0), false, address(erc20), validAmount, uint32(block.timestamp), uint64(block.timestamp + 1000));
+    Pandasia.Airdrop memory airdrop = pandasia.getAirdrop(id);
+    assertEq(airdrop.claimAmount, validAmount);
+  }
+
+  function testNewAirdropExpired() public {
+    uint64 invalidExpiresAt = uint64(block.timestamp - 1);
+    uint64 validExpiresAt = uint64(block.timestamp + 1000);
+    vm.expectRevert(Pandasia.AirdropExpired.selector);
+    pandasia.newAirdrop(bytes32(0), false, address(erc20), 10 ether, uint32(block.timestamp), invalidExpiresAt);
+
+    uint64 id = pandasia.newAirdrop(bytes32(0), false, address(erc20), 10 ether, uint32(block.timestamp), validExpiresAt);
+    Pandasia.Airdrop memory airdrop = pandasia.getAirdrop(id);
+    assertEq(airdrop.expiresAt, validExpiresAt);
+  }
+
+  /**************************************************************************************************************************************/
+  /*** Can Claim Tests                                                                                                                ***/
+  /**************************************************************************************************************************************/
+
+  function testCanClaimAirdropNotStarted() public {
+    uint256 perClaimAmt = 10 ether;
+    uint256 totalFundingAmt = 50 ether;
+    uint256 futureTime = 100;
+
+    vm.startPrank(airdropOwner);
+    uint64 id = pandasia.newAirdrop(
+      bytes32(0),
+      false,
+      address(erc20),
+      perClaimAmt,
+      uint64(block.timestamp + futureTime),
+      uint64(block.timestamp + 1000)
+    );
 
     erc20.mint(airdropOwner, totalFundingAmt);
     erc20.approve(address(pandasia), totalFundingAmt);
-
-    // Fund it
     pandasia.fundAirdrop(id, totalFundingAmt);
-    assertEq(erc20.balanceOf(airdropOwner), 0);
-
     vm.stopPrank();
+
+    vm.expectRevert(Pandasia.AirdropNotStarted.selector);
+    pandasia.canClaimAirdrop(validator, id, emptyProof);
+
+    vm.warp(block.timestamp + futureTime);
+    assertTrue(pandasia.canClaimAirdrop(validator, id, emptyProof));
+  }
+
+  function testCanClaimAirdropExpired() public {
+    uint256 perClaimAmt = 10 ether;
+    uint256 totalFundingAmt = 50 ether;
+    uint256 endTime = 100;
+
+    vm.startPrank(airdropOwner);
+    uint64 id = pandasia.newAirdrop(bytes32(0), false, address(erc20), perClaimAmt, uint64(block.timestamp), uint64(block.timestamp + 100));
+
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+    pandasia.fundAirdrop(id, totalFundingAmt);
+    vm.stopPrank();
+
+    vm.warp(block.timestamp + endTime + 1);
+
+    vm.expectRevert(Pandasia.AirdropExpired.selector);
+    pandasia.canClaimAirdrop(validator, id, emptyProof);
+  }
+
+  function testCanClaimAirdropOutOfFunds() public {
+    vm.prank(airdropOwner);
+    uint64 id = pandasia.newAirdrop(bytes32(0), false, address(erc20), 10 ether, uint64(block.timestamp), uint64(block.timestamp + 100));
+
+    vm.expectRevert(Pandasia.AirdropOutOfFunds.selector);
+    pandasia.canClaimAirdrop(validator, id, emptyProof);
+
+    vm.startPrank(airdropOwner);
+    uint256 totalFundingAmt = 50 ether;
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+    pandasia.fundAirdrop(id, totalFundingAmt);
+    vm.stopPrank();
+
+    pandasia.canClaimAirdrop(validator, id, emptyProof);
+  }
+
+  function testCanOnlyClaimOnce() public {
+    uint256 perClaimAmt = 10 ether;
+    uint64 id = createFundedAirdrop(perClaimAmt);
+
+    uint256 preBalance = erc20.balanceOf(validator);
+    vm.prank(validator);
+    pandasia.claimAirdrop(id, emptyProof);
+    assertEq(erc20.balanceOf(validator), preBalance + perClaimAmt);
+
+    vm.prank(validator);
+    vm.expectRevert(Pandasia.AddressAlreadyClaimed.selector);
+    pandasia.claimAirdrop(id, emptyProof);
+  }
+
+  function testCanClaimAndClaimMatch() public {
+    uint256 perClaimAmt = 10 ether;
+    uint64 id = createFundedAirdrop(perClaimAmt);
+
+    assertTrue(pandasia.canClaimAirdrop(validator, id, emptyProof));
+
+    uint256 preBalance = erc20.balanceOf(validator);
+    vm.prank(validator);
+    pandasia.claimAirdrop(id, emptyProof);
+    assertEq(erc20.balanceOf(validator), preBalance + perClaimAmt);
 
     vm.expectRevert(Pandasia.AddressNotEligible.selector);
     pandasia.canClaimAirdrop(notEligibleUser, id, emptyProof);
@@ -97,36 +303,166 @@ contract AirdropTest is Test {
     vm.prank(notEligibleUser);
     vm.expectRevert(Pandasia.AddressNotEligible.selector);
     pandasia.claimAirdrop(id, emptyProof);
+  }
 
-    isEligible = pandasia.canClaimAirdrop(validator, id, emptyProof);
-    assertTrue(isEligible);
+  function testHasClaimed() public {
+    uint256 perClaimAmt = 10 ether;
+    uint64 id = createFundedAirdrop(perClaimAmt);
 
-    vm.startPrank(validator);
+    bool hasClaimed = pandasia.hasClaimed(id, validator);
+    assertFalse(hasClaimed);
+
+    uint256 preBalance = erc20.balanceOf(validator);
+    vm.prank(validator);
     pandasia.claimAirdrop(id, emptyProof);
-    assertEq(erc20.balanceOf(validator), perClaimAmt);
+    assertEq(erc20.balanceOf(validator), preBalance + perClaimAmt);
 
-    // Can only claim once
-    vm.expectRevert(Pandasia.AddressAlreadyClaimed.selector);
-    pandasia.claimAirdrop(id, emptyProof);
+    hasClaimed = pandasia.hasClaimed(id, validator);
+    assertTrue(hasClaimed);
+  }
+
+  /**************************************************************************************************************************************/
+  /*** Funding Airdrop Tests                                                                                                                ***/
+  /**************************************************************************************************************************************/
+
+  function testFundAirdropInvalidAmount() public {
+    uint256 perClaimAmt = 10 ether;
+    uint256 totalFundingAmt = 50 ether;
+
+    vm.startPrank(airdropOwner);
+    uint64 id = pandasia.newAirdrop(otherRoot, false, address(erc20), perClaimAmt, uint32(block.timestamp), uint64(block.timestamp + 1000));
+
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+
+    vm.expectRevert(Pandasia.InvalidAmount.selector);
+    pandasia.fundAirdrop(id, totalFundingAmt + 10);
+
+    vm.expectRevert(Pandasia.ZeroAmount.selector);
+    pandasia.fundAirdrop(id, 0);
+
+    pandasia.fundAirdrop(id, totalFundingAmt);
+    assertEq(erc20.balanceOf(address(pandasia)), totalFundingAmt);
+  }
+
+  function testFundAirdropFee() public {
+    uint256 perClaimAmt = 10 ether;
+    uint256 totalFundingAmt = 50 ether;
+    uint32 feePct = 1000; // 10%
+
+    vm.prank(deployer);
+    pandasia.setFee(feePct);
+
+    vm.startPrank(airdropOwner);
+    uint64 id = pandasia.newAirdrop(otherRoot, false, address(erc20), perClaimAmt, uint32(block.timestamp), uint64(block.timestamp + 1000));
+
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+    pandasia.fundAirdrop(id, totalFundingAmt);
     vm.stopPrank();
 
-    Pandasia.Airdrop memory ad = pandasia.getAirdrop(id);
-    console2.log(ad.balance);
+    Pandasia.Airdrop memory airdrop = pandasia.getAirdrop(id);
+
+    uint256 feeAmount = (totalFundingAmt * feePct) / 10_000;
+    uint256 fundAmount = totalFundingAmt - feeAmount;
+
+    assertEq(airdrop.balance, fundAmount);
+    assertEq(erc20.balanceOf(address(pandasia)), totalFundingAmt);
+
+    uint256 previousBalance = erc20.balanceOf(deployer);
+    vm.prank(deployer);
+    pandasia.withdrawFees(id);
+
+    assertEq(erc20.balanceOf(deployer), previousBalance + feeAmount);
+  }
+
+  function testFundAirdrop() public {
+    uint256 perClaimAmt = 10 ether;
+    uint256 totalFundingAmt = 50 ether;
+
+    vm.startPrank(airdropOwner);
+    uint64 id = pandasia.newAirdrop(otherRoot, false, address(erc20), perClaimAmt, uint32(block.timestamp), uint64(block.timestamp + 1000));
+
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+    pandasia.fundAirdrop(id, totalFundingAmt);
+
+    Pandasia.Airdrop memory airdrop = pandasia.getAirdrop(id);
+    vm.stopPrank();
+
+    assertEq(airdrop.balance, totalFundingAmt);
+    assertEq(erc20.balanceOf(address(pandasia)), totalFundingAmt);
+  }
+
+  /**************************************************************************************************************************************/
+  /*** Withdraw Airdrop Tests                                                                                                              ***/
+  /**************************************************************************************************************************************/
+
+  function testWithdrawNotOwnerFunding() public {
+    uint256 perClaimAmt = 10 ether;
+    uint256 totalFundingAmt = 50 ether;
+
+    vm.startPrank(airdropOwner);
+
+    uint64 id = pandasia.newAirdrop(bytes32(0), false, address(erc20), perClaimAmt, uint64(block.timestamp), uint64(block.timestamp + 1000));
+
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+    pandasia.fundAirdrop(id, totalFundingAmt);
+
+    vm.warp(block.timestamp + 1001);
+    vm.stopPrank();
 
     vm.expectRevert(Pandasia.NotOwner.selector);
     pandasia.withdrawFunding(id, 1 ether);
 
+    vm.prank(airdropOwner);
+    pandasia.withdrawFunding(id, 1 ether);
+    assertEq(erc20.balanceOf(airdropOwner), 1 ether);
+  }
+
+  function testWithdrawInvalidAmount() public {
+    uint256 perClaimAmt = 10 ether;
+    uint256 totalFundingAmt = 50 ether;
+
     vm.startPrank(airdropOwner);
+
+    uint64 id = pandasia.newAirdrop(bytes32(0), false, address(erc20), perClaimAmt, uint64(block.timestamp), uint64(block.timestamp + 1000));
+
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+    pandasia.fundAirdrop(id, totalFundingAmt);
+
+    vm.warp(block.timestamp + 1001);
+
     vm.expectRevert(Pandasia.InvalidAmount.selector);
-    pandasia.withdrawFunding(id, totalFundingAmt);
+    pandasia.withdrawFunding(id, totalFundingAmt + 10 ether);
+    vm.stopPrank();
+  }
+
+  function testWithdrawFundingAirdropStillActive() public {
+    uint256 perClaimAmt = 10 ether;
+    uint256 totalFundingAmt = 50 ether;
+
+    vm.startPrank(airdropOwner);
+    uint64 id = pandasia.newAirdrop(bytes32(0), false, address(erc20), perClaimAmt, uint64(block.timestamp), uint64(block.timestamp + 1000));
+
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+    pandasia.fundAirdrop(id, totalFundingAmt);
 
     vm.expectRevert(Pandasia.AirdropStillActive.selector);
     pandasia.withdrawFunding(id, 1 ether);
 
     vm.warp(block.timestamp + 1001);
+
     pandasia.withdrawFunding(id, 1 ether);
     assertEq(erc20.balanceOf(airdropOwner), 1 ether);
     vm.stopPrank();
+  }
+
+  function testEmergencyWithdrawFundingUnauthorized() public {
+    uint64 id = createFundedAirdrop(10 ether);
 
     bytes4 selector = bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
     vm.expectRevert(abi.encodeWithSelector(selector, address(this)));
@@ -137,52 +473,34 @@ contract AirdropTest is Test {
     assertEq(erc20.balanceOf(deployer), 1 ether);
   }
 
-  function testNewAirdropWithAdditionalMerkeRoot() public {
-    bool isEligible;
+  function testEmergencyWithdrawFundingInvalidRequest() public {
     uint256 perClaimAmt = 10 ether;
     uint256 totalFundingAmt = 50 ether;
 
     vm.startPrank(airdropOwner);
+    uint64 id = pandasia.newAirdrop(bytes32(0), false, address(erc20), perClaimAmt, uint64(block.timestamp), uint64(block.timestamp + 1000));
 
-    uint64 id = pandasia.newAirdrop(otherRoot, false, address(erc20), perClaimAmt, uint64(block.timestamp), uint64(block.timestamp + 1000));
-    uint64[] memory ids = pandasia.getAirdropIds(airdropOwner);
-    assertEq(ids[0], id, "getAirdrops");
-
+    // fund it
     erc20.mint(airdropOwner, totalFundingAmt);
     erc20.approve(address(pandasia), totalFundingAmt);
-
-    // Fund it
     pandasia.fundAirdrop(id, totalFundingAmt);
-    assertEq(erc20.balanceOf(airdropOwner), 0);
-
     vm.stopPrank();
 
-    vm.expectRevert(Pandasia.AddressNotEligible.selector);
-    pandasia.canClaimAirdrop(notEligibleUser, id, emptyProof);
+    vm.prank(deployer);
+    vm.expectRevert(Pandasia.InvalidWithdrawRequest.selector);
+    pandasia.emergencyWithdraw(id, totalFundingAmt + 1);
+    // assertEq(erc20.balanceOf(deployer), 1 ether);
 
-    vm.prank(notEligibleUser);
-    vm.expectRevert(Pandasia.AddressNotEligible.selector);
-    pandasia.claimAirdrop(id, emptyProof);
-
-    isEligible = pandasia.canClaimAirdrop(validator, id, emptyProof);
-    assertTrue(isEligible);
-
-    vm.prank(validator);
-    pandasia.claimAirdrop(id, emptyProof);
-    assertEq(erc20.balanceOf(validator), perClaimAmt);
-
-    // Claim via otherRoot
-    vm.prank(otherUser);
-    pandasia.claimAirdrop(id, otherProof);
-    assertEq(erc20.balanceOf(otherUser), perClaimAmt);
-
-    // Claim via staking contract
-    vm.prank(minipoolOperator);
-    pandasia.claimAirdrop(id, emptyProof);
-    assertEq(erc20.balanceOf(minipoolOperator), perClaimAmt);
+    vm.prank(deployer);
+    pandasia.emergencyWithdraw(id, totalFundingAmt);
+    assertEq(erc20.balanceOf(deployer), totalFundingAmt);
   }
 
-  function testGetAirdropWithoutCreating() public {
+  /**************************************************************************************************************************************/
+  /*** Get Airdrop Tests                                                                                                              ***/
+  /**************************************************************************************************************************************/
+
+  function testGetAirdropNotExistant() public {
     Pandasia.Airdrop memory airdrop = pandasia.getAirdrop(0);
     Pandasia.Airdrop memory expected = Pandasia.Airdrop(0, address(0), address(0), 0, bytes32(0), 0, 0, 0, false);
 
@@ -237,92 +555,142 @@ contract AirdropTest is Test {
     assertEq(airdrop.root, expected.root);
   }
 
-  function testNewAirdropInvalidERC20() public {
-    vm.expectRevert(Pandasia.InvalidAddress.selector);
-    pandasia.newAirdrop(bytes32(0), false, address(0), 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
+  function testGetAirdropIds() public {
+    vm.startPrank(airdropOwner);
+    uint64 id = pandasia.newAirdrop(otherRoot, false, address(erc20), 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
+
+    uint64[] memory ids = pandasia.getAirdropIds(airdropOwner);
+    assertEq(ids.length, 1);
+
+    pandasia.newAirdrop(otherRoot, false, address(erc20), 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
+    uint64 id3 = pandasia.newAirdrop(otherRoot, false, address(erc20), 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
+
+    ids = pandasia.getAirdropIds(airdropOwner);
+    assertEq(ids.length, 3);
+    assertEq(ids[0], id);
+    assertEq(ids[2], id3);
+
+    address otherOwner = address(0x45);
+
+    vm.startPrank(otherOwner);
+    pandasia.newAirdrop(otherRoot, false, address(erc20), 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
+
+    ids = pandasia.getAirdropIds(otherOwner);
+    assertEq(ids.length, 1);
+
+    ids = pandasia.getAirdropIds(airdropOwner);
+    assertEq(ids.length, 3);
   }
 
-  function testNewAirdropInvalidAmount() public {
-    vm.expectRevert(Pandasia.InvalidAmount.selector);
-    pandasia.newAirdrop(bytes32(0), false, address(erc20), 0 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
-  }
-
-  function testNewAirdropExpired() public {
-    vm.expectRevert(Pandasia.AirdropExpired.selector);
-    pandasia.newAirdrop(bytes32(0), false, address(erc20), 10 ether, uint32(block.timestamp), uint64(block.timestamp - 1));
-  }
-
-  function testFundAirdropInvalidAmount() public {
+  function testGetAirdrops() public {
     uint256 perClaimAmt = 10 ether;
     uint256 totalFundingAmt = 50 ether;
+    uint64 startsAt = uint64(block.timestamp);
+    uint64 expiresAt = uint64(block.timestamp + 1000);
 
+    // create an airdrop
     vm.startPrank(airdropOwner);
-    uint64 id = pandasia.newAirdrop(otherRoot, false, address(erc20), perClaimAmt, uint32(block.timestamp), uint64(block.timestamp + 1000));
-
-    erc20.mint(airdropOwner, totalFundingAmt);
-    erc20.approve(address(pandasia), totalFundingAmt);
-
-    vm.expectRevert(Pandasia.InvalidAmount.selector);
-    pandasia.fundAirdrop(id, totalFundingAmt + 10);
-
-    vm.expectRevert(Pandasia.ZeroAmount.selector);
-    pandasia.fundAirdrop(id, 0);
-  }
-
-  function testFundAirdropFee() public {
-    uint256 perClaimAmt = 10 ether;
-    uint256 totalFundingAmt = 50 ether;
-    uint32 feePct = 1000; // 10%
-
-    vm.prank(deployer);
-    pandasia.setFee(feePct);
-
-    vm.startPrank(airdropOwner);
-    uint64 id = pandasia.newAirdrop(otherRoot, false, address(erc20), perClaimAmt, uint32(block.timestamp), uint64(block.timestamp + 1000));
-
+    uint64 id = pandasia.newAirdrop(otherRoot, false, address(erc20), perClaimAmt, startsAt, expiresAt);
     erc20.mint(airdropOwner, totalFundingAmt);
     erc20.approve(address(pandasia), totalFundingAmt);
     pandasia.fundAirdrop(id, totalFundingAmt);
     vm.stopPrank();
 
-    Pandasia.Airdrop memory airdrop = pandasia.getAirdrop(id);
+    Pandasia.Airdrop memory expected1 = Pandasia.Airdrop(
+      0,
+      airdropOwner,
+      address(erc20),
+      totalFundingAmt,
+      otherRoot,
+      perClaimAmt,
+      startsAt,
+      expiresAt,
+      false
+    );
 
-    uint256 feeAmount = (totalFundingAmt * feePct) / 10_000;
-    uint256 fundAmount = totalFundingAmt - feeAmount;
-
-    assertEq(airdrop.balance, fundAmount);
-    assertEq(erc20.balanceOf(address(pandasia)), totalFundingAmt);
-
-    uint256 previousBalance = erc20.balanceOf(deployer);
-    vm.prank(deployer);
-    pandasia.withdrawFees(id);
-
-    assertEq(erc20.balanceOf(deployer), previousBalance + feeAmount);
-  }
-
-  function testFundAirdrop() public {
-    uint256 perClaimAmt = 10 ether;
-    uint256 totalFundingAmt = 50 ether;
-
+    // second airdrop
     vm.startPrank(airdropOwner);
-    uint64 id = pandasia.newAirdrop(otherRoot, false, address(erc20), perClaimAmt, uint32(block.timestamp), uint64(block.timestamp + 1000));
-
+    uint64 id2 = pandasia.newAirdrop(validatorRoot, true, address(erc20), perClaimAmt, startsAt, expiresAt);
     erc20.mint(airdropOwner, totalFundingAmt);
     erc20.approve(address(pandasia), totalFundingAmt);
-    pandasia.fundAirdrop(id, totalFundingAmt);
-
-    Pandasia.Airdrop memory airdrop = pandasia.getAirdrop(id);
+    pandasia.fundAirdrop(id2, totalFundingAmt);
     vm.stopPrank();
 
-    assertEq(airdrop.balance, totalFundingAmt);
-    assertEq(erc20.balanceOf(address(pandasia)), totalFundingAmt);
+    Pandasia.Airdrop memory expected2 = Pandasia.Airdrop(
+      0,
+      airdropOwner,
+      address(erc20),
+      totalFundingAmt,
+      validatorRoot,
+      perClaimAmt,
+      startsAt,
+      expiresAt,
+      true
+    );
+
+    // Test
+    Pandasia.Airdrop[] memory airdrops = pandasia.getAirdrops(0, 1);
+    assertEq(airdrops.length, 1);
+
+    Pandasia.Airdrop memory actual1 = airdrops[0];
+
+    assertEq(actual1.balance, expected1.balance);
+    assertEq(actual1.claimAmount, expected1.claimAmount);
+    assertEq(actual1.erc20, expected1.erc20);
+    assertEq(actual1.expiresAt, expected1.expiresAt);
+    assertEq(actual1.onlyRegistered, expected1.onlyRegistered);
+    assertEq(actual1.owner, expected1.owner);
+    assertEq(actual1.root, expected1.root);
+
+    airdrops = pandasia.getAirdrops(1, 2);
+    assertEq(airdrops.length, 1);
+
+    Pandasia.Airdrop memory actual2 = airdrops[0];
+
+    assertEq(actual2.balance, expected2.balance);
+    assertEq(actual2.claimAmount, expected2.claimAmount);
+    assertEq(actual2.erc20, expected2.erc20);
+    assertEq(actual2.expiresAt, expected2.expiresAt);
+    assertEq(actual2.onlyRegistered, expected2.onlyRegistered);
+    assertEq(actual2.owner, expected2.owner);
+    assertEq(actual2.root, expected2.root);
+
+    airdrops = pandasia.getAirdrops(0, 2);
+    assertEq(airdrops.length, 2);
   }
 
-  //
-  // HELPERS
-  //
+  /**************************************************************************************************************************************/
+  /*** Helpers                                                                                                                        ***/
+  /**************************************************************************************************************************************/
 
   uint160 private actorCounter = 0;
+
+  // create generic funded airdrop
+  function createFundedAirdrop(uint256 perClaimAmt) internal returns (uint64 id) {
+    uint256 totalFundingAmt = 50 ether;
+
+    vm.startPrank(airdropOwner);
+    id = pandasia.newAirdrop(bytes32(0), false, address(erc20), perClaimAmt, uint64(block.timestamp), uint64(block.timestamp + 1000));
+
+    // fund it
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+    pandasia.fundAirdrop(id, totalFundingAmt);
+    vm.stopPrank();
+  }
+
+  function createGenericAirdrop() internal returns (uint64 id) {
+    uint256 perClaimAmt = 10 ether;
+    uint256 totalFundingAmt = 50 ether;
+    vm.startPrank(airdropOwner);
+    id = pandasia.newAirdrop(bytes32(0), false, address(erc20), perClaimAmt, uint64(block.timestamp), uint64(block.timestamp + 1000));
+
+    // fund it
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+    pandasia.fundAirdrop(id, totalFundingAmt);
+    vm.stopPrank();
+  }
 
   function getActor(string memory name) internal returns (address) {
     actorCounter++;

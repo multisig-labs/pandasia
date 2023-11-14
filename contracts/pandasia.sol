@@ -31,7 +31,7 @@ contract Pandasia is OwnableUpgradeable {
   error InvalidWithdrawRequest();
   error NotOwner();
   error PAddrAlreadyRegistered();
-  error PAddrNotInValidatorMerkleTree();
+  error PAddrNotInMerkleTree();
   error ZeroAmount();
 
   // Storage is sorted for slot optimization
@@ -243,7 +243,7 @@ contract Pandasia is OwnableUpgradeable {
       c2p[msg.sender] = paddy;
       p2c[paddy] = msg.sender;
     } else {
-      revert PAddrNotInValidatorMerkleTree();
+      revert PAddrNotInMerkleTree();
     }
   }
 
@@ -266,7 +266,6 @@ contract Pandasia is OwnableUpgradeable {
     return keccak256(bytes.concat(keccak256(abi.encode(account))));
   }
 
-  // TODO: Test function, remove before going to production
   function recoverMessage(uint8 v, bytes32 r, bytes32 s) external view returns (address) {
     bytes32 msgHash = hashChecksummedMessage(msg.sender);
     (uint256 x, uint256 y) = SECP256K1.recover(uint256(msgHash), v, uint256(r), uint256(s));
@@ -334,7 +333,7 @@ contract Pandasia is OwnableUpgradeable {
     return airdrops[airdropId];
   }
 
-  function getAirdrops(uint64 offset, uint64 limit) external returns (Airdrop[] memory pageOfAirdrops) {
+  function getAirdrops(uint64 offset, uint64 limit) external view returns (Airdrop[] memory pageOfAirdrops) {
     uint64 max = offset + limit;
     if (max > airdropCount || limit == 0) {
       max = airdropCount;
@@ -343,10 +342,6 @@ contract Pandasia is OwnableUpgradeable {
     uint64 total = 0;
     for (uint64 i = offset; i < max; i++) {
       Airdrop memory airdrop = airdrops[i];
-      logAirdrop(airdrop);
-
-      logAirdrop(airdrops[i]);
-
       pageOfAirdrops[total] = airdrop;
       total++;
     }
@@ -355,15 +350,5 @@ contract Pandasia is OwnableUpgradeable {
     assembly {
       mstore(pageOfAirdrops, total)
     }
-  }
-
-  function logAirdrop(Pandasia.Airdrop memory airdrop) internal virtual {
-    console2.log(airdrop.balance);
-    console2.log(airdrop.claimAmount);
-    console2.log(airdrop.erc20);
-    console2.log(airdrop.expiresAt);
-    console2.log(airdrop.onlyRegistered);
-    console2.log(airdrop.owner);
-    console2.logBytes32(airdrop.root);
   }
 }

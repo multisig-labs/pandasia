@@ -41,10 +41,13 @@ contract PandasiaTest is Test {
     pandasia.initialize();
   }
 
+  /**************************************************************************************************************************************/
+  /*** Registration Tests                                                                                                             ***/
+  /**************************************************************************************************************************************/
+
   function testRegisterPChainAddr() public {
     bytes32 root = bytes32(0x1733170f5a465a52692730efa67c11a3c9b1208a5acbe833057fac165ce6947b);
     address caddy = address(0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4);
-    // address paddy = address(0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02);
     bytes32[] memory proof = new bytes32[](1);
     proof[0] = bytes32(0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f);
 
@@ -56,7 +59,7 @@ contract PandasiaTest is Test {
     bytes32 r = bytes32(0x6ac1cc3277dffe75d9cc8264acacc9f464762bab7ef73921a67dee1a398bd337);
     bytes32 s = bytes32(0x39cf19e2ff4c36ba64ed3684af9a72b59b7ccd16833666c81e84fb001bbb315a);
 
-    vm.expectRevert();
+    vm.expectRevert(Pandasia.PAddrNotInMerkleTree.selector);
     pandasia.registerPChainAddr(v, r, s, proof);
     assertFalse(pandasia.isRegisteredValidator(caddy));
 
@@ -76,6 +79,39 @@ contract PandasiaTest is Test {
     pandasia.registerPChainAddr(v, r, s, proof);
   }
 
+  function testUnregisterPChainAddr() public {
+    bytes32 root = bytes32(0x1733170f5a465a52692730efa67c11a3c9b1208a5acbe833057fac165ce6947b);
+    address caddy = address(0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4);
+    // address paddy = address(0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02);
+
+    bytes32[] memory proof = new bytes32[](1);
+    proof[0] = bytes32(0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f);
+
+    pandasia.setMerkleRoot(root);
+    assertFalse(pandasia.isRegisteredValidator(caddy));
+
+    // Signature generated on wallet.avax.network
+    uint8 v = 0;
+    bytes32 r = bytes32(0x6ac1cc3277dffe75d9cc8264acacc9f464762bab7ef73921a67dee1a398bd337);
+    bytes32 s = bytes32(0x39cf19e2ff4c36ba64ed3684af9a72b59b7ccd16833666c81e84fb001bbb315a);
+
+    vm.prank(caddy);
+    pandasia.unregisterPChainAddr();
+    assertFalse(pandasia.isRegisteredValidator(caddy));
+
+    vm.prank(caddy);
+    pandasia.registerPChainAddr(v, r, s, proof);
+    assertTrue(pandasia.isRegisteredValidator(caddy));
+
+    vm.prank(caddy);
+    pandasia.unregisterPChainAddr();
+    assertFalse(pandasia.isRegisteredValidator(caddy));
+  }
+
+  /**************************************************************************************************************************************/
+  /*** Merkle Tests                                                                                                                   ***/
+  /**************************************************************************************************************************************/
+
   // Test against known-good message using wallet.avax.network
   function testMessageHashAlgo() public {
     string memory caddrStr = "0x63682bdc5f875e9bf69e201550658492c9763f89";
@@ -86,12 +122,6 @@ contract PandasiaTest is Test {
     // Signing "0x63682bdc5f875e9bf69e201550658492c9763f89" on https://wallet.avax.network/ gives 0x68c88e730eced13ee4a68eff65d3d250bb7b0f27c1cb4c8e20c52514d45d9390
     assertEq(message, 0x68c88e730eced13ee4a68eff65d3d250bb7b0f27c1cb4c8e20c52514d45d9390);
   }
-
-  // function testMessageHash() public {
-  // 	bytes32 msgHash = pandasia.hashMessage(address(0x63682bDC5f875e9bF69E201550658492C9763F89));
-  // 	bytes32 hashFromWallet = 0x68C88E730ECED13EE4A68EFF65D3D250BB7B0F27C1CB4C8E20C52514D45D9390;
-  // 	assertEq(msgHash, hashFromWallet);
-  // }
 
   // Ensure pandasia is hashing messages the same as the avax wallet
   function testMessageHash() public {
@@ -159,34 +189,25 @@ contract PandasiaTest is Test {
     assertTrue(ok);
   }
 
-  function testUnregisterPChainAddr() public {
-    bytes32 root = bytes32(0x1733170f5a465a52692730efa67c11a3c9b1208a5acbe833057fac165ce6947b);
+  function testRecoverMessage() public {
+    address pChainAddressBytes = address(0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02);
     address caddy = address(0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4);
-    // address paddy = address(0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02);
-
-    bytes32[] memory proof = new bytes32[](1);
-    proof[0] = bytes32(0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f);
-
-    pandasia.setMerkleRoot(root);
-    assertFalse(pandasia.isRegisteredValidator(caddy));
 
     // Signature generated on wallet.avax.network
     uint8 v = 0;
     bytes32 r = bytes32(0x6ac1cc3277dffe75d9cc8264acacc9f464762bab7ef73921a67dee1a398bd337);
     bytes32 s = bytes32(0x39cf19e2ff4c36ba64ed3684af9a72b59b7ccd16833666c81e84fb001bbb315a);
 
-    vm.prank(caddy);
-    pandasia.unregisterPChainAddr();
-    assertFalse(pandasia.isRegisteredValidator(caddy));
+    // not using our c-chain addr the recovered address will be wrong
+    assertFalse(pandasia.recoverMessage(v, r, s) == pChainAddressBytes);
 
     vm.prank(caddy);
-    pandasia.registerPChainAddr(v, r, s, proof);
-    assertTrue(pandasia.isRegisteredValidator(caddy));
-
-    vm.prank(caddy);
-    pandasia.unregisterPChainAddr();
-    assertFalse(pandasia.isRegisteredValidator(caddy));
+    assertEq(pandasia.recoverMessage(v, r, s), pChainAddressBytes);
   }
+
+  /**************************************************************************************************************************************/
+  /*** Upgrade Tests                                                                                                                  ***/
+  /**************************************************************************************************************************************/
 
   function testUpgrades() public {
     ProxyAdmin proxyAdmin = new ProxyAdmin();
@@ -222,9 +243,9 @@ contract PandasiaTest is Test {
     assertEq(v1.stakingContract(), stakingContract);
   }
 
-  //
-  // HELPERS
-  //
+  /**************************************************************************************************************************************/
+  /*** Helpers                                                                                                                        ***/
+  /**************************************************************************************************************************************/
 
   string private checkpointLabel;
   uint256 private checkpointGasLeft;
