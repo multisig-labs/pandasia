@@ -15,8 +15,6 @@ interface Staking {
   function getLastRewardsCycleCompleted(address stakerAddr) external view returns (uint256);
 }
 
-// TODO Make this contract a TransparentUpgradeableProxy so we can upgrade without losing state
-
 contract Pandasia is OwnableUpgradeable {
   using SafeERC20 for IERC20;
 
@@ -25,11 +23,17 @@ contract Pandasia is OwnableUpgradeable {
   error AirdropExpired();
   error AirdropNotStarted();
   error AirdropOutOfFunds();
+  error AirdropStillActive();
   error InvalidAddress();
   error InvalidAmount();
   error InvalidWithdrawRequest();
+  error NotOwner();
   error PAddrAlreadyRegistered();
-  error PAddrNotInValidatorMerkleTree();
+  error PAddrNotInMerkleTree();
+  error ZeroAmount();
+
+  event AirdropCreated(uint64 indexed id);
+  event AirdropClaimed(uint64 indexed id, address indexed claimant);
 
   // Storage is sorted for slot optimization
   // _owner address comes from Ownable Slot 0
@@ -108,29 +112,43 @@ contract Pandasia is OwnableUpgradeable {
 
     airdropIds[msg.sender].push(currentAirdropId);
 
-    // TODO Emit event for airdrop creation
+    emit AirdropCreated(currentAirdropId);
+
     return currentAirdropId;
   }
 
-  function fundAirdrop(uint64 airdropId, uint256 claimAmount) external {
+  function fundAirdrop(uint64 airdropId, uint256 fundAmount) external {
     Airdrop storage airdrop = airdrops[airdropId];
     IERC20 token = IERC20(airdrop.erc20);
 
     uint256 balance = token.balanceOf(msg.sender);
-    if (claimAmount == 0 || balance < claimAmount) {
+
+    if (fundAmount == 0) {
+      revert ZeroAmount();
+    }
+
+    if (balance < fundAmount) {
       revert InvalidAmount();
     }
 
-    uint256 feeAmt = (claimAmount * feePct) / 10_000;
-    uint256 fundAmt = claimAmount - feeAmt;
+    uint256 feeAmt = (fundAmount * feePct) / 10_000;
+    uint256 fundAmt = fundAmount - feeAmt;
     airdrop.balance = airdrop.balance + fundAmt;
-    token.safeTransferFrom(msg.sender, address(this), fundAmt);
+    token.safeTransferFrom(msg.sender, address(this), fundAmt + feeAmt);
   }
 
   function withdrawFunding(uint64 airdropId, uint256 withdrawAmt) external {
     Airdrop memory airdrop = airdrops[airdropId];
-    if (airdrop.owner != msg.sender || airdrop.balance < withdrawAmt || block.timestamp < airdrop.expiresAt) {
-      revert InvalidWithdrawRequest();
+    if (airdrop.owner != msg.sender) {
+      revert NotOwner();
+    }
+
+    if (airdrop.balance < withdrawAmt) {
+      revert InvalidAmount();
+    }
+
+    if (block.timestamp < airdrop.expiresAt) {
+      revert AirdropStillActive();
     }
     airdrop.balance = airdrop.balance - withdrawAmt;
     IERC20(airdrop.erc20).safeTransfer(msg.sender, withdrawAmt);
@@ -141,14 +159,16 @@ contract Pandasia is OwnableUpgradeable {
   /**************************************************************************************************************************************/
 
   function claimAirdrop(uint64 airdropId, bytes32[] memory proof) external {
-    Airdrop memory airdrop = airdrops[airdropId];
-    if (canClaimAirdrop(msg.sender, airdropId, proof)) {
-      claimed[airdropId][msg.sender] = true;
-      airdrop.balance = airdrop.balance - airdrop.claimAmount;
-      IERC20(airdrop.erc20).safeTransfer(msg.sender, airdrop.claimAmount);
+    Airdrop storage airdrop = airdrops[airdropId];
+
+    if (!canClaimAirdrop(msg.sender, airdropId, proof)) {
+      return;
     }
 
-    // emit some event
+    claimed[airdropId][msg.sender] = true;
+    airdrop.balance = airdrop.balance - airdrop.claimAmount;
+    IERC20(airdrop.erc20).safeTransfer(msg.sender, airdrop.claimAmount);
+    emit AirdropClaimed(airdropId, msg.sender);
   }
 
   function canClaimAirdrop(address cChainAddr, uint64 airdropId, bytes32[] memory proof) public view returns (bool) {
@@ -227,11 +247,10 @@ contract Pandasia is OwnableUpgradeable {
       c2p[msg.sender] = paddy;
       p2c[paddy] = msg.sender;
     } else {
-      revert PAddrNotInValidatorMerkleTree();
+      revert PAddrNotInMerkleTree();
     }
   }
 
-  // TODO: Test function, remove before going to production
   function unregisterPChainAddr() external {
     address paddr = c2p[msg.sender];
     delete c2p[msg.sender];
@@ -250,7 +269,6 @@ contract Pandasia is OwnableUpgradeable {
     return keccak256(bytes.concat(keccak256(abi.encode(account))));
   }
 
-  // TODO: Test function, remove before going to production
   function recoverMessage(uint8 v, bytes32 r, bytes32 s) external view returns (address) {
     bytes32 msgHash = hashChecksummedMessage(msg.sender);
     (uint256 x, uint256 y) = SECP256K1.recover(uint256(msgHash), v, uint256(r), uint256(s));
@@ -318,7 +336,7 @@ contract Pandasia is OwnableUpgradeable {
     return airdrops[airdropId];
   }
 
-  function getAirdrops(uint64 offset, uint64 limit) external returns (Airdrop[] memory pageOfAirdrops) {
+  function getAirdrops(uint64 offset, uint64 limit) external view returns (Airdrop[] memory pageOfAirdrops) {
     uint64 max = offset + limit;
     if (max > airdropCount || limit == 0) {
       max = airdropCount;
@@ -327,10 +345,6 @@ contract Pandasia is OwnableUpgradeable {
     uint64 total = 0;
     for (uint64 i = offset; i < max; i++) {
       Airdrop memory airdrop = airdrops[i];
-      logAirdrop(airdrop);
-
-      logAirdrop(airdrops[i]);
-
       pageOfAirdrops[total] = airdrop;
       total++;
     }
@@ -339,15 +353,5 @@ contract Pandasia is OwnableUpgradeable {
     assembly {
       mstore(pageOfAirdrops, total)
     }
-  }
-
-  function logAirdrop(Pandasia.Airdrop memory airdrop) internal virtual {
-    console2.log(airdrop.balance);
-    console2.log(airdrop.claimAmount);
-    console2.log(airdrop.erc20);
-    console2.log(airdrop.expiresAt);
-    console2.log(airdrop.onlyRegistered);
-    console2.log(airdrop.owner);
-    console2.logBytes32(airdrop.root);
   }
 }
