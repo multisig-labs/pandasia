@@ -15,8 +15,6 @@ interface Staking {
   function getLastRewardsCycleCompleted(address stakerAddr) external view returns (uint256);
 }
 
-// TODO Make this contract a TransparentUpgradeableProxy so we can upgrade without losing state
-
 contract Pandasia is OwnableUpgradeable {
   using SafeERC20 for IERC20;
 
@@ -33,6 +31,9 @@ contract Pandasia is OwnableUpgradeable {
   error PAddrAlreadyRegistered();
   error PAddrNotInMerkleTree();
   error ZeroAmount();
+
+  event AirdropCreated(uint64 indexed id);
+  event AirdropClaimed(uint64 indexed id, address indexed claimant);
 
   // Storage is sorted for slot optimization
   // _owner address comes from Ownable Slot 0
@@ -111,7 +112,8 @@ contract Pandasia is OwnableUpgradeable {
 
     airdropIds[msg.sender].push(currentAirdropId);
 
-    // TODO Emit event for airdrop creation
+    emit AirdropCreated(currentAirdropId);
+
     return currentAirdropId;
   }
 
@@ -158,13 +160,15 @@ contract Pandasia is OwnableUpgradeable {
 
   function claimAirdrop(uint64 airdropId, bytes32[] memory proof) external {
     Airdrop storage airdrop = airdrops[airdropId];
-    if (canClaimAirdrop(msg.sender, airdropId, proof)) {
-      claimed[airdropId][msg.sender] = true;
-      airdrop.balance = airdrop.balance - airdrop.claimAmount;
-      IERC20(airdrop.erc20).safeTransfer(msg.sender, airdrop.claimAmount);
+
+    if (!canClaimAirdrop(msg.sender, airdropId, proof)) {
+      return;
     }
 
-    // emit some event
+    claimed[airdropId][msg.sender] = true;
+    airdrop.balance = airdrop.balance - airdrop.claimAmount;
+    IERC20(airdrop.erc20).safeTransfer(msg.sender, airdrop.claimAmount);
+    emit AirdropClaimed(airdropId, msg.sender);
   }
 
   function canClaimAirdrop(address cChainAddr, uint64 airdropId, bytes32[] memory proof) public view returns (bool) {
@@ -247,7 +251,6 @@ contract Pandasia is OwnableUpgradeable {
     }
   }
 
-  // TODO: Test function, remove before going to production
   function unregisterPChainAddr() external {
     address paddr = c2p[msg.sender];
     delete c2p[msg.sender];

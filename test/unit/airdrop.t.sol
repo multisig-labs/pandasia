@@ -605,7 +605,7 @@ contract AirdropTest is Test {
     vm.stopPrank();
 
     Pandasia.Airdrop memory expected2 = Pandasia.Airdrop(
-      0,
+      id2,
       airdropOwner,
       address(erc20),
       totalFundingAmt,
