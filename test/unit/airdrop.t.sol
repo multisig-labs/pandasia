@@ -5,7 +5,8 @@ import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
 import {console2} from "forge-std/console2.sol";
 import {Pandasia} from "../../contracts/Pandasia.sol";
-import {StakingMock} from "../../contracts/StakingMock.sol";
+import {StakingMock} from "./mocks/StakingMock.sol";
+import {StorageMock} from "./mocks/StorageMock.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -13,6 +14,7 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 contract AirdropTest is Test {
   ERC20Mock public erc20;
   Pandasia public pandasia;
+  StorageMock public storageContract;
   StakingMock public stakingContract;
 
   address public deployer; // Owner of Pandasia contract
@@ -56,8 +58,12 @@ contract AirdropTest is Test {
     stakingContract = new StakingMock();
     stakingContract.setLastRewardsCycleCompleted(minipoolOperator, 1);
 
+    storageContract = new StorageMock();
+    storageContract.setAddress(keccak256(abi.encodePacked("contract.address", "Staking")), address(stakingContract));
+
     pandasia.setMerkleRoot(validatorRoot);
-    pandasia.setStakingContract(address(stakingContract));
+    pandasia.setStorageContract(address(storageContract));
+
     pandasia.transferOwnership(deployer);
 
     // Signature generated on wallet.avax.network
