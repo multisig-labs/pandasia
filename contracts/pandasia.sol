@@ -15,6 +15,10 @@ interface Staking {
   function getLastRewardsCycleCompleted(address stakerAddr) external view returns (uint256);
 }
 
+interface Storage {
+  function getAddress(bytes32 key) external view returns (address);
+}
+
 contract Pandasia is OwnableUpgradeable {
   using SafeERC20 for IERC20;
 
@@ -48,8 +52,7 @@ contract Pandasia is OwnableUpgradeable {
   mapping(address => address) public c2p; // c-chain addr => verified p-chain addr
   mapping(address => address) public p2c; // verified p-chain addr => c-chain addr
 
-  // TODO Switch this to gogopool Storage addr, and then get staking contract addr from storage
-  address public stakingContract;
+  address public storageContract;
 
   struct Airdrop {
     uint64 id;
@@ -227,7 +230,8 @@ contract Pandasia is OwnableUpgradeable {
   }
 
   function isMinipoolOperator(address addr) public view returns (bool) {
-    // TODO verify this is going to work
+    bytes32 key = keccak256(abi.encodePacked("contract.address", "Staking"));
+    address stakingContract = Storage(storageContract).getAddress(key);
     return Staking(stakingContract).getLastRewardsCycleCompleted(addr) > 0;
   }
 
@@ -320,8 +324,8 @@ contract Pandasia is OwnableUpgradeable {
     feePct = fee;
   }
 
-  function setStakingContract(address addr) external onlyOwner {
-    stakingContract = addr;
+  function setStorageContract(address addr) external onlyOwner {
+    storageContract = addr;
   }
 
   /**************************************************************************************************************************************/

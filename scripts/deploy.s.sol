@@ -20,7 +20,7 @@ contract DeployContract is Script {
     );
     Pandasia pandasia = Pandasia(payable(pandasiaProxy));
 
-    pandasia.setStakingContract(0xB6dDbf75e2F0C7FC363B47B84b5C03959526AecB);
+    pandasia.setStorageContract(0x1cEa17F9dE4De28FeB6A102988E12D4B90DfF1a9);
 
     vm.stopBroadcast();
   }

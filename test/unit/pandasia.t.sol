@@ -212,8 +212,8 @@ contract PandasiaTest is Test {
     Pandasia v1 = Pandasia(payable(pandasiaProxy));
     v1.initialize();
 
-    address stakingContract = address(0x01);
-    v1.setStakingContract(stakingContract);
+    address storageContract = address(0x01);
+    v1.setStorageContract(storageContract);
 
     // Can't initialize the implementation contract
     vm.expectRevert(Initializable.InvalidInitialization.selector);
@@ -235,7 +235,7 @@ contract PandasiaTest is Test {
 
     proxyAdmin.upgrade(ITransparentUpgradeableProxy(address(pandasiaProxy)), address(v2Implementation));
 
-    assertEq(v1.stakingContract(), stakingContract);
+    assertEq(v1.storageContract(), storageContract);
   }
 
   /**************************************************************************************************************************************/
