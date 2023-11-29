@@ -3,7 +3,6 @@ pragma solidity ^0.8.19;
 
 import {AddressChecksumUtils} from "./AddressChecksumUtils.sol";
 import "./SECP256K1.sol";
-import {console2} from "forge-std/console2.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
@@ -59,11 +58,10 @@ contract Pandasia is OwnableUpgradeable {
     address owner; // account that contributed the funds
     address erc20; // claimable asset
     uint256 balance; // current balance of asset in the airdrop
-    bytes32 root; // optional merkle root for this airdrop
+    bytes32 customRoot; // optional merkle root for this airdrop
     uint256 claimAmount; // claimAmount claimable by each address
     uint64 startsAt; // time that airdop starts and claims can be made
     uint64 expiresAt; // time that airdop expires and no further claims can be made
-    bool onlyRegistered; // if onlyRegistered=true than addr must be in root AND merkleRoot, else an addr in root OR (previously seen valdiator in pandasia or googpool) is eligble
   }
 
   constructor() {
@@ -78,14 +76,7 @@ contract Pandasia is OwnableUpgradeable {
   /*** Airdrop Functions                                                                                                              ***/
   /**************************************************************************************************************************************/
 
-  function newAirdrop(
-    bytes32 root,
-    bool onlyRegistered,
-    address erc20,
-    uint256 claimAmount,
-    uint64 startsAt,
-    uint64 expiresAt
-  ) external returns (uint64) {
+  function newAirdrop(bytes32 customRoot, address erc20, uint256 claimAmount, uint64 startsAt, uint64 expiresAt) external returns (uint64) {
     if (erc20 == address(0)) {
       revert InvalidAddress();
     }
@@ -108,10 +99,9 @@ contract Pandasia is OwnableUpgradeable {
     airdrop.owner = msg.sender;
     airdrop.erc20 = erc20;
     airdrop.claimAmount = claimAmount;
-    airdrop.root = root;
+    airdrop.customRoot = customRoot;
     airdrop.startsAt = startsAt;
     airdrop.expiresAt = expiresAt;
-    airdrop.onlyRegistered = onlyRegistered;
 
     airdropIds[msg.sender].push(currentAirdropId);
 
@@ -198,19 +188,13 @@ contract Pandasia is OwnableUpgradeable {
       addr = cChainAddr;
     }
 
-    bool isInAirdropRoot = verify(airdrop.root, addr, proof);
-
-    // this should be isKnownValidator
     bool isKnownValidator = isRegisteredValidator(cChainAddr) || isMinipoolOperator(cChainAddr);
+
     bool isEligible;
-    if (airdrop.onlyRegistered) {
-      if (isKnownValidator && isInAirdropRoot) {
-        isEligible = true;
-      }
+    if (airdrop.customRoot != bytes32(0)) {
+      isEligible = isKnownValidator && verify(airdrop.customRoot, addr, proof);
     } else {
-      if (isKnownValidator || isInAirdropRoot) {
-        isEligible = true;
-      }
+      isEligible = isKnownValidator;
     }
 
     if (!isEligible) {
