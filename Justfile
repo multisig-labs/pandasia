@@ -77,6 +77,15 @@ approve-token token_addr amount:
 fund-airdrop airdrop_id amount:
   cast send ${PANDASIA_ADDR} "fundAirdrop(uint64,uint256)" {{airdrop_id}} {{amount}} --private-key=${PRIVATE_KEY}
 
+unregister:
+  cast send ${PANDASIA_ADDR} "unregisterPChainAddr()" --private-key=${PRIVATE_KEY}
+
+is-validator caddr:
+  cast call ${PANDASIA_ADDR} "isRegisteredValidator(address)(bool)" {{caddr}}
+
+get-current-root:
+  cast call ${PANDASIA_ADDR} "merkleRoot()(bytes32)"
+
 # TODO create a P Chain testing table
 
 sync: (_ping ETH_RPC_URL)
