@@ -2,6 +2,11 @@
   "abi": [
     {
       "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "inputs": [],
       "name": "AddressAlreadyClaimed",
       "type": "error"
     },
@@ -27,6 +32,11 @@
     },
     {
       "inputs": [],
+      "name": "AirdropStillActive",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "InvalidAddress",
       "type": "error"
     },
@@ -37,7 +47,44 @@
     },
     {
       "inputs": [],
+      "name": "InvalidInitialization",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "InvalidWithdrawRequest",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotInitializing",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableInvalidOwner",
+      "type": "error"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "account",
+          "type": "address"
+        }
+      ],
+      "name": "OwnableUnauthorizedAccount",
       "type": "error"
     },
     {
@@ -47,8 +94,58 @@
     },
     {
       "inputs": [],
-      "name": "PAddrNotInValidatorMerkleTree",
+      "name": "PAddrNotInMerkleTree",
       "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ZeroAmount",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint64",
+          "name": "id",
+          "type": "uint64"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "claimant",
+          "type": "address"
+        }
+      ],
+      "name": "AirdropClaimed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint64",
+          "name": "id",
+          "type": "uint64"
+        }
+      ],
+      "name": "AirdropCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "version",
+          "type": "uint64"
+        }
+      ],
+      "name": "Initialized",
+      "type": "event"
     },
     {
       "anonymous": false,
@@ -138,7 +235,7 @@
         },
         {
           "internalType": "bytes32",
-          "name": "root",
+          "name": "customRoot",
           "type": "bytes32"
         },
         {
@@ -155,11 +252,6 @@
           "internalType": "uint64",
           "name": "expiresAt",
           "type": "uint64"
-        },
-        {
-          "internalType": "bool",
-          "name": "onlyRegistered",
-          "type": "bool"
         }
       ],
       "stateMutability": "view",
@@ -295,7 +387,7 @@
         },
         {
           "internalType": "uint256",
-          "name": "claimAmount",
+          "name": "fundAmount",
           "type": "uint256"
         }
       ],
@@ -338,7 +430,7 @@
             },
             {
               "internalType": "bytes32",
-              "name": "root",
+              "name": "customRoot",
               "type": "bytes32"
             },
             {
@@ -355,11 +447,6 @@
               "internalType": "uint64",
               "name": "expiresAt",
               "type": "uint64"
-            },
-            {
-              "internalType": "bool",
-              "name": "onlyRegistered",
-              "type": "bool"
             }
           ],
           "internalType": "struct Pandasia.Airdrop",
@@ -428,7 +515,7 @@
             },
             {
               "internalType": "bytes32",
-              "name": "root",
+              "name": "customRoot",
               "type": "bytes32"
             },
             {
@@ -445,11 +532,6 @@
               "internalType": "uint64",
               "name": "expiresAt",
               "type": "uint64"
-            },
-            {
-              "internalType": "bool",
-              "name": "onlyRegistered",
-              "type": "bool"
             }
           ],
           "internalType": "struct Pandasia.Airdrop[]",
@@ -457,7 +539,7 @@
           "type": "tuple[]"
         }
       ],
-      "stateMutability": "nonpayable",
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -501,6 +583,13 @@
         }
       ],
       "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "initialize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -558,13 +647,8 @@
       "inputs": [
         {
           "internalType": "bytes32",
-          "name": "root",
+          "name": "customRoot",
           "type": "bytes32"
-        },
-        {
-          "internalType": "bool",
-          "name": "onlyRegistered",
-          "type": "bool"
         },
         {
           "internalType": "address",
@@ -752,14 +836,14 @@
           "type": "address"
         }
       ],
-      "name": "setStakingContract",
+      "name": "setStorageContract",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
       "inputs": [],
-      "name": "stakingContract",
+      "name": "storageContract",
       "outputs": [
         {
           "internalType": "address",
