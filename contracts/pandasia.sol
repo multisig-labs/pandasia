@@ -3,7 +3,6 @@ pragma solidity ^0.8.19;
 
 import {AddressChecksumUtils} from "./AddressChecksumUtils.sol";
 import "./SECP256K1.sol";
-import {console2} from "forge-std/console2.sol";
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
@@ -193,8 +192,6 @@ contract Pandasia is OwnableUpgradeable {
 
     bool isEligible;
     if (airdrop.customRoot != bytes32(0x0)) {
-      console2.log("IN HERE can we CLAIM");
-      console2.log("is known validator?", isKnownValidator);
       isEligible = isKnownValidator && verify(airdrop.customRoot, addr, proof);
     } else {
       isEligible = isKnownValidator;
