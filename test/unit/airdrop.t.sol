@@ -177,6 +177,35 @@ contract AirdropTest is Test {
     assertEq(airdrop.expiresAt, validExpiresAt);
   }
 
+  function testNewAirdropZeroCustomRoot() public {
+    uint256 totalFundingAmt = 50 ether;
+
+    // Verify that neither 0x0 or 0 triggers custom root check
+    assertEq(bytes32(0), bytes32(0x0));
+
+    vm.startPrank(airdropOwner);
+    uint64 id = pandasia.newAirdrop(bytes32(0), address(erc20), 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
+
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+    pandasia.fundAirdrop(id, totalFundingAmt);
+    vm.stopPrank();
+
+    // Validator is registered and in merkle root, thus they can claim
+    assertTrue(pandasia.canClaimAirdrop(validator, id, validatorProof));
+
+    vm.startPrank(airdropOwner);
+    id = pandasia.newAirdrop(bytes32(0x0), address(erc20), 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
+
+    erc20.mint(airdropOwner, totalFundingAmt);
+    erc20.approve(address(pandasia), totalFundingAmt);
+    pandasia.fundAirdrop(id, totalFundingAmt);
+    vm.stopPrank();
+
+    // Validator is registered and in merkle root, thus they can claim
+    assertTrue(pandasia.canClaimAirdrop(validator, id, validatorProof));
+  }
+
   /**************************************************************************************************************************************/
   /*** Can Claim Tests                                                                                                                ***/
   /**************************************************************************************************************************************/
