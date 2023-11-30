@@ -2,25 +2,43 @@
 pragma solidity ^0.8.19;
 
 import "forge-std/Script.sol";
+import {EnvironmentConfig} from "./EnvironmentConfig.s.sol";
+
 import {Pandasia} from "../contracts/Pandasia.sol";
 
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
-contract DeployContract is Script {
+contract DeployContract is Script, EnvironmentConfig {
   function run() external {
-    vm.startBroadcast();
+    loadAddresses();
+    loadUsers();
 
-    ProxyAdmin proxyAdmin = new ProxyAdmin();
-    Pandasia pandasiaImpl = new Pandasia();
-    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(
-      address(pandasiaImpl),
-      address(proxyAdmin),
-      abi.encodeWithSelector(pandasiaImpl.initialize.selector)
-    );
-    Pandasia pandasia = Pandasia(payable(pandasiaProxy));
+    address deployer = getUser("deployer");
+    require(deployer.balance > 1 ether, "Insufficient funds to deploy");
 
-    pandasia.setStorageContract(0x1cEa17F9dE4De28FeB6A102988E12D4B90DfF1a9);
+    vm.startBroadcast(deployer);
+
+    if (isContractDeployed("Pandasia")) {
+      console2.log("Pandasia exists, skipping...");
+    } else {
+      ProxyAdmin proxyAdmin = new ProxyAdmin();
+      saveAddress("PandasiaAdmin", address(proxyAdmin));
+
+      Pandasia pandasiaImpl = new Pandasia();
+      saveAddress("PandasiaImpl", address(pandasiaImpl));
+
+      TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(
+        address(pandasiaImpl),
+        address(proxyAdmin),
+        abi.encodeWithSelector(pandasiaImpl.initialize.selector)
+      );
+      Pandasia pandasia = Pandasia(payable(pandasiaProxy));
+      saveAddress("Pandasia", address(pandasia));
+
+      console2.log("Setting storage address to", getAddress("Storage"));
+      pandasia.setStorageContract(getAddress("Storage"));
+    }
 
     vm.stopBroadcast();
   }
