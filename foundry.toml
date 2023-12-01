@@ -7,3 +7,4 @@ optimizer_runs = 5_000
 gas-reports = ["*"]
 solc-version = "0.8.20"
 verbosity = 2
+fs_permissions = [{ access = "read-write", path = "./deployed/"}]
