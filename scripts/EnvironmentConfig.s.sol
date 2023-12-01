@@ -101,10 +101,9 @@ contract EnvironmentConfig is Script {
   function isContractDeployed(string memory name) public returns (bool) {
     // key is a jq-ish locator of where to store data in the JSON
     string memory key = string(abi.encodePacked(".", name));
-    address addr = address(0);
     console2.log("json addresses", addressesJson);
 
-    // address addr = vm.parseJsonAddress(addressesJson, key);
+    address addr = vm.parseJsonAddress(addressesJson, key);
     return addr != address(0) && addr.code.length > 0;
   }
 
