@@ -40,7 +40,7 @@ contract Pandasia is OwnableUpgradeable {
 
   // Storage is sorted for slot optimization
   // _owner address comes from Ownable Slot 0
-  uint64 public airdropCount; // counter for AirdropIds (max 18,446,744,073,709,551,615 LFGG)
+  uint64 public airdropCount; // counter for AirdropIds (max 18,446,744,073,709,551,615)
   uint32 public feePct; // 10_000 = 100% fee charged on funding an airdrop
 
   mapping(uint64 => Airdrop) public airdrops;
@@ -60,8 +60,8 @@ contract Pandasia is OwnableUpgradeable {
     uint256 balance; // current balance of asset in the airdrop
     bytes32 customRoot; // optional merkle root for this airdrop
     uint256 claimAmount; // claimAmount claimable by each address
-    uint64 startsAt; // time that airdop starts and claims can be made
-    uint64 expiresAt; // time that airdop expires and no further claims can be made
+    uint64 startsAt; // time that airdrop starts and claims can be made
+    uint64 expiresAt; // time that airdrop expires and no further claims can be made
   }
 
   constructor() {
@@ -247,9 +247,6 @@ contract Pandasia is OwnableUpgradeable {
 
   // Uses about 35K gas for a large proof
   function verify(bytes32 root, address account, bytes32[] memory proof) public pure returns (bool) {
-    // I want to short circuit this root check somewhere else.
-    // it's weird to me that the negative case is a 0 and onyl checked
-    // when verification happens.
     return proof.length > 0 && account != address(0) && root != bytes32(0) && MerkleProof.verify(proof, root, _leaf(account));
   }
 
@@ -267,7 +264,7 @@ contract Pandasia is OwnableUpgradeable {
   // Given an address, convert to its checksummed string (mixedcase) format, and hash a message like the avalanche wallet would do
   function hashChecksummedMessage(address addr) public pure returns (bytes32) {
     bytes memory header = bytes("\x1AAvalanche Signed Message:\n");
-    // len of an ascii addr is 42 bytes
+    // length of an ascii addr is 42 bytes
     uint32 addrLen = 42;
     string memory addrStr = AddressChecksumUtils.getChecksum(addr);
     return sha256(abi.encodePacked(header, addrLen, "0x", addrStr));
