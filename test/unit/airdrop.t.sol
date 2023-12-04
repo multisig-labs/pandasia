@@ -105,7 +105,7 @@ contract AirdropTest is Test {
     // Validator can claim
     assertTrue(pandasia.canClaimAirdrop(validator, id, emptyProof));
 
-    // minipool operator is elgible
+    // minipool operator is eligible
     assertTrue(pandasia.canClaimAirdrop(minipoolOperator, id, emptyProof));
   }
 
@@ -121,7 +121,7 @@ contract AirdropTest is Test {
     pandasia.fundAirdrop(id, totalFundingAmt);
     vm.stopPrank();
 
-    // Not eligible uers can't claim
+    // Not eligible users can't claim
     vm.expectRevert(Pandasia.AddressNotEligible.selector);
     pandasia.canClaimAirdrop(notEligibleUser, id, emptyProof);
 
@@ -485,7 +485,7 @@ contract AirdropTest is Test {
   /*** Get Airdrop Tests                                                                                                              ***/
   /**************************************************************************************************************************************/
 
-  function testGetAirdropNotExistant() public {
+  function testGetAirdropNotExistent() public {
     Pandasia.Airdrop memory airdrop = pandasia.getAirdrop(0);
     Pandasia.Airdrop memory expected = Pandasia.Airdrop(0, address(0), address(0), 0, bytes32(0), 0, 0, 0);
 
