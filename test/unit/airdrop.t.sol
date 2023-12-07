@@ -2,7 +2,7 @@ pragma solidity ^0.8.19;
 
 import {Test} from "forge-std/Test.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
-import {ERC20Mock} from "@openzeppelin/contracts/mocks/ERC20Mock.sol";
+import {ERC20Mock} from "@openzeppelin/contracts/mocks/token/ERC20Mock.sol";
 import {console2} from "forge-std/console2.sol";
 import {Pandasia} from "../../contracts/Pandasia.sol";
 import {StakingMock} from "./mocks/StakingMock.sol";
@@ -31,7 +31,7 @@ contract AirdropTest is Test {
   bytes32 public otherRoot;
 
   function setUp() public {
-    ProxyAdmin proxyAdmin = new ProxyAdmin();
+    ProxyAdmin proxyAdmin = new ProxyAdmin(address(this));
     Pandasia pandasiaImpl = new Pandasia();
 
     TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(proxyAdmin), bytes(""));

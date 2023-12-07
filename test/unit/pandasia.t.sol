@@ -9,6 +9,7 @@ import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.s
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {ITransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {ERC1967Utils} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
 
 // Test Data
 // Mnemonic: test test test test test test test test test test test test test test test test test test test test test test test blade
@@ -36,7 +37,7 @@ contract PandasiaTest is Test {
   address public pAddressBytes = address(0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02);
 
   function setUp() public {
-    ProxyAdmin proxyAdmin = new ProxyAdmin();
+    ProxyAdmin proxyAdmin = new ProxyAdmin(address(this));
     Pandasia pandasiaImpl = new Pandasia();
 
     TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(proxyAdmin), bytes(""));
@@ -205,12 +206,13 @@ contract PandasiaTest is Test {
   /**************************************************************************************************************************************/
 
   function testUpgrades() public {
-    ProxyAdmin proxyAdmin = new ProxyAdmin();
     Pandasia pandasiaImpl = new Pandasia();
-
-    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(proxyAdmin), bytes(""));
+    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(this), bytes(""));
     Pandasia v1 = Pandasia(payable(pandasiaProxy));
     v1.initialize();
+
+    bytes32 adminSlot = vm.load(address(v1), ERC1967Utils.ADMIN_SLOT);
+    ProxyAdmin proxyAdmin = ProxyAdmin(address(uint160(uint256(adminSlot))));
 
     address storageContract = address(0x01);
     v1.setStorageContract(storageContract);
@@ -225,15 +227,15 @@ contract PandasiaTest is Test {
 
     // ownership checks
     assertEq(address(this), proxyAdmin.owner());
-    assertEq(proxyAdmin.getProxyAdmin(ITransparentUpgradeableProxy(address(pandasiaProxy))), address(proxyAdmin));
 
     Pandasia v2Implementation = new Pandasia();
 
     vm.prank(address(0x01));
-    vm.expectRevert("Ownable: caller is not the owner");
-    proxyAdmin.upgrade(ITransparentUpgradeableProxy(address(pandasiaProxy)), address(v2Implementation));
+    bytes4 selector = bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
+    vm.expectRevert(abi.encodeWithSelector(selector, address(0x01)));
+    proxyAdmin.upgradeAndCall(ITransparentUpgradeableProxy(address(pandasiaProxy)), address(v2Implementation), new bytes(0));
 
-    proxyAdmin.upgrade(ITransparentUpgradeableProxy(address(pandasiaProxy)), address(v2Implementation));
+    proxyAdmin.upgradeAndCall(ITransparentUpgradeableProxy(address(v1)), address(v2Implementation), new bytes(0));
 
     assertEq(v1.storageContract(), storageContract);
   }

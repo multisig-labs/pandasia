@@ -8,6 +8,7 @@ import {Pandasia} from "../contracts/Pandasia.sol";
 
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
+import {ERC1967Utils} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
 
 contract DeployContract is Script, EnvironmentConfig {
   function run() external {
@@ -22,9 +23,6 @@ contract DeployContract is Script, EnvironmentConfig {
     if (isContractDeployed("Pandasia")) {
       console2.log("Pandasia exists, skipping...");
     } else {
-      ProxyAdmin proxyAdmin = new ProxyAdmin();
-      saveAddress("PandasiaAdmin", address(proxyAdmin));
-
       Pandasia pandasiaImpl = new Pandasia();
       saveAddress("PandasiaImpl", address(pandasiaImpl));
 
@@ -33,6 +31,13 @@ contract DeployContract is Script, EnvironmentConfig {
         address(proxyAdmin),
         abi.encodeWithSelector(pandasiaImpl.initialize.selector)
       );
+
+      // TransparentUpgradeableProxy makes it's own ProxyAdmin now
+      // so we have to get the ProxyAdmin from it's storage slot
+      bytes32 adminSlot = vm.load(address(v1), ERC1967Utils.ADMIN_SLOT);
+      ProxyAdmin proxyAdmin = ProxyAdmin(address(uint160(uint256(adminSlot))));
+      saveAddress("ProxyAdmin", proxyAdmin);
+
       Pandasia pandasia = Pandasia(payable(pandasiaProxy));
       saveAddress("Pandasia", address(pandasia));
 
