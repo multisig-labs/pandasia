@@ -7,6 +7,7 @@ import "./SECP256K1.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
@@ -18,7 +19,7 @@ interface Storage {
   function getAddress(bytes32 key) external view returns (address);
 }
 
-contract Pandasia is OwnableUpgradeable {
+contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
   using SafeERC20 for IERC20;
 
   error AddressNotEligible();
@@ -53,6 +54,8 @@ contract Pandasia is OwnableUpgradeable {
 
   address public storageContract;
 
+  bytes32 public constant ROOT_UPDATER = keccak256("ROOT_UPDATER");
+
   struct Airdrop {
     uint64 id;
     address owner; // account that contributed the funds
@@ -70,6 +73,13 @@ contract Pandasia is OwnableUpgradeable {
 
   function initialize() public initializer {
     __Ownable_init(msg.sender);
+    __AccessControl_init();
+    _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+  }
+
+  modifier onlyRootUpdater() {
+    _checkRole(ROOT_UPDATER, msg.sender);
+    _;
   }
 
   /**************************************************************************************************************************************/
@@ -297,16 +307,20 @@ contract Pandasia is OwnableUpgradeable {
     IERC20(airdrop.erc20).safeTransfer(msg.sender, withdrawAmt);
   }
 
-  function setMerkleRoot(bytes32 root) external onlyOwner {
-    merkleRoot = root;
-  }
-
   function setFee(uint32 fee) external onlyOwner {
     feePct = fee;
   }
 
   function setStorageContract(address addr) external onlyOwner {
     storageContract = addr;
+  }
+
+  /**************************************************************************************************************************************/
+  /*** Root Updater Functions                                                                                                         ***/
+  /**************************************************************************************************************************************/
+
+  function setMerkleRoot(bytes32 root) external onlyRootUpdater {
+    merkleRoot = root;
   }
 
   /**************************************************************************************************************************************/

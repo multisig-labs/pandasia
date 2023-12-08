@@ -28,7 +28,7 @@ contract DeployContract is Script, EnvironmentConfig {
 
       TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(
         address(pandasiaImpl),
-        address(proxyAdmin),
+        deployer,
         abi.encodeWithSelector(pandasiaImpl.initialize.selector)
       );
 

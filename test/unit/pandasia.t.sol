@@ -37,12 +37,20 @@ contract PandasiaTest is Test {
   address public pAddressBytes = address(0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02);
 
   function setUp() public {
-    ProxyAdmin proxyAdmin = new ProxyAdmin(address(this));
     Pandasia pandasiaImpl = new Pandasia();
 
-    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(proxyAdmin), bytes(""));
+    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(this), bytes(""));
     pandasia = Pandasia(payable(pandasiaProxy));
     pandasia.initialize();
+    pandasia.grantRole(pandasia.ROOT_UPDATER(), address(this));
+  }
+
+  function initalizationTest() public {
+    bytes32 adminSlot = vm.load(address(pandasia), ERC1967Utils.ADMIN_SLOT);
+    ProxyAdmin proxyAdmin = ProxyAdmin(address(uint160(uint256(adminSlot))));
+    assertEq(proxyAdmin.owner(), address(this));
+
+    assertTrue(pandasia.hasRole(pandasia.DEFAULT_ADMIN_ROLE(), address(this)));
   }
 
   /**************************************************************************************************************************************/
@@ -199,6 +207,27 @@ contract PandasiaTest is Test {
 
     vm.prank(cAddress);
     assertEq(pandasia.recoverMessage(v, r, s), pAddressBytes);
+  }
+
+  function testSetMerkleRoot() public {
+    address updater = address(0x123);
+
+    assertFalse(pandasia.hasRole(pandasia.ROOT_UPDATER(), updater));
+
+    bytes32 merkleRoot = bytes32(0x1733170f5a465a52692730efa67c11a3c9b1208a5acbe833057fac165ce6947b);
+
+    vm.startPrank(updater);
+    bytes4 selector = bytes4(keccak256("AccessControlUnauthorizedAccount(address,bytes32)"));
+    vm.expectRevert(abi.encodeWithSelector(selector, updater, pandasia.ROOT_UPDATER()));
+    pandasia.setMerkleRoot(merkleRoot);
+    vm.stopPrank();
+
+    pandasia.grantRole(pandasia.ROOT_UPDATER(), updater);
+
+    vm.prank(updater);
+    pandasia.setMerkleRoot(merkleRoot);
+
+    assertEq(pandasia.merkleRoot(), merkleRoot);
   }
 
   /**************************************************************************************************************************************/
