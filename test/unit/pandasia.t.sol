@@ -294,7 +294,8 @@ contract PandasiaTest is Test {
     pandasia.registerPChainAddr(v, r, s, proof);
 
     assertTrue(pandasia.isRegisteredValidator(cAddress));
-    console2.log(pandasia.c2p(cAddress));
+
+    assertEq(pandasia.cChainAddrsCount(), 1);
 
     Pandasia.User[] memory users = pandasia.getRegisteredUsers(0, 0);
     assertEq(users.length, 1);

@@ -361,6 +361,10 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
     }
   }
 
+  function cChainAddrsCount() public view returns (uint) {
+    return cChainAddrs.length;
+  }
+
   function getRegisteredUsers(uint256 offset, uint256 limit) external view returns (User[] memory users) {
     uint256 totalCChainAddrs = cChainAddrs.length;
     uint256 max = offset + limit;
