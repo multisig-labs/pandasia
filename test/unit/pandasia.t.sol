@@ -35,6 +35,7 @@ contract PandasiaTest is Test {
 
   address public cAddress = address(0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4);
   address public pAddressBytes = address(0x424328BF10CDaEEDa6bb05A78cfF90a0BEA12c02);
+  uint64 public blockHeight;
 
   function setUp() public {
     Pandasia pandasiaImpl = new Pandasia();
@@ -43,6 +44,8 @@ contract PandasiaTest is Test {
     pandasia = Pandasia(payable(pandasiaProxy));
     pandasia.initialize();
     pandasia.grantRole(pandasia.ROOT_UPDATER(), address(this));
+
+    blockHeight = 111;
   }
 
   function initalizationTest() public {
@@ -62,7 +65,7 @@ contract PandasiaTest is Test {
     bytes32[] memory proof = new bytes32[](1);
     proof[0] = bytes32(0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f);
 
-    pandasia.setMerkleRoot(root);
+    pandasia.setMerkleRoot(root, blockHeight);
     assertFalse(pandasia.isRegisteredValidator(cAddress));
 
     // Signature generated on wallet.avax.network
@@ -95,7 +98,7 @@ contract PandasiaTest is Test {
     bytes32[] memory proof = new bytes32[](1);
     proof[0] = bytes32(0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f);
 
-    pandasia.setMerkleRoot(root);
+    pandasia.setMerkleRoot(root, blockHeight);
     assertFalse(pandasia.isRegisteredValidator(cAddress));
 
     // Signature generated on wallet.avax.network
@@ -215,19 +218,21 @@ contract PandasiaTest is Test {
     assertFalse(pandasia.hasRole(pandasia.ROOT_UPDATER(), updater));
 
     bytes32 merkleRoot = bytes32(0x1733170f5a465a52692730efa67c11a3c9b1208a5acbe833057fac165ce6947b);
+    uint64 height = 1212;
 
     vm.startPrank(updater);
     bytes4 selector = bytes4(keccak256("AccessControlUnauthorizedAccount(address,bytes32)"));
     vm.expectRevert(abi.encodeWithSelector(selector, updater, pandasia.ROOT_UPDATER()));
-    pandasia.setMerkleRoot(merkleRoot);
+    pandasia.setMerkleRoot(merkleRoot, height);
     vm.stopPrank();
 
     pandasia.grantRole(pandasia.ROOT_UPDATER(), updater);
 
     vm.prank(updater);
-    pandasia.setMerkleRoot(merkleRoot);
+    pandasia.setMerkleRoot(merkleRoot, height);
 
     assertEq(pandasia.merkleRoot(), merkleRoot);
+    assertEq(pandasia.blockHeight(), height);
   }
 
   /**************************************************************************************************************************************/

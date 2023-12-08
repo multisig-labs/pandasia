@@ -29,6 +29,7 @@ contract AirdropTest is Test {
   bytes32[] public otherProof;
   bytes32 public validatorRoot;
   bytes32 public otherRoot;
+  uint64 public blockHeight;
 
   function setUp() public {
     Pandasia pandasiaImpl = new Pandasia();
@@ -56,13 +57,15 @@ contract AirdropTest is Test {
     validatorProof = new bytes32[](1);
     validatorProof[0] = bytes32(0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f);
 
+    blockHeight = uint64(1211);
+
     stakingContract = new StakingMock();
     stakingContract.setLastRewardsCycleCompleted(minipoolOperator, 1);
 
     storageContract = new StorageMock();
     storageContract.setAddress(keccak256(abi.encodePacked("contract.address", "Staking")), address(stakingContract));
 
-    pandasia.setMerkleRoot(validatorRoot);
+    pandasia.setMerkleRoot(validatorRoot, blockHeight);
     pandasia.setStorageContract(address(storageContract));
 
     pandasia.transferOwnership(deployer);
