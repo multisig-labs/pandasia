@@ -73,9 +73,6 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
 
   function initialize() public initializer {
     __Ownable_init(msg.sender);
-  }
-
-  function initializeV2() public reinitializer(2) {
     __AccessControl_init();
     _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
   }

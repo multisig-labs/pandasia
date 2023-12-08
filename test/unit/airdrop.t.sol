@@ -31,13 +31,11 @@ contract AirdropTest is Test {
   bytes32 public otherRoot;
 
   function setUp() public {
-    ProxyAdmin proxyAdmin = new ProxyAdmin(address(this));
     Pandasia pandasiaImpl = new Pandasia();
 
-    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(proxyAdmin), bytes(""));
+    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(this), bytes(""));
     pandasia = Pandasia(payable(pandasiaProxy));
     pandasia.initialize();
-    pandasia.initializeV2();
 
     pandasia.grantRole(pandasia.ROOT_UPDATER(), address(this));
 
