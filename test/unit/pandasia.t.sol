@@ -4,6 +4,7 @@ import {Test} from "forge-std/Test.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {console2} from "forge-std/console2.sol";
 import {Pandasia} from "../../contracts/pandasia.sol";
+import {PandasiaV1} from "../../contracts/archive/pandasiav1.sol";
 import {SECP256K1} from "../../contracts/SECP256K1.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
@@ -43,6 +44,8 @@ contract PandasiaTest is Test {
     TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(proxyAdmin), bytes(""));
     pandasia = Pandasia(payable(pandasiaProxy));
     pandasia.initialize();
+    pandasia.initializeV2();
+    pandasia.grantRole(pandasia.ROOT_UPDATER(), address(this));
   }
 
   /**************************************************************************************************************************************/
@@ -238,6 +241,37 @@ contract PandasiaTest is Test {
     proxyAdmin.upgradeAndCall(ITransparentUpgradeableProxy(address(v1)), address(v2Implementation), new bytes(0));
 
     assertEq(v1.storageContract(), storageContract);
+  }
+
+  function testV2() public {
+    PandasiaV1 pandasiaImplV1 = new PandasiaV1();
+    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImplV1), address(this), bytes(""));
+    PandasiaV1 v1 = PandasiaV1(payable(pandasiaProxy));
+    v1.initialize();
+
+    Pandasia v2Implementation = new Pandasia();
+
+    bytes32 adminSlot = vm.load(address(v1), ERC1967Utils.ADMIN_SLOT);
+    ProxyAdmin proxyAdmin = ProxyAdmin(address(uint160(uint256(adminSlot))));
+
+    proxyAdmin.upgradeAndCall(ITransparentUpgradeableProxy(address(v1)), address(v2Implementation), new bytes(0));
+
+    Pandasia v2 = Pandasia(address(v1));
+    // ensure that this address doesn't have the DEFAULT_ADMIN_ROLE
+
+    assertFalse(v2.hasRole(pandasia.DEFAULT_ADMIN_ROLE(), address(this)));
+
+    v2.initializeV2();
+
+    assertTrue(v2.hasRole(pandasia.DEFAULT_ADMIN_ROLE(), address(this)));
+
+    bytes32 root = bytes32(0x1733170f5a465a52692730efa67c11a3c9b1208a5acbe833057fac165ce6947b);
+
+    // console2.logBytes32(pandasia.ROOT_UPDATER());
+
+    bytes4 selector = bytes4(keccak256("AccessControlUnauthorizedAccount(address,bytes32)"));
+    vm.expectRevert(abi.encodeWithSelector(selector, address(this), pandasia.ROOT_UPDATER()));
+    v2.setMerkleRoot(root);
   }
 
   /**************************************************************************************************************************************/

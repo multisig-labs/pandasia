@@ -37,6 +37,9 @@ contract AirdropTest is Test {
     TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(address(pandasiaImpl), address(proxyAdmin), bytes(""));
     pandasia = Pandasia(payable(pandasiaProxy));
     pandasia.initialize();
+    pandasia.initializeV2();
+
+    pandasia.grantRole(pandasia.ROOT_UPDATER(), address(this));
 
     deployer = getActor("deployer");
     airdropOwner = getActor("airdropOwner");
