@@ -39,16 +39,15 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
   event AirdropCreated(uint64 indexed id);
   event AirdropClaimed(uint64 indexed id, address indexed claimant);
 
-  // Storage is sorted for slot optimization
-  // _owner address comes from Ownable Slot 0
+  bytes32 public merkleRoot; // Merkle root defining all verified validator P-chain addresses
+
+  uint64 public blockHeight; // Block height at which the merkle root was calculated
   uint64 public airdropCount; // counter for AirdropIds (max 18,446,744,073,709,551,615)
   uint32 public feePct; // 10_000 = 100% fee charged on funding an airdrop
 
   mapping(uint64 => Airdrop) public airdrops;
   mapping(address => uint64[]) public airdropIds; // index of owners => airdropIds
   mapping(uint64 => mapping(address => bool)) public claimed; // airdropIds => users claim status
-
-  bytes32 public merkleRoot; // Merkle root defining all verified validator P-chain addresses
 
   address[] public cChainAddrs;
   mapping(address => address) public c2p; // c-chain addr => verified p-chain addr
@@ -326,8 +325,9 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
   /*** Root Updater Functions                                                                                                         ***/
   /**************************************************************************************************************************************/
 
-  function setMerkleRoot(bytes32 root) external onlyRootUpdater {
+  function setMerkleRoot(bytes32 root, uint64 height) external onlyRootUpdater {
     merkleRoot = root;
+    blockHeight = height;
   }
 
   /**************************************************************************************************************************************/

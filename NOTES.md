@@ -27,7 +27,8 @@ bin/pandasia generate-tree --db data/pandasia-dev.db
 
 # Submit current root to contract
 export CURRENT_ROOT=$(curl --silent $PANDASIA_URL/trees | jq -r '.[0].Root'); echo ${CURRENT_ROOT}
-just cast-submit-root ${CURRENT_ROOT}
+export HEIGHT=$(curl --silent $PANDASIA_URL/trees | jq -r '.[0].Height'); echo ${HEIGHT}
+just cast-submit-root ${CURRENT_ROOT} ${HEIGHT}
 
 
 # Test addrs and a sig from wallet.avax.network
