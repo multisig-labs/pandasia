@@ -288,7 +288,7 @@ contract PandasiaTest is Test {
     bytes32[] memory proof = new bytes32[](1);
     proof[0] = bytes32(0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f);
 
-    pandasia.setMerkleRoot(root);
+    pandasia.setMerkleRoot(root, blockHeight);
 
     // Signature generated on wallet.avax.network
     uint8 v = 0;

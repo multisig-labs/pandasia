@@ -20,30 +20,26 @@ contract DeployContract is Script, EnvironmentConfig {
 
     vm.startBroadcast(deployer);
 
-    if (isContractDeployed("Pandasia")) {
-      console2.log("Pandasia exists, skipping...");
-    } else {
-      Pandasia pandasiaImpl = new Pandasia();
-      saveAddress("PandasiaImpl", address(pandasiaImpl));
+    Pandasia pandasiaImpl = new Pandasia();
+    saveAddress("PandasiaImpl", address(pandasiaImpl));
 
-      TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(
-        address(pandasiaImpl),
-        deployer,
-        abi.encodeWithSelector(pandasiaImpl.initialize.selector)
-      );
+    TransparentUpgradeableProxy pandasiaProxy = new TransparentUpgradeableProxy(
+      address(pandasiaImpl),
+      deployer,
+      abi.encodeWithSelector(pandasiaImpl.initialize.selector)
+    );
 
-      // TransparentUpgradeableProxy makes it's own ProxyAdmin now
-      // so we have to get the ProxyAdmin from it's storage slot
-      bytes32 adminSlot = vm.load(address(v1), ERC1967Utils.ADMIN_SLOT);
-      ProxyAdmin proxyAdmin = ProxyAdmin(address(uint160(uint256(adminSlot))));
-      saveAddress("ProxyAdmin", proxyAdmin);
+    Pandasia pandasia = Pandasia(payable(pandasiaProxy));
+    saveAddress("Pandasia", address(pandasia));
 
-      Pandasia pandasia = Pandasia(payable(pandasiaProxy));
-      saveAddress("Pandasia", address(pandasia));
+    // TransparentUpgradeableProxy makes it's own ProxyAdmin now
+    // so we have to get the ProxyAdmin from it's storage slot
+    bytes32 adminSlot = vm.load(address(pandasia), ERC1967Utils.ADMIN_SLOT);
+    ProxyAdmin proxyAdmin = ProxyAdmin(address(uint160(uint256(adminSlot))));
+    saveAddress("PandasiaAdmin", address(proxyAdmin));
 
-      console2.log("Setting storage address to", getAddress("Storage"));
-      pandasia.setStorageContract(getAddress("Storage"));
-    }
+    console2.log("Setting storage address to", getAddress("Storage"));
+    pandasia.setStorageContract(getAddress("Storage"));
 
     vm.stopBroadcast();
   }
