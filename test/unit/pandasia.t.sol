@@ -270,6 +270,41 @@ contract PandasiaTest is Test {
   }
 
   /**************************************************************************************************************************************/
+  /*** Get User Test                                                                                                                  ***/
+  /**************************************************************************************************************************************/
+
+  function testGetUsersNoneRegistered() public {
+    Pandasia.User[] memory users = pandasia.getRegisteredUsers(0, 0);
+    assertEq(users.length, 0);
+  }
+
+  function testGetUsers() public {
+    bytes32 root = bytes32(0x1733170f5a465a52692730efa67c11a3c9b1208a5acbe833057fac165ce6947b);
+    bytes32[] memory proof = new bytes32[](1);
+    proof[0] = bytes32(0xa7409058568815d08a7ad3c7d4fd44cf1dec90c620cb31e55ad24c654f7ba34f);
+
+    pandasia.setMerkleRoot(root);
+
+    // Signature generated on wallet.avax.network
+    uint8 v = 0;
+    bytes32 r = bytes32(0x6ac1cc3277dffe75d9cc8264acacc9f464762bab7ef73921a67dee1a398bd337);
+    bytes32 s = bytes32(0x39cf19e2ff4c36ba64ed3684af9a72b59b7ccd16833666c81e84fb001bbb315a);
+
+    vm.prank(cAddress);
+    pandasia.registerPChainAddr(v, r, s, proof);
+
+    assertTrue(pandasia.isRegisteredValidator(cAddress));
+
+    assertEq(pandasia.cChainAddrsCount(), 1);
+
+    Pandasia.User[] memory users = pandasia.getRegisteredUsers(0, 0);
+    assertEq(users.length, 1);
+
+    assertEq(users[0].cChainAddr, cAddress);
+    assertEq(users[0].pChainAddr, pAddressBytes);
+  }
+
+  /**************************************************************************************************************************************/
   /*** Helpers                                                                                                                        ***/
   /**************************************************************************************************************************************/
 

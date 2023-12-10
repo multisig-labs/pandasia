@@ -45,10 +45,12 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
   uint32 public feePct; // 10_000 = 100% fee charged on funding an airdrop
 
   mapping(uint64 => Airdrop) public airdrops;
-  mapping(uint64 => mapping(address => bool)) public claimed; // airdropIds => users claim status
   mapping(address => uint64[]) public airdropIds; // index of owners => airdropIds
+  mapping(uint64 => mapping(address => bool)) public claimed; // airdropIds => users claim status
 
   bytes32 public merkleRoot; // Merkle root defining all verified validator P-chain addresses
+
+  address[] public cChainAddrs;
   mapping(address => address) public c2p; // c-chain addr => verified p-chain addr
   mapping(address => address) public p2c; // verified p-chain addr => c-chain addr
 
@@ -65,6 +67,11 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
     uint256 claimAmount; // claimAmount claimable by each address
     uint64 startsAt; // time that airdrop starts and claims can be made
     uint64 expiresAt; // time that airdrop expires and no further claims can be made
+  }
+
+  struct User {
+    address cChainAddr;
+    address pChainAddr;
   }
 
   constructor() {
@@ -104,7 +111,6 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
 
     Airdrop storage airdrop = airdrops[currentAirdropId];
 
-    // Do we care? Can they set any owner on creation?
     airdrop.id = currentAirdropId;
     airdrop.owner = msg.sender;
     airdrop.erc20 = erc20;
@@ -242,6 +248,7 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
       revert PAddrAlreadyRegistered();
     }
     if (verify(merkleRoot, paddy, proof)) {
+      cChainAddrs.push(msg.sender);
       c2p[msg.sender] = paddy;
       p2c[paddy] = msg.sender;
     } else {
@@ -351,6 +358,33 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
     // solhint-disable-next-line no-inline-assembly
     assembly {
       mstore(pageOfAirdrops, total)
+    }
+  }
+
+  function cChainAddrsCount() public view returns (uint) {
+    return cChainAddrs.length;
+  }
+
+  function getRegisteredUsers(uint256 offset, uint256 limit) external view returns (User[] memory users) {
+    uint256 totalCChainAddrs = cChainAddrs.length;
+    uint256 max = offset + limit;
+    if (max > totalCChainAddrs || limit == 0) {
+      max = totalCChainAddrs;
+    }
+
+    users = new User[](max - offset);
+
+    uint256 total = 0;
+    for (uint256 i = 0; i < cChainAddrs.length; i++) {
+      address cAddr = cChainAddrs[i];
+      if (c2p[cAddr] != address(0)) {
+        users[total] = (User(cAddr, c2p[cAddr]));
+        total++;
+      }
+    }
+
+    assembly {
+      mstore(users, total)
     }
   }
 }
