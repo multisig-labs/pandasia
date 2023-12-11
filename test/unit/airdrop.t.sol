@@ -264,6 +264,24 @@ contract AirdropTest is Test {
     assertEq(airdrop.erc20, address(0));
   }
 
+  function testDeleteAirdropWithFunding() public {
+    uint256 perClaimAmt = 10 ether;
+    uint64 id = createFundedAirdrop(perClaimAmt);
+
+    vm.expectRevert(Pandasia.AirdropStillHasFunding.selector);
+    pandasia.deleteAirdrop(id);
+
+    Pandasia.Airdrop memory airdrop = pandasia.getAirdrop(id);
+
+    vm.prank(deployer);
+    pandasia.emergencyWithdraw(id);
+
+    pandasia.deleteAirdrop(id);
+    airdrop = pandasia.getAirdrop(id);
+
+    assertEq(airdrop.claimAmount, 0);
+  }
+
   /**************************************************************************************************************************************/
   /*** Can Claim Tests                                                                                                                ***/
   /**************************************************************************************************************************************/
@@ -512,31 +530,18 @@ contract AirdropTest is Test {
 
     bytes4 selector = bytes4(keccak256("OwnableUnauthorizedAccount(address)"));
     vm.expectRevert(abi.encodeWithSelector(selector, address(this)));
-    pandasia.emergencyWithdraw(id, 1 ether);
+    pandasia.emergencyWithdraw(id);
+
+    Pandasia.Airdrop memory airdrop = pandasia.getAirdrop(id);
+    uint256 airdropBalance = airdrop.balance;
 
     vm.prank(deployer);
-    pandasia.emergencyWithdraw(id, 1 ether);
-    assertEq(erc20.balanceOf(deployer), 1 ether);
-  }
+    pandasia.emergencyWithdraw(id);
 
-  function testEmergencyWithdrawFundingInvalidRequest() public {
-    uint256 totalFundingAmt = 50 ether;
+    airdrop = pandasia.getAirdrop(id);
 
-    vm.startPrank(airdropOwner);
-    uint64 id = pandasia.newAirdrop(bytes32(0), address(erc20), 10 ether, uint64(block.timestamp), uint64(block.timestamp + 1000));
-
-    erc20.mint(airdropOwner, totalFundingAmt);
-    erc20.approve(address(pandasia), totalFundingAmt);
-    pandasia.fundAirdrop(id, totalFundingAmt);
-    vm.stopPrank();
-
-    vm.prank(deployer);
-    vm.expectRevert(Pandasia.InvalidWithdrawRequest.selector);
-    pandasia.emergencyWithdraw(id, totalFundingAmt + 1);
-
-    vm.prank(deployer);
-    pandasia.emergencyWithdraw(id, totalFundingAmt);
-    assertEq(erc20.balanceOf(deployer), totalFundingAmt);
+    assertEq(erc20.balanceOf(deployer), airdropBalance);
+    assertEq(airdrop.balance, 0);
   }
 
   /**************************************************************************************************************************************/
