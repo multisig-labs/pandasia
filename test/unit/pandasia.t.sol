@@ -44,6 +44,7 @@ contract PandasiaTest is Test {
     pandasia = Pandasia(payable(pandasiaProxy));
     pandasia.initialize();
     pandasia.grantRole(pandasia.ROOT_UPDATER(), address(this));
+    pandasia.grantRole(pandasia.AIRDROP_ADMIN(), address(this));
 
     blockHeight = 111;
   }

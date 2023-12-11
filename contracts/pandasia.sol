@@ -28,6 +28,7 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
   error AirdropNotStarted();
   error AirdropOutOfFunds();
   error AirdropStillActive();
+  error AirdropStillHasFunding();
   error InvalidAddress();
   error InvalidAmount();
   error InvalidWithdrawRequest();
@@ -56,6 +57,7 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
   address public storageContract;
 
   bytes32 public constant ROOT_UPDATER = keccak256("ROOT_UPDATER");
+  bytes32 public constant AIRDROP_ADMIN = keccak256("AIRDROP_ADMIN");
 
   struct Airdrop {
     uint64 id;
@@ -88,11 +90,22 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
     _;
   }
 
+  modifier onlyAirdropAdmin() {
+    _checkRole(AIRDROP_ADMIN, msg.sender);
+    _;
+  }
+
   /**************************************************************************************************************************************/
   /*** Airdrop Functions                                                                                                              ***/
   /**************************************************************************************************************************************/
 
-  function newAirdrop(bytes32 customRoot, address erc20, uint256 claimAmount, uint64 startsAt, uint64 expiresAt) external returns (uint64) {
+  function newAirdrop(
+    bytes32 customRoot,
+    address erc20,
+    uint256 claimAmount,
+    uint64 startsAt,
+    uint64 expiresAt
+  ) external onlyAirdropAdmin returns (uint64) {
     if (erc20 == address(0)) {
       revert InvalidAddress();
     }
@@ -123,6 +136,14 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
     emit AirdropCreated(currentAirdropId);
 
     return currentAirdropId;
+  }
+
+  function deleteAirdrop(uint64 airdropId) external onlyAirdropAdmin {
+    Airdrop memory airdrop = airdrops[airdropId];
+    if (airdrop.balance > 0) {
+      revert AirdropStillHasFunding();
+    }
+    delete airdrops[airdropId];
   }
 
   function fundAirdrop(uint64 airdropId, uint256 fundAmount) external {
@@ -304,13 +325,13 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
     IERC20(airdrop.erc20).safeTransfer(msg.sender, fees);
   }
 
-  function emergencyWithdraw(uint64 airdropId, uint256 withdrawAmt) external onlyOwner {
-    Airdrop memory airdrop = airdrops[airdropId];
-    if (airdrop.balance < withdrawAmt) {
-      revert InvalidWithdrawRequest();
-    }
-    airdrop.balance = airdrop.balance - withdrawAmt;
-    IERC20(airdrop.erc20).safeTransfer(msg.sender, withdrawAmt);
+  function emergencyWithdraw(uint64 airdropId) external onlyOwner {
+    Airdrop storage airdrop = airdrops[airdropId];
+
+    uint256 balance = airdrop.balance;
+    airdrop.balance = 0;
+
+    IERC20(airdrop.erc20).safeTransfer(msg.sender, balance);
   }
 
   function setFee(uint32 fee) external onlyOwner {
