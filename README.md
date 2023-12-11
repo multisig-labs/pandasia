@@ -20,6 +20,13 @@ their node.
 
 # How to Use
 
+Here's a demo video of the registration flow
+
+
+https://github.com/multisig-labs/pandasia/assets/13784188/f0236478-63a7-4f48-b1cf-a695ca2a09c0
+
+
+
 ### As a validator
 
 If you're currently running your own validator node, head to [pandasia.io](https://pandasia.io)
@@ -36,8 +43,6 @@ your C-Chain address you use to run your minipool on [pandasia.io](https://panda
 ### Looking to create your own airdrop?
 
 Reach out to [@ggp_steven](https://t.me/ggp_steven) on telegram and we'll get you started!
-
-![](docs/pandasia-ui.png)
 
 ## Technical Approach
 
