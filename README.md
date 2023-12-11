@@ -6,17 +6,12 @@ One of the Charities, (Πανδαισία) "banquet for everyone"
 
 # Problem
 
-<<<<<<< HEAD
-Be “the place” where user’s can come to “claim” their validator node, cryptographically tying their C-chain addr to a P-chain addr. Then build web UI for projects to come and airdrop tokens / NFTs to the “verified” validator community. Of course any Minipool operator will automatically be a "verified" validator.
-=======
 The primary way to bootstrap your novel blockchain is through an airdrop to as wide and decentralized set of node
 operators as possible. But because of the avalanche network design, this is very tricky to do. Validators exist on
 the P-chain, but airdrops, wallets, and smart contracts exist on the C-Chain. There is no easy way to link a validators
 profile on the P-chain to their C-Chain wallets. BEcause of that there isn't actually an easy way for subnets
 to airdrop tokens to validator nodes which is one key blocker to helping subnets grow through decentralization.
 Introducing Pandasia.
-
-> > > > > > > 47727a6 (Update README)
 
 # Idea
 
