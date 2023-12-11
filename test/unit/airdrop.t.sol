@@ -39,9 +39,12 @@ contract AirdropTest is Test {
     pandasia.initialize();
 
     pandasia.grantRole(pandasia.ROOT_UPDATER(), address(this));
+    pandasia.grantRole(pandasia.AIRDROP_ADMIN(), address(this));
 
     deployer = getActor("deployer");
     airdropOwner = getActor("airdropOwner");
+    pandasia.grantRole(pandasia.AIRDROP_ADMIN(), address(airdropOwner));
+
     minipoolOperator = getActor("minipoolOperator");
     otherUser = getActor("otherUser", 0x0000000000000000000000000000000000000001);
     validator = getActor("validator", 0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4);
@@ -208,6 +211,57 @@ contract AirdropTest is Test {
 
     // Validator is registered and in merkle root, thus they can claim
     assertTrue(pandasia.canClaimAirdrop(validator, id, validatorProof));
+  }
+
+  function testNewAirdropNotAdmin() public {
+    address user1 = address(0x01);
+
+    vm.startPrank(user1);
+    bytes4 selector = bytes4(keccak256("AccessControlUnauthorizedAccount(address,bytes32)"));
+    vm.expectRevert(abi.encodeWithSelector(selector, user1, pandasia.AIRDROP_ADMIN()));
+    uint64 id = pandasia.newAirdrop(bytes32(0), address(erc20), 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
+    vm.stopPrank();
+
+    pandasia.grantRole(pandasia.AIRDROP_ADMIN(), user1);
+
+    vm.prank(user1);
+    id = pandasia.newAirdrop(bytes32(0), address(erc20), 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
+  }
+
+  function testDeleteAirdrop() public {
+    uint64 id = pandasia.newAirdrop(bytes32(0), address(erc20), 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
+
+    Pandasia.Airdrop memory airdrop = pandasia.getAirdrop(id);
+
+    assertEq(airdrop.erc20, address(erc20));
+
+    pandasia.deleteAirdrop(id);
+
+    airdrop = pandasia.getAirdrop(id);
+    assertEq(airdrop.erc20, address(0));
+  }
+
+  function testDeleteAirdropNotAdmin() public {
+    uint64 id = pandasia.newAirdrop(bytes32(0), address(erc20), 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
+
+    Pandasia.Airdrop memory airdrop = pandasia.getAirdrop(id);
+
+    assertEq(airdrop.erc20, address(erc20));
+
+    address user1 = address(0x01);
+
+    vm.startPrank(user1);
+    bytes4 selector = bytes4(keccak256("AccessControlUnauthorizedAccount(address,bytes32)"));
+    vm.expectRevert(abi.encodeWithSelector(selector, user1, pandasia.AIRDROP_ADMIN()));
+    pandasia.deleteAirdrop(id);
+    vm.stopPrank();
+
+    pandasia.grantRole(pandasia.AIRDROP_ADMIN(), user1);
+    vm.prank(user1);
+    pandasia.deleteAirdrop(id);
+
+    airdrop = pandasia.getAirdrop(id);
+    assertEq(airdrop.erc20, address(0));
   }
 
   /**************************************************************************************************************************************/
@@ -551,6 +605,7 @@ contract AirdropTest is Test {
 
     pandasia.newAirdrop(otherRoot, address(erc20), 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
     uint64 id3 = pandasia.newAirdrop(otherRoot, address(erc20), 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));
+    vm.stopPrank();
 
     ids = pandasia.getAirdropIds(airdropOwner);
     assertEq(ids.length, 3);
@@ -558,6 +613,7 @@ contract AirdropTest is Test {
     assertEq(ids[2], id3);
 
     address otherOwner = address(0x45);
+    pandasia.grantRole(pandasia.AIRDROP_ADMIN(), otherOwner);
 
     vm.startPrank(otherOwner);
     pandasia.newAirdrop(otherRoot, address(erc20), 10 ether, uint32(block.timestamp), uint64(block.timestamp + 1000));

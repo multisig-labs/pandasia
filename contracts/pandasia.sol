@@ -56,6 +56,7 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
   address public storageContract;
 
   bytes32 public constant ROOT_UPDATER = keccak256("ROOT_UPDATER");
+  bytes32 public constant AIRDROP_ADMIN = keccak256("AIRDROP_ADMIN");
 
   struct Airdrop {
     uint64 id;
@@ -88,11 +89,22 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
     _;
   }
 
+  modifier onlyAirdropAdmin() {
+    _checkRole(AIRDROP_ADMIN, msg.sender);
+    _;
+  }
+
   /**************************************************************************************************************************************/
   /*** Airdrop Functions                                                                                                              ***/
   /**************************************************************************************************************************************/
 
-  function newAirdrop(bytes32 customRoot, address erc20, uint256 claimAmount, uint64 startsAt, uint64 expiresAt) external returns (uint64) {
+  function newAirdrop(
+    bytes32 customRoot,
+    address erc20,
+    uint256 claimAmount,
+    uint64 startsAt,
+    uint64 expiresAt
+  ) external onlyAirdropAdmin returns (uint64) {
     if (erc20 == address(0)) {
       revert InvalidAddress();
     }
@@ -123,6 +135,10 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
     emit AirdropCreated(currentAirdropId);
 
     return currentAirdropId;
+  }
+
+  function deleteAirdrop(uint64 airdropId) external onlyAirdropAdmin {
+    delete airdrops[airdropId];
   }
 
   function fundAirdrop(uint64 airdropId, uint256 fundAmount) external {
