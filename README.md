@@ -25,19 +25,22 @@ their node.
 
 # How to Use
 
-## As a validator
+### As a validator
 
-If you're currently a avalanche validator and running your own node, you can head to [pandasia.io](https://pandasia.io)
-and follow the steps to register. If you have any issues reach out to us in [Discord](https://discord.gg/5bXrj6tc)!
+If you're currently running your own validator node, head to [pandasia.io](https://pandasia.io)
+and follow the steps to register. When signing the message, make sure the message contains the C-Chain address
+you want to register with Pandasia, and sign it with your P-Chain rewards address.
 
-## As a minipool operator
+If you have any issues reach out to us in [Discord](https://discord.gg/5bXrj6tc)!
+
+### As a minipool operator
 
 Are you a minipool operator with GoGoPool? You can access pandasia airdrops without having to register! Just log in with
 your C-Chain address you use to run your minipool on [pandasia.io](https://pandasia.io).
 
-## Looking to create your own airdrop?
+### Looking to create your own airdrop?
 
-Reach out to us at we'll get you started!
+Reach out to [@ggp_steven](https://t.me/ggp_steven) on telegram and we'll get you started!
 
 ![](docs/pandasia-ui.png)
 
