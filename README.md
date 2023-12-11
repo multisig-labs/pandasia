@@ -86,3 +86,9 @@ Projects create airdrops, depositing tokens to be distributed to registered vali
 The start and end time can be configued, as well as the distribution amount.
 
 ![](docs/airdrop.png)
+
+# What's coming
+
+Currently you need to contact MultisigLabs to create an airdrop, but we plan to open it up to the public soon.
+
+We're also working on getting delegators involved in the airdrop action!
