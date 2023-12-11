@@ -1,9 +1,6 @@
-# TODO
-
-Use this to check our work on if rewards have been recvd
-https://ava-labs-inc.metabaseapp.com/public/question/78f9de45-1f09-4b08-847b-086372bdcc4c
-
 # Command Scratchpad
+
+Various commands that were helpful during development.
 
 ```bash
 just install
@@ -125,7 +122,7 @@ signature: 24eWufzWvm38teEhNQmtE9N5BD12CWUawv1YtbYkuxeS5gGCN6CoZBgU4V4WDrLa5anYy
 
 If we want to use all lowercase (un-checksummed) c-chain addrs we can do this:
 
-```
+```js
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 // Given an address, convert to its string (lowercase) format, and hash a message like the avalanche wallet would do
 function hashMessage(address addr) public pure returns (bytes32) {

@@ -1,4 +1,4 @@
-version: 2
+version: "2"
 sql:
   - engine: "sqlite"
     schema: "pkg/db/schema.sql"
