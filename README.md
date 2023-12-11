@@ -37,7 +37,7 @@ that same message in our smart contracts. If the signatures match they're allowe
 
 ### User creates signed message
 
-When you sign a message with [wallet.avax.network](https://wallet.avax.network), it prepends your message with additional information before hashing. For example we want the user to sign a message with their C-chain address, i.e. `0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4`. So the actual messgage the wallet constructs for the user to sign is:
+When you sign a message with [wallet.avax.network](https://wallet.avax.network), it prepends your message with additional information before hashing. For example we want the user to sign a message with their C-chain address, i.e. `0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4`. So the actual message the wallet constructs for the user to sign is:
 
 `\x1AAvalanche Signed Message:\n\x0000002A0x0961Ca10D49B9B8e371aA0Bcf77fE5730b18f2E4`
 
@@ -83,7 +83,7 @@ With all those pieces in place, a user can now "register" with Pandasia and thei
 Airdrops! Airdrops! Airdrops!
 
 Projects create airdrops, depositing tokens to be distributed to registered validators!
-The start and end time can be configued, as well as the distribution amount.
+The start and end time can be configured, as well as the distribution amount.
 
 ![](docs/airdrop.png)
 
