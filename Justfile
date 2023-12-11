@@ -86,6 +86,9 @@ is-validator caddr:
 get-current-root:
   cast call ${PANDASIA_ADDR} "merkleRoot()(bytes32)"
 
+give-role:
+  cast send ${PANDASIA_ADDR} "grantRole(bytes32,address)" 0x74f28e511945f0c7e6b920293543cc0af92b61e5354edca36cce70da5d12e054 0x9b87d2c3147d95C6B5c4A0a1E5f05E90bc5F0cd9 --private-key=${PRIVATE_KEY}
+
 # TODO create a P Chain testing table
 
 sync: (_ping ETH_RPC_URL)
