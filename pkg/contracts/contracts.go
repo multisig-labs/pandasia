@@ -3,8 +3,8 @@ package contracts
 import (
 	"fmt"
 
-	"github.com/ava-labs/coreth/ethclient"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/multisig-labs/pandasia/pkg/contracts/pandasia"
 )
 

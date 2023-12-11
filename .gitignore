@@ -28,3 +28,4 @@ broadcast
 # Openzeppelin Proxy files
 .openzeppelin
 
+abigen

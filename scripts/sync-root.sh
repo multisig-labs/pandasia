@@ -16,9 +16,11 @@ sleep 60
 
 while true; do
 		echo "Getting current root..."
-		CURRENT_ROOT=$(curl --silent localhost:8000/trees | jq -r '.[0].Root')
+    TREES=$(curl --silent localhost:8000/trees)
+		CURRENT_ROOT=$(echo $TREES | jq -r '.[0].Root')
+    CURRENT_HEIGHT=$(echo $TREES | jq -r '.[0].Height')
 		echo "Posting root to contract..."
-		if ! /app/bin/cast send --private-key=$PRIVATE_KEY $PANDASIA_ADDR "setValidatorRoot(bytes32)" $CURRENT_ROOT; then
+		if ! /app/bin/cast send --private-key=$PRIVATE_KEY $PANDASIA_ADDR "setMerkleRoot(bytes32,uint64)" $CURRENT_ROOT $CURRENT_HEIGHT; then
 		    echo "Error posting root to contract to $ETH_RPC_URL. Will try again after sleeping..."
 		fi
 		echo "Done. Sleeping..."
