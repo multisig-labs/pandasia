@@ -21,7 +21,7 @@ contract UpgradeContract is Script, EnvironmentConfig {
     vm.startBroadcast(deployer);
 
     Pandasia pandasiaImplV2 = new Pandasia();
-    saveAddress("PandasiaImplV2", address(pandasiaImpl));
+    saveAddress("PandasiaImplV2", address(pandasiaImplV2));
 
     ProxyAdmin proxyAdmin = ProxyAdmin(getAddress("PandasiaAdmin"));
     address pandasiaProxy = getAddress("Pandasia");
