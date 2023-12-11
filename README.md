@@ -80,4 +80,9 @@ With all those pieces in place, a user can now "register" with Pandasia and thei
 
 ## Airdrops
 
-Airdrops
+Airdrops! Airdrops! Airdrops!
+
+Projects create airdrops, depositing tokens to be distributed to registered validators!
+The start and end time can be configued, as well as the distribution amount.
+
+![](docs/airdrop.png)
