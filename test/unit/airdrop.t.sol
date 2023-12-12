@@ -64,6 +64,7 @@ contract AirdropTest is Test {
 
     stakingContract = new StakingMock();
     stakingContract.setLastRewardsCycleCompleted(minipoolOperator, 1);
+    stakingContract.setAVAXValidatingHighWater(minipoolOperator, 1000 ether);
 
     storageContract = new StorageMock();
     storageContract.setAddress(keccak256(abi.encodePacked("contract.address", "Staking")), address(stakingContract));
@@ -386,6 +387,18 @@ contract AirdropTest is Test {
 
     hasClaimed = pandasia.hasClaimed(id, validator);
     assertTrue(hasClaimed);
+  }
+
+  function testIsMinipoolOperator() public {
+    address onlyCycle = getActor("onlyCycle");
+    address onlyHighWater = getActor("onlyHighWater");
+
+    stakingContract.setLastRewardsCycleCompleted(onlyCycle, 1);
+    stakingContract.setAVAXValidatingHighWater(onlyHighWater, 1000 ether);
+
+    assertTrue(pandasia.isMinipoolOperator(minipoolOperator));
+    assertTrue(pandasia.isMinipoolOperator(onlyCycle));
+    assertTrue(pandasia.isMinipoolOperator(onlyHighWater));
   }
 
   /**************************************************************************************************************************************/
