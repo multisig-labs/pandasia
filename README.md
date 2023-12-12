@@ -4,30 +4,30 @@ One of the Charities, (Πανδαισία) "banquet for everyone"
 
 ![Pandasia](docs/pandasia.jpg)
 
+# Commercial
+https://youtu.be/bSNT-d-O0Sc
+
 # Problem
 
-The primary way to bootstrap your novel blockchain is through an airdrop to as wide and decentralized set of node
-operators as possible. But because of the avalanche network design, this is very tricky to do. Validators exist on
-the P-chain, but airdrops, wallets, and smart contracts exist on the C-Chain. There is no easy way to link a validators
-profile on the P-chain to their C-Chain wallets. BEcause of that there isn't actually an easy way for subnets
-to airdrop tokens to validator nodes which is one key blocker to helping subnets grow through decentralization.
+The primary way to bootstrap a novel blockchain is through an airdrop to as wide and decentralized set of validators as possible. But because of the Avalanche Network design, this is very tricky to do. 
+
+Validators exist on the P-chain, but airdrops, wallets, and smart contracts exist on the C-Chain. There is no easy way to link a validators profile on the P-chain to their C-Chain wallets. Because of that, there isn't an easy way for Subnets to airdrop tokens to validator nodes. 
+
+This is a key blocker to helping Subnets grow through decentralization.
+
 Introducing Pandasia.
 
 # Idea
 
-Pandasia is the tool to help projects airdrop to AVAX validators by allowing validators to verify ownership of
-their node.
+Pandasia is a smart contract protocol allowing Subnet teams to decentralize by airdropping tokens to registered Avalanche validators. 
 
-# How to Use
+# How to Use...
 
-Here's a demo video of the registration flow
-
+Here's a demo video of the registration flow. 
 
 https://github.com/multisig-labs/pandasia/assets/13784188/f0236478-63a7-4f48-b1cf-a695ca2a09c0
 
-
-
-### As a validator
+### ...As a validator
 
 If you're currently running your own validator node, head to [pandasia.io](https://pandasia.io)
 and follow the steps to register. When signing the message, make sure the message contains the C-Chain address
@@ -35,14 +35,14 @@ you want to register with Pandasia, and sign it with your P-Chain rewards addres
 
 If you have any issues reach out to us in [Discord](https://discord.gg/5bXrj6tc)!
 
-### As a minipool operator
+### ...As a minipool operator
 
 Are you a minipool operator with GoGoPool? You can access pandasia airdrops without having to register! Just log in with
 your C-Chain address you use to run your minipool on [pandasia.io](https://pandasia.io).
 
 ### Looking to create your own airdrop?
 
-Reach out to [@ggp_steven](https://t.me/ggp_steven) on telegram and we'll get you started!
+Reach out to [@ggp_steven](https://t.me/ggp_steven) on Telegram and we'll get you started. 
 
 ## Technical Approach
 
@@ -76,7 +76,7 @@ We do this in two parts:
 2. Then apply the user-provided signature against **our** message. Since the user cannot forge `msg.sender` we are sure that the P-chain key did in fact sign a message containing `msg.sender`.
 
 Decomposing the signature is a little tricky, because the `ecrecover` precompile will take a signature, a message hash, and return an _ethereum_ address that signed it. But in our case a P-chain key signed the message, so `ecrecover` will give us the wrong address because the P-Chain address is derived differently than eth addresses.
-So we use a Solidity library `SECP256K1` to do this instead of the `ecrecover` precompile.
+We use a Solidity library `SECP256K1` to do this instead of the `ecrecover` precompile.
 
 The C-chain address the user types in the message box MUST be of the mixed-case, checksummed variety. (Remember that an
 Ethereum address has a clever built-in checksum that uses the case of the various letters as the checksum.) If they use
@@ -85,7 +85,7 @@ expecting mixed case.
 
 ### Tracking Validators
 
-So now we have a method for cryptographically linking a C-chain address to a P-chain address, the final piece to the
+So now that we have a method for cryptographically linking a C-chain address to a P-chain address, the final piece to the
 puzzle is determining if a specific P-Chain address was actually running a validator at one point. We cannot determine
 this from Solidity, since the C-chain cannot query the P-chain for information.
 
@@ -108,6 +108,7 @@ The start and end time can be configured, as well as the distribution amount.
 
 # What's coming
 
-Currently you need to contact MultisigLabs to create an airdrop, but we plan to open it up to the public soon.
-
-We're also working on getting delegators involved in the airdrop action!
+- [ ] Currently you need to contact MultisigLabs to create an airdrop, but we plan to open it up to the public soon.
+- [ ] Delegators will be able to register and receive airdrops
+- [ ] Subnet teams will be able to airdrop locked escrow tokens that vest over a period of time
+- [ ] If you have any ideas on how to make Pandasia more useful to Subnets, send a message on Discord! 
