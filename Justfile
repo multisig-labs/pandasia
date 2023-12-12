@@ -86,8 +86,10 @@ is-validator caddr:
 get-current-root:
   cast call ${PANDASIA_ADDR} "merkleRoot()(bytes32)"
 
-give-role caddr:
-  cast send ${PANDASIA_ADDR} "grantRole(bytes32,address)" 0x74f28e511945f0c7e6b920293543cc0af92b61e5354edca36cce70da5d12e054 {{caddr}} --private-key=${PRIVATE_KEY}
+give-role role caddr:
+  #!/bin/bash
+  roleBytes=$(cast call ${PANDASIA_ADDR} "{{role}}()")
+  cast send ${PANDASIA_ADDR} "grantRole(bytes32,address)" $roleBytes {{caddr}} --private-key=${PRIVATE_KEY}
 
 # TODO create a P Chain testing table
 
