@@ -13,6 +13,8 @@ import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
 interface Staking {
   function getLastRewardsCycleCompleted(address stakerAddr) external view returns (uint256);
+
+  function getAVAXValidatingHighWater(address stakerAddr) external view returns (uint256);
 }
 
 interface Storage {
@@ -252,7 +254,7 @@ contract Pandasia is OwnableUpgradeable, AccessControlUpgradeable {
   function isMinipoolOperator(address addr) public view returns (bool) {
     bytes32 key = keccak256(abi.encodePacked("contract.address", "Staking"));
     address stakingContract = Storage(storageContract).getAddress(key);
-    return Staking(stakingContract).getLastRewardsCycleCompleted(addr) > 0;
+    return Staking(stakingContract).getLastRewardsCycleCompleted(addr) > 0 || Staking(stakingContract).getAVAXValidatingHighWater(addr) > 0;
   }
 
   /**************************************************************************************************************************************/
