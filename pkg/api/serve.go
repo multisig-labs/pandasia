@@ -15,8 +15,6 @@ import (
 
 	"github.com/AbsaOSS/env-binder/env"
 	"github.com/ava-labs/avalanchego/utils/cb58"
-	"github.com/ava-labs/avalanchego/utils/formatting/address"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -120,6 +118,10 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		return c.HTML(http.StatusOK, "ok")
 	})
 
+	e.GET("/check_pchain_addr/:addr", func(c echo.Context) error {
+		return c.HTML(http.StatusOK, "ok")
+	})
+
 	e.GET("/trees", func(c echo.Context) error {
 		roots, err := queries.ListMerkleRoots(ctx)
 		if err != nil {
@@ -163,39 +165,39 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 	})
 
 	// TODO: Remove before production
-	e.POST("/debug/add-addresses", func(c echo.Context) error {
-		var addrs addAddrParams
-		err := c.Bind(&addrs)
-		if err != nil {
-			slog.Error("Error parsing arguments", err)
-			return c.String(http.StatusBadRequest, err.Error())
-		}
+	// e.POST("/debug/add-addresses", func(c echo.Context) error {
+	// 	var addrs addAddrParams
+	// 	err := c.Bind(&addrs)
+	// 	if err != nil {
+	// 		slog.Error("Error parsing arguments", err)
+	// 		return c.String(http.StatusBadRequest, err.Error())
+	// 	}
 
-		vaddrs := []merkle.ValidatorAddress{}
-		for _, addr := range addrs.Addrs {
-			_, _, addrBytes, err := address.Parse(addr)
-			if err != nil {
-				slog.Error("Error parsing address", err)
-				return c.JSON(http.StatusInternalServerError, err.Error())
-			}
-			vaddr := merkle.ValidatorAddress{Addr: addr, AddrHex: common.BytesToAddress(addrBytes).Hex()}
-			vaddrs = append(vaddrs, vaddr)
-		}
+	// 	vaddrs := []merkle.ValidatorAddress{}
+	// 	for _, addr := range addrs.Addrs {
+	// 		_, _, addrBytes, err := address.Parse(addr)
+	// 		if err != nil {
+	// 			slog.Error("Error parsing address", err)
+	// 			return c.JSON(http.StatusInternalServerError, err.Error())
+	// 		}
+	// 		vaddr := merkle.ValidatorAddress{Addr: addr, AddrHex: common.BytesToAddress(addrBytes).Hex()}
+	// 		vaddrs = append(vaddrs, vaddr)
+	// 	}
 
-		tree, err := merkle.GenerateTree(vaddrs)
-		if err != nil {
-			slog.Error("Error generating tree", err.Error())
-			return c.JSON(http.StatusInternalServerError, err.Error())
-		}
+	// 	tree, err := merkle.GenerateTree(vaddrs)
+	// 	if err != nil {
+	// 		slog.Error("Error generating tree", err.Error())
+	// 		return c.JSON(http.StatusInternalServerError, err.Error())
+	// 	}
 
-		err = merkle.SaveTreeToDB(ctx, queries, merkle.TREE_TYPE_VALIDATOR, addrs.Height, tree, "debug")
-		if err != nil {
-			slog.Error("Error saving tree to databse", err.Error())
-			return c.JSON(http.StatusInternalServerError, err.Error())
-		}
+	// 	err = merkle.SaveTreeToDB(ctx, queries, merkle.TREE_TYPE_VALIDATOR, addrs.Height, tree, "debug")
+	// 	if err != nil {
+	// 		slog.Error("Error saving tree to databse", err.Error())
+	// 		return c.JSON(http.StatusInternalServerError, err.Error())
+	// 	}
 
-		return c.JSON(http.StatusOK, "success")
-	})
+	// 	return c.JSON(http.StatusOK, "success")
+	// })
 
 	e.GET("/signature/:sig", func(c echo.Context) error {
 		sig := c.Param("sig")
