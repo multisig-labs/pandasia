@@ -76,6 +76,10 @@ type sigResponse struct {
 	SigS string
 }
 
+type findPchainResponse struct {
+	Exists bool
+}
+
 type addAddrParams struct {
 	Addrs  []string `json:"addrs"`
 	Height int      `json:"height"`
@@ -118,8 +122,30 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		return c.HTML(http.StatusOK, "ok")
 	})
 
-	e.GET("/check_pchain_addr/:addr", func(c echo.Context) error {
-		return c.HTML(http.StatusOK, "ok")
+	e.GET("/check_pchain_addr/:root", func(c echo.Context) error {
+		root := c.Param("root")
+		addr := c.QueryParam("addr")
+
+		// TODO check addr format
+
+		t, err := queries.FindMerkleTreeByRoot(ctx, root)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+		}
+
+		p := db.FindPchainAddrParams{
+			RewardsAddr: sql.NullString{addr, true},
+			TypeID:      12,
+			Height:      int64(t.Height),
+		}
+
+		cnt, err := queries.FindPchainAddr(ctx, p)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnprocessableEntity, err.Error())
+		}
+
+		result := findPchainResponse{Exists: cnt > 0}
+		return c.JSON(http.StatusOK, result)
 	})
 
 	e.GET("/trees", func(c echo.Context) error {

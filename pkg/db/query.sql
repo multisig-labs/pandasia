@@ -11,9 +11,10 @@ INSERT OR IGNORE INTO txs (
 -- name: FindAddrsForMerkleTree :many
 SELECT DISTINCT rewards_addr
 FROM txs
-WHERE has_earned_reward = 1
-AND type_id = ?
+WHERE type_id = ?
 AND height <= ?
+AND validator_start_ts < strftime('%s','now')
+AND validator_end_ts > strftime('%s','now')
 ORDER BY rewards_addr;
 
 -- name: CreateMerkleTree :exec
@@ -22,6 +23,15 @@ INSERT OR IGNORE INTO merkle_trees (
 ) VALUES (
  ?, ?, ?, ?
 ) RETURNING id;
+
+-- name: FindPchainAddr :one
+SELECT count(*)
+FROM txs
+WHERE rewards_addr = ?
+AND type_id = ?
+AND height <= ?
+AND validator_start_ts < strftime('%s','now')
+AND validator_end_ts > strftime('%s','now');
 
 -- name: FindMerkleTreeByType :one
 SELECT id, height, tree_type, root, tree, description
