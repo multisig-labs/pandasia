@@ -67,9 +67,10 @@ func (q *Queries) CreateTx(ctx context.Context, arg CreateTxParams) error {
 const findAddrsForMerkleTree = `-- name: FindAddrsForMerkleTree :many
 SELECT DISTINCT rewards_addr
 FROM txs
-WHERE has_earned_reward = 1
-AND type_id = ?
+WHERE type_id = ?
 AND height <= ?
+AND validator_start_ts < strftime('%s','now')
+AND validator_end_ts > strftime('%s','now')
 ORDER BY rewards_addr
 `
 
@@ -159,6 +160,29 @@ func (q *Queries) FindMerkleTreeByType(ctx context.Context, treeType string) (Fi
 		&i.Description,
 	)
 	return i, err
+}
+
+const findPchainAddr = `-- name: FindPchainAddr :one
+SELECT count(*)
+FROM txs
+WHERE rewards_addr = ?
+AND type_id = ?
+AND height <= ?
+AND validator_start_ts < strftime('%s','now')
+AND validator_end_ts > strftime('%s','now')
+`
+
+type FindPchainAddrParams struct {
+	RewardsAddr sql.NullString
+	TypeID      int64
+	Height      int64
+}
+
+func (q *Queries) FindPchainAddr(ctx context.Context, arg FindPchainAddrParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, findPchainAddr, arg.RewardsAddr, arg.TypeID, arg.Height)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
 }
 
 const listMerkleRoots = `-- name: ListMerkleRoots :many
