@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"crypto/subtle"
 	"database/sql"
 	"fmt"
 	"io/fs"
@@ -18,6 +19,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 	"github.com/multisig-labs/pandasia/pkg/contracts"
 	"github.com/multisig-labs/pandasia/pkg/db"
 	"github.com/multisig-labs/pandasia/pkg/merkle"
@@ -77,7 +79,7 @@ type sigResponse struct {
 }
 
 type findPchainResponse struct {
-	Exists bool
+	Exists bool `json:"exists"`
 }
 
 type addAddrParams struct {
@@ -95,6 +97,12 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 	e := echo.New()
 	e.HideBanner = true
 	e.Debug = true // Show more detailed errors in json response
+
+	authTokenFromEnv, ok := os.LookupEnv("PANDASIA_AUTHTOKEN")
+	if ok {
+		log.Info("Using PANDASIA_AUTHTOKEN from env")
+	}
+
 	e.Use(middleware.CORS())
 	e.Use(middleware.Gzip())
 	e.Use(middleware.RecoverWithConfig(middleware.RecoverConfig{
@@ -179,15 +187,21 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 	})
 
 	e.GET("/sync", func(c echo.Context) error {
-		// spawn a new goroutine to do the work
-		go func() {
-			err := updatePChain(gCtx, dbFile, queries, nodeURL)
-			if err != nil {
-				slog.Error("Error updating pchain", err)
-			}
-		}()
+		authToken := c.QueryParam("token")
+		if authToken != "" && subtle.ConstantTimeCompare([]byte(authTokenFromEnv), []byte(authToken)) == 1 {
+			// spawn a new goroutine to do the work
+			// TODO improve this to not allow multiple calls
+			go func() {
+				err := updatePChain(gCtx, dbFile, queries, nodeURL)
+				if err != nil {
+					slog.Error("Error updating pchain", err)
+				}
+			}()
 
-		return c.JSON(http.StatusOK, "success")
+			return c.JSON(http.StatusOK, "success")
+		} else {
+			return echo.NewHTTPError(http.StatusUnauthorized, fmt.Errorf("invalid or missing token"))
+		}
 	})
 
 	// TODO: Remove before production
