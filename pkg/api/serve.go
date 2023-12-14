@@ -212,7 +212,7 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		startHeight, err := strconv.ParseInt(startHeightString, 10, 64)
 		if err != nil {
 			slog.Error("Unable to convert startHeight to int %w", err)
-			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("unable to parse startHeight"))
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("unable to parse startHeight %w", err))
 		}
 
 		if authToken != "" && subtle.ConstantTimeCompare([]byte(authTokenFromEnv), []byte(authToken)) == 1 {
