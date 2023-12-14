@@ -68,7 +68,7 @@ func syncPchainCmd() {
 		bar.Add(n)
 	}
 
-	err := syncer.SyncPChain(ctx, queries, args.NodeURL, f)
+	err := syncer.SyncPChainRecent(ctx, queries, args.NodeURL, f)
 	handleError(err)
 }
 
