@@ -11,18 +11,23 @@ import (
 	"golang.org/x/exp/slog"
 )
 
+func SyncPChainRecent(ctx context.Context, queries *db.Queries, uri string, progressFn func(tot int, n int)) error {
+	startHeight, err := queries.MaxHeight(ctx)
+	if err != nil {
+		return fmt.Errorf("queries.MaxHeight %w", err)
+	}
+
+	SyncPChain(ctx, queries, uri, startHeight, progressFn)
+	return nil
+}
+
 // Sync the DB with the current state of the P-chain
-func SyncPChain(ctx context.Context, queries *db.Queries, uri string, progressFn func(tot int, n int)) error {
+func SyncPChain(ctx context.Context, queries *db.Queries, uri string, startHeight int64, progressFn func(tot int, n int)) error {
 	if progressFn == nil {
 		progressFn = func(tot int, n int) {}
 	}
 	batchSize := int64(1000)
 	keepTypeIds := []int64{pchain.RewardValidatorTxId, pchain.AddValidatorTxId, pchain.AddDelegatorTxId}
-
-	startHeight, err := queries.MaxHeight(ctx)
-	if err != nil {
-		return fmt.Errorf("queries.MaxHeight %w", err)
-	}
 
 	maxHeight := pchain.MaxHeight(uri)
 	numBlksToFetch := (maxHeight - startHeight)

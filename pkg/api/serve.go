@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -204,6 +205,30 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		}
 	})
 
+	e.GET("/sync_all", func(c echo.Context) error {
+		authToken := c.QueryParam("token")
+		startHeightString := c.QueryParam("startHeight")
+
+		startHeight, err := strconv.ParseInt(startHeightString, 10, 64)
+		if err != nil {
+			slog.Error("Unable to convert startHeight to int %w", err)
+			return echo.NewHTTPError(http.StatusBadRequest, fmt.Errorf("unable to parse startHeight %w", err))
+		}
+
+		if authToken != "" && subtle.ConstantTimeCompare([]byte(authTokenFromEnv), []byte(authToken)) == 1 {
+			go func() {
+				err := syncer.SyncPChain(gCtx, queries, nodeURL, int64(startHeight), nil)
+				if err != nil {
+					slog.Error("Error sycning pchain", err)
+				}
+			}()
+
+			return c.JSON(http.StatusOK, "success")
+		} else {
+			return echo.NewHTTPError(http.StatusUnauthorized, fmt.Errorf("invalid or missing token"))
+		}
+	})
+
 	// TODO: Remove before production
 	// e.POST("/debug/add-addresses", func(c echo.Context) error {
 	// 	var addrs addAddrParams
@@ -373,7 +398,7 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 
 func updatePChain(gCtx context.Context, dbFile *sql.DB, queries *db.Queries, nodeURL string) error {
 	slog.Info("starting sync job")
-	err := syncer.SyncPChain(gCtx, queries, nodeURL, nil)
+	err := syncer.SyncPChainRecent(gCtx, queries, nodeURL, nil)
 	if err != nil {
 		return err
 	}
