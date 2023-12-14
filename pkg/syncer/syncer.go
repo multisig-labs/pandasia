@@ -29,11 +29,6 @@ func SyncPChain(ctx context.Context, queries *db.Queries, uri string, startHeigh
 	batchSize := int64(1000)
 	keepTypeIds := []int64{pchain.RewardValidatorTxId, pchain.AddValidatorTxId, pchain.AddDelegatorTxId}
 
-	startHeight, err := queries.MaxHeight(ctx)
-	if err != nil {
-		return fmt.Errorf("queries.MaxHeight %w", err)
-	}
-
 	maxHeight := pchain.MaxHeight(uri)
 	numBlksToFetch := (maxHeight - startHeight)
 

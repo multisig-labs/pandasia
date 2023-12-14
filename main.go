@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 
 	"runtime/debug"
@@ -41,8 +42,9 @@ func main() {
 
 func syncPchainCmd() {
 	args := struct {
-		NodeURL string `cli:"--node-url, Avalanche node URL" default:"http://localhost:9650"`
-		DbFile  string `cli:"--db, SQLite database file name" default:"pandasia.db"`
+		NodeURL     string `cli:"--node-url, Avalanche node URL" default:"http://localhost:9650"`
+		DbFile      string `cli:"--db, SQLite database file name" default:"pandasia.db"`
+		StartHeight string `cli:"--start-height, Start height to begin fetch" default:"last"`
 	}{}
 	mcli.Parse(&args, mcli.WithErrorHandling(flag.ExitOnError))
 
@@ -68,8 +70,18 @@ func syncPchainCmd() {
 		bar.Add(n)
 	}
 
-	err := syncer.SyncPChainRecent(ctx, queries, args.NodeURL, f)
-	handleError(err)
+	if args.StartHeight == "last" {
+		slog.Info("Syncing recent transactions")
+		err := syncer.SyncPChainRecent(ctx, queries, args.NodeURL, f)
+		handleError(err)
+	} else {
+		startHeight, err := strconv.ParseInt(args.StartHeight, 10, 64)
+		handleError(err)
+
+		slog.Info("Syncing transactions from", "blockHeight", startHeight)
+		err = syncer.SyncPChain(ctx, queries, args.NodeURL, startHeight, f)
+		handleError(err)
+	}
 }
 
 func serveApiCmd() {
