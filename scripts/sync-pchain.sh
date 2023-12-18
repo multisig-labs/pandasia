@@ -15,7 +15,8 @@ sleep 60
 
 while true; do
 		echo "Syncing with P Chain..."
-		/app/bin/pandasia sync-pchain --node-url $P_CHAIN_URL --db /data/pandasia-mainnet.db
+    # hit /sync endpoint
+    curl http://localhost:8000/sync?token=$PANDASIA_AUTHTOKEN
 		echo "Done. Sleeping..."
 		sleep $INTERVAL
 done

@@ -68,6 +68,9 @@ cast-submit-root root height: (_ping ETH_RPC_URL)
 cast-is-validator caddr: (_ping ETH_RPC_URL)
 	cast call ${PANDASIA_ADDR} "isRegisteredValidator(address)" {{caddr}}
 
+cast-get-registered-users offset limit: (_ping ETH_RPC_URL)
+  cast call ${PANDASIA_ADDR} "getRegisteredUsers(uint256,uint256)" {{offset}} {{limit}}
+
 cast method args="":
   cast call ${PANDASIA_ADDR} "{{method}}" {{args}}
 
