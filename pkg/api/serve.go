@@ -380,10 +380,12 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 		for {
 			select {
 			case <-ctx.Done():
+				slog.Info("Update PChain routine context done")
 				return nil
 			case <-time.After(EnvConfig.jobPeriod):
 				err := updatePChain(gCtx, dbFile, queries, nodeURL)
 				if err != nil {
+					slog.Error("Error in update PChain timer", "err::", err)
 					return err
 				}
 			}
@@ -398,7 +400,16 @@ func StartHttpServer(dbFileName string, host string, port int, nodeURL string, w
 
 func updatePChain(gCtx context.Context, dbFile *sql.DB, queries *db.Queries, nodeURL string) error {
 	slog.Info("starting sync job")
-	err := syncer.SyncPChainRecent(gCtx, queries, nodeURL, nil)
+
+	counter := 0
+	f := func(tot int, n int) {
+		if counter%10 == 0 {
+			slog.Info("sync_pchain", "tot::", tot, "n::", counter)
+		}
+		counter++
+	}
+
+	err := syncer.SyncPChainRecent(gCtx, queries, nodeURL, f)
 	if err != nil {
 		return err
 	}
